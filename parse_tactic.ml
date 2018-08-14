@@ -115,6 +115,7 @@ struct
     fn Meson.ASM_MESON_TAC thl, "ASM_MESON_TAC";
     fn Metis.ASM_METIS_TAC thl, "ASM_METIS_TAC";
     fn Ind_defs.BACKCHAIN_TAC th, "BACKCHAIN_TAC";
+    fn CHEAT_TAC, "CHEAT_TAC";
     fn CONJ_TAC, "CONJ_TAC";
     fn CONTR_TAC th, "CONTR_TAC";
     fn (CONV_TAC " ") conv, "CONV_TAC";
