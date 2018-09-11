@@ -11,6 +11,7 @@ set_jrh_lexer;;
 open Lib;;
 open Fusion;;
 open Basics;;
+open Printer;;
 open Parser;;
 open Equal;;
 open Bool;;
@@ -377,9 +378,12 @@ let prove_inductive_relations_exist,new_inductive_definition =
     let fvs,th1 = prove_inductive_properties tm in
     let th2 = generalize_schematic_variables true fvs th1 in
     derive_existence th2
-  and new_inductive_definition tm =
+  and new_inductive_definition (tm : term) : thm * thm * thm =
     try let th = tryfind (find_redefinition tm) (!the_inductive_definitions) in
-        warn true "Benign redefinition of inductive predicate"; th
+        warn true "Benign redefinition of inductive predicate";
+        map_triple
+          (global_fmt_print "ind_defs.new_inductive_definition.lookup") th;
+        th
     with Failure _ ->
     let fvs,th1 = prove_inductive_properties tm in
     let th2 = generalize_schematic_variables true fvs th1 in
@@ -389,6 +393,7 @@ let prove_inductive_relations_exist,new_inductive_definition =
     let i,c = CONJ_PAIR ic in
     let thtr = GENL avs r,GENL avs i,GENL avs c in
     the_inductive_definitions := thtr::(!the_inductive_definitions);
+    map_triple (global_fmt_print "ind_defs.new_inductive_definition") thtr;
     thtr in
   prove_inductive_relations_exist,new_inductive_definition;;
 

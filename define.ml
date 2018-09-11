@@ -998,7 +998,8 @@ let define =
     try let th,th' = tryfind (fun th -> th,PART_MATCH I th tm')
                              (!the_definitions) in
         if can (PART_MATCH I th') (concl th) then
-         (warn true "Benign redefinition"; th')
+         (warn true "Benign redefinition";
+              global_fmt_print "define.define.lookup" th'; th')
         else failwith ""
     with Failure _ ->
       let f,th = close_definition_clauses tm in
@@ -1007,4 +1008,5 @@ let define =
       let th2 = new_specification[fst(dest_var f)] th1 in
       let g = mk_mconst(dest_var f) in
       let th3 = PROVE_HYP th2 (INST [g,f] th) in
-      the_definitions := th3::(!the_definitions); th3;;
+      the_definitions := th3::(!the_definitions);
+      global_fmt_print "define.define" th3; th3;;

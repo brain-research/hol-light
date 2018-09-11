@@ -195,46 +195,6 @@ let sexp_goal_stripped (gl:goal) =
 (* Parseable S-Expression printer for proof logs.                            *)
 (* ------------------------------------------------------------------------- *)
 
-let proof_fmt : Format.formatter option =
-  try
-    let filename = Sys.getenv "PROOF_LOG_OUTPUT" in
-    (* TODO figure out where to close this channel. *)
-    let proof_log_oc = open_out filename in
-    Some Format.formatter_of_out_channel proof_log_oc
-  with Not_found -> None;;
-
-let training_fmt filename_base =
-  let make_formatter filename =
-    (* TODO(szegedy) figure out where to close this channels. *)
-    Format.formatter_of_out_channel (open_out filename) in
-  let train_fmt = make_formatter (filename_base ^ ".train") in
-  let test_fmt = make_formatter (filename_base ^ ".test") in
-  let valid_fmt = make_formatter (filename_base ^ ".valid") in
-  Some (fun i ->
-      if i mod 5 == 4 then
-        test_fmt
-      else if i mod 5 == 2 then
-        valid_fmt
-      else
-        train_fmt);;
-
-let tac_params_proof_fmt : (int -> Format.formatter) option =
-  try
-    let filename_base = Sys.getenv "TAC_PARAMS_PROOF_LOG_OUTPUT" in
-    training_fmt filename_base
-  with Not_found -> None;;
-
-let tactic_proof_fmt : (int -> Format.formatter) option =
-  try
-    let filename_base = Sys.getenv "TACTIC_PROOF_LOG_OUTPUT" in
-    training_fmt filename_base
-  with Not_found -> None;;
-
-let training_proof_fmt : (int -> Format.formatter) option =
-  try
-    let filename_base = Sys.getenv "TRAINING_PROOF_LOG_OUTPUT" in
-    training_fmt filename_base
-  with Not_found -> None;;
 
 (* TODO(smloos) implement this function.
    Will need to build data structure throughout _CONV tactics. *)
@@ -447,6 +407,10 @@ let rec sexp_flat_tac_params f (Proof_log ((ths, tm), taclog, logl)) =
 let rec sexp_flat_tac (Proof_log ((ths, tm), taclog, logl)) =
   sexp_term tm :: (Sleaf (tactic_sep_name taclog) ::
                      List.concat (map sexp_flat_tac logl))
+
+(* Print the first goal (i.e. the original conjecture) from a proof log *)
+let sexp_print_first_goal fmt (Proof_log (goal, taclog, logl)) =
+   (sexp_print fmt (Snode [Sleaf "global_thm"; (sexp_goal goal)]))
 
 let referenced_thms plog =
   let seen : (int, unit) Hashtbl.t = Hashtbl.create 1 in

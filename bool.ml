@@ -39,6 +39,17 @@ parse_as_infix("<=>",(2,"right"));;
 override_interface ("<=>",`(=):bool->bool->bool`);;
 parse_as_infix("=",(12,"right"));;
 
+
+(* ------------------------------------------------------------------------- *)
+(* Add logging wrapper around new_basic_definition calls.                    *)
+(* ------------------------------------------------------------------------- *)
+
+let log_new_basic_definition tm =
+  let ret_thm = new_basic_definition tm in
+  global_fmt_print "fusion.new_basic_definition" ret_thm;
+  ret_thm;;
+
+
 (* ------------------------------------------------------------------------- *)
 (* Special syntax for Boolean equations (IFF).                               *)
 (* ------------------------------------------------------------------------- *)
@@ -162,7 +173,7 @@ let CONJUNCTS = striplist CONJ_PAIR;;
 (* Rules for ==>                                                             *)
 (* ------------------------------------------------------------------------- *)
 
-let IMP_DEF = new_basic_definition
+let IMP_DEF = log_new_basic_definition
   `(==>) = \p q. p /\ q <=> p`;;
 
 let mk_imp = mk_binary "==>";;
@@ -247,7 +258,7 @@ let IMP_TRANS =
 (* Rules for !                                                               *)
 (* ------------------------------------------------------------------------- *)
 
-let FORALL_DEF = new_basic_definition
+let FORALL_DEF = log_new_basic_definition
  `(!) = \P:A->bool. P = \x. T`;;
 
 let mk_forall = mk_binder "!";;
@@ -317,7 +328,7 @@ let GEN_ALL th =
 (* Rules for ?                                                               *)
 (* ------------------------------------------------------------------------- *)
 
-let EXISTS_DEF = new_basic_definition
+let EXISTS_DEF = log_new_basic_definition
  `(?) = \P:A->bool. !q. (!x. P x ==> q) ==> q`;;
 
 let mk_exists =  mk_binder "?";;
@@ -364,7 +375,7 @@ let SIMPLE_CHOOSE v th =
 (* Rules for \/                                                              *)
 (* ------------------------------------------------------------------------- *)
 
-let OR_DEF = new_basic_definition
+let OR_DEF = log_new_basic_definition
  `(\/) = \p q. !r. (p ==> r) ==> (q ==> r) ==> r`;;
 
 let mk_disj = mk_binary "\\/";;
@@ -416,10 +427,10 @@ let SIMPLE_DISJ_CASES th1 th2 =
 (* Rules for negation and falsity.                                           *)
 (* ------------------------------------------------------------------------- *)
 
-let F_DEF = new_basic_definition
+let F_DEF = log_new_basic_definition
  `F = !p:bool. p`;;
 
-let NOT_DEF = new_basic_definition
+let NOT_DEF = log_new_basic_definition
  `(~) = \p. p ==> F`;;
 
 let mk_neg =
@@ -472,7 +483,7 @@ let CONTR =
 (* Rules for unique existence.                                               *)
 (* ------------------------------------------------------------------------- *)
 
-let EXISTS_UNIQUE_DEF = new_basic_definition
+let EXISTS_UNIQUE_DEF = log_new_basic_definition
  `(?!) = \P:A->bool. ((?) P) /\ (!x y. P x /\ P y ==> x = y)`;;
 
 let mk_uexists = mk_binder "?!";;

@@ -11,6 +11,7 @@ set_jrh_lexer;;
 open Lib;;
 open Fusion;;
 open Basics;;
+open Printer;;
 open Equal;;
 open Bool;;
 open Drule;;
@@ -109,7 +110,8 @@ let new_recursive_definition =
     ignore(PART_MATCH I th' (concl th)); th' in
   fun ax tm ->
     try let th = tryfind (find_redefinition tm) (!the_recursive_definitions) in
-        warn true "Benign redefinition of recursive function"; th
+        warn true "Benign redefinition of recursive function";
+        global_fmt_print "recursion.new_recursive_definition.lookup" th; th
     with Failure _ ->
     let rawcls = conjuncts tm in
     let spcls = map (snd o strip_forall) rawcls in
@@ -122,4 +124,5 @@ let new_recursive_definition =
     let dth = new_specification (map (fst o dest_var) evs) eth in
     let dths = map2 SPECL fvs (CONJUNCTS dth) in
     let th = end_itlist CONJ dths in
-    the_recursive_definitions := th::(!the_recursive_definitions); th;;
+    the_recursive_definitions := th::(!the_recursive_definitions);
+    global_fmt_print "recursion.new_recursive_definition" th; th;;

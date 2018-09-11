@@ -12,6 +12,7 @@ open System;;
 open Lib;;
 open Fusion;;
 open Basics;;
+open Printer;;
 open Parser;;
 open Equal;;
 open Bool;;
@@ -312,8 +313,9 @@ let new_specification =
       try let sth = snd(find (fun ((names',th'),sth') ->
                                names' = names && aconv (concl th') (concl th))
                              (!the_specifications)) in
-          warn true ("Benign respecification"); sth
+          warn true ("Benign respecification");
+          global_fmt_print "nums.new_specification.lookup" sth; sth
       with Failure _ ->
           let sth = specifies names th in
           the_specifications := ((names,th),sth)::(!the_specifications);
-          sth;;
+          global_fmt_print "nums.new_specification" sth; sth;;

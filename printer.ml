@@ -594,7 +594,7 @@ let rec sexp_term tm =
     Var (str, ty) -> Snode [Sleaf "v"; sexp_type ty; Sleaf str]
   | Const (str, ty) -> Snode [Sleaf "c"; sexp_type ty; Sleaf str]
   | Comb (t1, t2) -> Snode [Sleaf "a"; sexp_term t1; sexp_term t2]
-  | Abs (t1, t2) -> Snode [Sleaf "l"; sexp_term t1; sexp_term t2]
+  | Abs (t1, t2) -> Snode [Sleaf "l"; sexp_term t1; sexp_term t2];;
 
 
 let sexp_thm =
@@ -604,12 +604,72 @@ let sexp_thm =
     Snode [Sleaf "h"; Snode (map sexp_term tls); sexp_term tm]) else
   sexp_memoize (fun th ->
       let tls, tm = dest_thm th in
-      Snode [Sleaf "h"; Snode (map sexp_term tls); sexp_term tm])
+      Snode [Sleaf "h"; Snode (map sexp_term tls); sexp_term tm]);;
 
-let str_of_sexp s = sexp_print Format.str_formatter s; flush_str_formatter()
+let str_of_sexp s = sexp_print Format.str_formatter s; flush_str_formatter();;
 
 type term_encoding = Pretty | Sexp
 let current_encoding = ref Pretty
 let encode_term t = match !current_encoding with
     Pretty -> string_of_term t
-  | Sexp -> str_of_sexp (sexp_term t)
+  | Sexp -> str_of_sexp (sexp_term t);;
+
+
+(* ------------------------------------------------------------------------- *)
+(* Formatters for proof and theorem recording                                *)
+(* ------------------------------------------------------------------------- *)
+
+let proof_fmt : Format.formatter option =
+  try
+    let filename = Sys.getenv "PROOF_LOG_OUTPUT" in
+    (* TODO figure out where to close this channel. *)
+    let proof_log_oc = open_out filename in
+    Some Format.formatter_of_out_channel proof_log_oc
+  with Not_found -> None;;
+
+let training_fmt filename_base =
+  let make_formatter filename =
+    (* TODO(szegedy) figure out where to close this channels. *)
+    Format.formatter_of_out_channel (open_out filename) in
+  let train_fmt = make_formatter (filename_base ^ ".train") in
+  let test_fmt = make_formatter (filename_base ^ ".test") in
+  let valid_fmt = make_formatter (filename_base ^ ".valid") in
+  Some (fun i ->
+      if i mod 5 == 4 then
+        test_fmt
+      else if i mod 5 == 2 then
+        valid_fmt
+      else
+        train_fmt);;
+
+let tac_params_proof_fmt : (int -> Format.formatter) option =
+  try
+    let filename_base = Sys.getenv "TAC_PARAMS_PROOF_LOG_OUTPUT" in
+    training_fmt filename_base
+  with Not_found -> None;;
+
+let tactic_proof_fmt : (int -> Format.formatter) option =
+  try
+    let filename_base = Sys.getenv "TACTIC_PROOF_LOG_OUTPUT" in
+    training_fmt filename_base
+  with Not_found -> None;;
+
+let training_proof_fmt : (int -> Format.formatter) option =
+  try
+    let filename_base = Sys.getenv "TRAINING_PROOF_LOG_OUTPUT" in
+    training_fmt filename_base
+  with Not_found -> None;;
+
+(* If environment variable is set, then log new definitions to file. *)
+let global_fmt  : Format.formatter option =
+  try
+    let filename = Sys.getenv "GLOBAL_THM_DEF_OUTPUT" in
+    let proof_log_oc = open_out filename in
+    Some Format.formatter_of_out_channel proof_log_oc
+  with Not_found -> None;;
+
+let global_fmt_print source_str th =
+  let s = (Snode [Sleaf source_str; (sexp_thm th)]) in
+  (match global_fmt with
+     Some fmt -> sexp_print fmt s; pp_print_newline fmt ()
+   | None -> ());;
