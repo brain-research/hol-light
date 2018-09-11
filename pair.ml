@@ -166,7 +166,7 @@ let the_definitions = ref
   EXISTS_UNIQUE_DEF; NOT_DEF; F_DEF; OR_DEF; EXISTS_DEF; FORALL_DEF; IMP_DEF;
   AND_DEF; T_DEF];;
 
-let new_definition =
+let new_definition : term -> thm =
   let depair =
     let rec depair gv arg =
       try let l,r = dest_pair arg in
@@ -180,7 +180,9 @@ let new_definition =
     try let th,th' = tryfind (fun th -> th,PART_MATCH I th def)
                              (!the_definitions) in
         ignore(PART_MATCH I th' (snd(strip_forall(concl th))));
-        warn true "Benign redefinition"; GEN_ALL (GENL avs th')
+        warn true "Benign redefinition";
+        let ret_thm = GEN_ALL (GENL avs th') in
+        global_fmt_print "pair.new_definition.lookup" ret_thm; ret_thm
     with Failure _ ->
         let l,r = dest_eq def in
         let fn,args = strip_comb l in
@@ -193,7 +195,8 @@ let new_definition =
         let threps = map (SYM o PURE_REWRITE_CONV[FST; SND]) xreps in
         let th3 = TRANS th2 (SYM(SUBS_CONV threps r)) in
         let th4 = GEN_ALL (GENL avs th3) in
-        the_definitions := th4::(!the_definitions); th4;;
+        the_definitions := th4::(!the_definitions);
+        global_fmt_print "pair.new_definition" th4; th4;;
 
 (* ------------------------------------------------------------------------- *)
 (* A few more useful definitions.                                            *)

@@ -81,6 +81,8 @@ let rec map2 f l1 l2 =
   | (h1::t1),(h2::t2) -> let h = f h1 h2 in h::(map2 f t1 t2)
   | _ -> failwith "map2: length mismatch";;
 
+let map_triple f (a, b, c)  = (f a, f b, f c);;
+
 let findi f l =
   let rec loop i l = match l with
       [] -> raise Not_found

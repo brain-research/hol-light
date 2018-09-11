@@ -11,6 +11,7 @@ set_jrh_lexer;;
 open Lib;;
 open Fusion;;
 open Basics;;
+open Printer;;
 open Nets;;
 open Parser;;
 open Equal;;
@@ -487,9 +488,10 @@ let new_definition tm =
   let rtm = try list_mk_abs(largs,r)
     with Failure _ -> failwith "new_definition: Non-variable in LHS pattern" in
   let def = mk_eq(lv,rtm) in
-  let th1 = new_basic_definition def in
+  let th1 = log_new_basic_definition def in
   let th2 = rev_itlist
     (fun tm th -> let ith = AP_THM th tm in
                   TRANS ith (BETA_CONV(rand(concl ith)))) largs th1 in
   let rvs = filter (not o C mem avs) largs in
-  itlist GEN rvs (itlist GEN avs th2);;
+  let ret_thm = itlist GEN rvs (itlist GEN avs th2) in
+  global_fmt_print "drule.new_definition" ret_thm; ret_thm;;
