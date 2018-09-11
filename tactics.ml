@@ -952,10 +952,10 @@ let (TAC_PROOF : goal * tactic -> thm) =
       let th,log = just null_inst [] in
       let log = finalize_proof_log before_thms log in
       add_proof_stats Log.all_stats log;
-      let sexp_print_with_endl fmt sexp=
+      let sexp_print_with_endl fmt sexp =
         sexp_print fmt sexp;
         pp_print_newline fmt () in
-      (* Generate an idex to decide which partition to put in the output:
+      (* Generate an index to decide which partition to put in the output:
          training, testing or validation.
        *)
       incr tactics_counter;
@@ -976,6 +976,11 @@ let (TAC_PROOF : goal * tactic -> thm) =
          Some fmt -> map (sexp_print (fmt !tactics_counter)) (sexp_flat_tac_params sexp_src log);
                      pp_print_newline (fmt !tactics_counter) ()
         | None -> ());
+      (match subgoal_dependencies_fmt with
+          Some fmt -> sexp_print fmt (sexp_subgoal_dependendies log);
+                      pp_print_newline fmt ()
+        | None -> ());
+
       (* Try to replay proof to ensure log is consistent *)
       (try
         if !strict then (

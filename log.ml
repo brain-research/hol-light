@@ -523,3 +523,24 @@ let add_proof_stats st plog =
   let after_tactics = st.total_tactics in
   let thl = referenced_thms plog in
   st.proof_info <- (after_tactics - before_tactics, length thl) :: st.proof_info
+
+
+(* ---------------------------------------------------------------------------*)
+(* Creates a map from subgoals to theorems to file specified in environment   *)
+(* variable SUBGOAL_DEPENDENCIES_LOG_OUTPUT.                                  *)
+(* ---------------------------------------------------------------------------*)
+
+let rec collect_subgoals (Proof_log (g,_,logs) : 'a proof_log) : goal list =
+  g :: concat (map collect_subgoals logs)
+
+let sexp_subgoal_dependendies (Proof_log (g,_,logs) : 'a proof_log) : sexp =
+  Snode (sexp_goal g ::
+         Sleaf "->" ::
+         map sexp_goal (concat (map collect_subgoals logs)))
+
+let subgoal_dependencies_fmt : Format.formatter option =
+  try
+    let filename = Sys.getenv "SUBGOAL_DEPENDENCIES_LOG_OUTPUT" in
+    let proof_log_oc = open_out filename in
+    Some Format.formatter_of_out_channel proof_log_oc
+  with Not_found -> None;;
