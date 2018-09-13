@@ -839,31 +839,6 @@ let ANTS_TAC =
 (* A printer for goals etc.                                                  *)
 (* ------------------------------------------------------------------------- *)
 
-let pp_print_goal fmt =
-  let string_of_int3 n =
-    if n < 10 then "  "^string_of_int n
-    else if n < 100 then " "^string_of_int n
-    else string_of_int n in
-  let print_hyp n (s,th) =
-    Format.pp_open_hbox fmt ();
-    Format.pp_print_string fmt (string_of_int3 n);
-    Format.pp_print_string fmt " [";
-    Format.pp_open_hvbox fmt 0;
-    pp_print_term fmt (concl th);
-    Format.pp_close_box fmt ();
-    Format.pp_print_string fmt "]";
-    (if not (s = "") then (Format.pp_print_string fmt (" ("^s^")")) else ());
-    Format.pp_close_box fmt ();
-    Format.pp_print_newline fmt () in
-  let rec print_hyps n asl =
-    if asl = [] then () else
-    (print_hyp n (hd asl);
-     print_hyps (n + 1) (tl asl)) in
-  fun (asl,w) ->
-    Format.pp_print_newline fmt ();
-    if asl <> [] then (print_hyps 0 (rev asl); Format.pp_print_newline fmt ()) else ();
-    pp_print_qterm fmt w; Format.pp_print_newline fmt ();;
-
 let (print_goal:goal->unit) = pp_print_goal std_formatter;;
 
 let (print_goalstack:goalstack->unit) =
@@ -940,7 +915,6 @@ let (mk_goalstate:goal->goalstate) =
       (fun inst [th,log] -> INSTANTIATE_ALL inst th, log)
     else failwith "mk_goalstate: Non-boolean goal";;
 
-let tactics_counter = ref 0;;
 let strict = ref false
 
 let (TAC_PROOF : goal * tactic -> thm) =
@@ -952,38 +926,11 @@ let (TAC_PROOF : goal * tactic -> thm) =
       let th,log = just null_inst [] in
       let log = finalize_proof_log before_thms log in
       add_proof_stats Log.all_stats log;
-      let sexp_print_with_endl fmt sexp =
-        sexp_print fmt sexp;
-        pp_print_newline fmt () in
+
       (* Generate an index to decide which partition to put in the output:
          training, testing or validation.
        *)
-      incr tactics_counter;
-      (match proof_fmt with
-          Some fmt -> sexp_print fmt (sexp_proof_log sexp_src log);
-                      pp_print_newline fmt ()
-        | None -> ());
-      (match training_proof_fmt with
-          Some fmt ->  List.iter (sexp_print_with_endl (fmt !tactics_counter))
-                                 (sexp_proof_log_flatten_stripped
-                                    sexp_src log)
-        | None -> ());
-      (match global_fmt with
-         Some fmt -> sexp_print_first_goal fmt log;
-                     pp_print_newline fmt ()
-       | None -> ());
-      (match tactic_proof_fmt with
-         Some fmt -> map (sexp_print (fmt !tactics_counter)) (sexp_flat_tac log);
-                     pp_print_newline (fmt !tactics_counter) ()
-        | None -> ());
-      (match tac_params_proof_fmt with
-         Some fmt -> map (sexp_print (fmt !tactics_counter)) (sexp_flat_tac_params sexp_src log);
-                     pp_print_newline (fmt !tactics_counter) ()
-        | None -> ());
-      (match subgoal_dependencies_fmt with
-          Some fmt -> sexp_print fmt (sexp_subgoal_dependendies log);
-                      pp_print_newline fmt ()
-        | None -> ());
+      print_logs log;
 
       (* Try to replay proof to ensure log is consistent *)
       (try

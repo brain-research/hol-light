@@ -409,8 +409,8 @@ let rec sexp_flat_tac (Proof_log ((ths, tm), taclog, logl)) =
                      List.concat (map sexp_flat_tac logl))
 
 (* Print the first goal (i.e. the original conjecture) from a proof log *)
-let sexp_print_first_goal fmt (Proof_log (goal, taclog, logl)) =
-   (sexp_print fmt (Snode [Sleaf "global_thm"; (sexp_goal goal)]))
+let first_goal (Proof_log (goal, taclog, logl)) : sexp =
+  Snode [Sleaf "global_thm"; (sexp_goal goal)]
 
 let referenced_thms plog =
   let seen : (int, unit) Hashtbl.t = Hashtbl.create 1 in
@@ -500,11 +500,50 @@ let rec collect_subgoals (Proof_log (g,_,logs) : 'a proof_log) : goal list =
 let sexp_subgoal_dependendies (Proof_log (g,_,logs) : 'a proof_log) : sexp =
   Snode (sexp_goal g ::
          Sleaf "->" ::
-         map sexp_goal (concat (map collect_subgoals logs)))
+         map sexp_goal (concat (map collect_subgoals logs)));;
 
-let subgoal_dependencies_fmt : Format.formatter option =
-  try
-    let filename = Sys.getenv "SUBGOAL_DEPENDENCIES_LOG_OUTPUT" in
-    let proof_log_oc = open_out filename in
-    Some Format.formatter_of_out_channel proof_log_oc
-  with Not_found -> None;;
+
+(* ---------------------------------------------------------------------------*)
+(* Common code for logging hooks                                              *)
+(* ---------------------------------------------------------------------------*)
+
+let print_sexps_with_endl (sexps : sexp list) (fmt : Format.formatter) : unit =
+    List.iter (sexp_print fmt) sexps;
+    pp_print_newline fmt ();;
+
+let try_to_apply (f : 'a -> unit) (arg_o : 'a option) : unit =
+  match arg_o with
+    Some arg -> f arg
+  | None -> ();;
+
+let try_to_print (es : sexp list) (fmt_o : Format.formatter option) : unit =
+  try_to_apply (print_sexps_with_endl es) fmt_o;;
+
+(* Poor-man's data splitting into train, test, and validation.                *)
+let get_partition data_counter : data_partition =
+  match data_counter mod 5 with
+    4 -> Test
+  | 2 -> Valid
+  | _ -> Train
+
+(* ---------------------------------------------------------------------------*)
+(* print_logs is the entry point for all proof logging.                       *)
+(*                                                                            *)
+(* This function also decides, for every proof (not proof step) whether it    *)
+(* goes in test, valid, or train.                                             *)
+(* ---------------------------------------------------------------------------*)
+let data_counter = ref 0;;
+let print_logs (log : 'a proof_log) =
+  incr data_counter;
+
+  try_to_print [sexp_proof_log sexp_src log] proof_fmt;
+  try_to_print [sexp_subgoal_dependendies log] subgoal_dependencies_fmt;
+  try_to_print [first_goal log] global_fmt;
+
+  let partition : data_partition = get_partition !data_counter in
+  try_to_print (sexp_flat_tac log) (tactic_proof_fmt partition);
+  try_to_print (sexp_flat_tac_params sexp_src log) 
+               (tac_params_proof_fmt partition);
+  List.iter
+    (fun sexp -> try_to_print [sexp] (training_proof_fmt partition))
+    (sexp_proof_log_flatten_stripped sexp_src log);;

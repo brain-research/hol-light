@@ -545,6 +545,35 @@ let pp_print_thm fmt th =
    pp_close_box fmt ());;
 
 (* ------------------------------------------------------------------------- *)
+(* A printer for goals etc.                                                  *)
+(* ------------------------------------------------------------------------- *)
+
+let pp_print_goal fmt =
+  let string_of_int3 n =
+    if n < 10 then "  "^string_of_int n
+    else if n < 100 then " "^string_of_int n
+    else string_of_int n in
+  let print_hyp n (s,th) =
+    Format.pp_open_hbox fmt ();
+    Format.pp_print_string fmt (string_of_int3 n);
+    Format.pp_print_string fmt " [";
+    Format.pp_open_hvbox fmt 0;
+    pp_print_term fmt (concl th);
+    Format.pp_close_box fmt ();
+    Format.pp_print_string fmt "]";
+    (if not (s = "") then (Format.pp_print_string fmt (" ("^s^")")) else ());
+    Format.pp_close_box fmt ();
+    Format.pp_print_newline fmt () in
+  let rec print_hyps n asl =
+    if asl = [] then () else
+    (print_hyp n (hd asl);
+     print_hyps (n + 1) (tl asl)) in
+  fun (asl,w) ->
+    Format.pp_print_newline fmt ();
+    if asl <> [] then (print_hyps 0 (rev asl); Format.pp_print_newline fmt ()) else ();
+    pp_print_qterm fmt w; Format.pp_print_newline fmt ();;
+
+(* ------------------------------------------------------------------------- *)
 (* Print on standard output.                                                 *)
 (* ------------------------------------------------------------------------- *)
 
@@ -617,57 +646,51 @@ let encode_term t = match !current_encoding with
 
 (* ------------------------------------------------------------------------- *)
 (* Formatters for proof and theorem recording                                *)
+(* Each formatter writes to a file that is specified in an env variable.     *)
 (* ------------------------------------------------------------------------- *)
 
+let formatter_from_environment_variable (env_var : string)
+                                        (file_extension : string) 
+                                        : Format.formatter option =
+  try
+    let filename = Sys.getenv env_var in
+    let proof_log_oc = open_out (filename ^ file_extension) in
+    Some Format.formatter_of_out_channel proof_log_oc
+  with Not_found -> None;;
+
 let proof_fmt : Format.formatter option =
-  try
-    let filename = Sys.getenv "PROOF_LOG_OUTPUT" in
-    (* TODO figure out where to close this channel. *)
-    let proof_log_oc = open_out filename in
-    Some Format.formatter_of_out_channel proof_log_oc
-  with Not_found -> None;;
+  formatter_from_environment_variable "PROOF_LOG_OUTPUT" ""
 
-let training_fmt filename_base =
-  let make_formatter filename =
-    (* TODO(szegedy) figure out where to close this channels. *)
-    Format.formatter_of_out_channel (open_out filename) in
-  let train_fmt = make_formatter (filename_base ^ ".train") in
-  let test_fmt = make_formatter (filename_base ^ ".test") in
-  let valid_fmt = make_formatter (filename_base ^ ".valid") in
-  Some (fun i ->
-      if i mod 5 == 4 then
-        test_fmt
-      else if i mod 5 == 2 then
-        valid_fmt
-      else
-        train_fmt);;
+let global_fmt : Format.formatter option =
+  formatter_from_environment_variable "GLOBAL_THM_DEF_OUTPUT" ""
 
-let tac_params_proof_fmt : (int -> Format.formatter) option =
-  try
-    let filename_base = Sys.getenv "TAC_PARAMS_PROOF_LOG_OUTPUT" in
-    training_fmt filename_base
-  with Not_found -> None;;
+let subgoal_dependencies_fmt : Format.formatter option =
+  formatter_from_environment_variable "SUBGOAL_DEPENDENCIES_LOG_OUTPUT" ""
 
-let tactic_proof_fmt : (int -> Format.formatter) option =
-  try
-    let filename_base = Sys.getenv "TACTIC_PROOF_LOG_OUTPUT" in
-    training_fmt filename_base
-  with Not_found -> None;;
+type data_partition = Test | Valid | Train;;
 
-let training_proof_fmt : (int -> Format.formatter) option =
-  try
-    let filename_base = Sys.getenv "TRAINING_PROOF_LOG_OUTPUT" in
-    training_fmt filename_base
-  with Not_found -> None;;
+let make_fmt_triplet_for_data_split (env_var : string) 
+                                : data_partition -> (Format.formatter option) =
+  (*The let exprs make sure that the formatters are created during startup.
+    Otherwise, the files are reset every time a new proof is written. *)
+  let fmt_test = formatter_from_environment_variable env_var ".test" in
+  let fmt_valid = formatter_from_environment_variable env_var ".valid" in
+  let fmt_train = formatter_from_environment_variable env_var ".train" in
+  fun p -> match p with
+      Test -> fmt_test
+    | Valid -> fmt_valid
+    | Train -> fmt_train
 
-(* If environment variable is set, then log new definitions to file. *)
-let global_fmt  : Format.formatter option =
-  try
-    let filename = Sys.getenv "GLOBAL_THM_DEF_OUTPUT" in
-    let proof_log_oc = open_out filename in
-    Some Format.formatter_of_out_channel proof_log_oc
-  with Not_found -> None;;
+let tactic_proof_fmt : data_partition -> (Format.formatter option) =
+  make_fmt_triplet_for_data_split "TACTIC_PROOF_LOG_OUTPUT"
 
+let tac_params_proof_fmt : data_partition -> (Format.formatter option) =
+  make_fmt_triplet_for_data_split "TAC_PARAMS_PROOF_LOG_OUTPUT"
+
+let training_proof_fmt : data_partition -> (Format.formatter option) =
+  make_fmt_triplet_for_data_split "TRAINING_PROOF_LOG_OUTPUT"
+
+(* global print function, printing to file specified in env var ... *)
 let global_fmt_print source_str th =
   let s = (Snode [Sleaf source_str; (sexp_thm th)]) in
   (match global_fmt with
