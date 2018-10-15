@@ -174,6 +174,10 @@ let rec sexp_print fmt s = match s with
       List.iter (fun s -> pp_print_char fmt ' '; sexp_print fmt s) sl;
       pp_print_char fmt ')';;
 
+let print_sexps (sexps : sexp list) (fmt : Format.formatter) : unit =
+    List.iter (sexp_print fmt) sexps;
+    pp_print_newline fmt ();;
+
 (* Turn a converter raw : 'a -> sexp into a memoized converter memo : 'a -> sexp
    that writes either (memo _n raw) or _n, where _n is fresh. *)
 let sexp_memoize : ('a -> sexp) -> ('a -> sexp) =
@@ -660,6 +664,9 @@ let formatter_from_environment_variable (env_var : string)
 
 let proof_fmt : Format.formatter option =
   formatter_from_environment_variable "PROOF_LOG_OUTPUT" ""
+
+let prooflog_pb_fmt : Format.formatter option =
+  formatter_from_environment_variable "PROOFLOG_PB_OUTPUT" ""
 
 let global_fmt : Format.formatter option =
   formatter_from_environment_variable "GLOBAL_THM_DEF_OUTPUT" ""

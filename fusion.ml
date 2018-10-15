@@ -610,7 +610,7 @@ module Hol : Hol_kernel = struct
         else let c = new_constant(cname,ty); Const(cname,ty) in
              let dth = sequent([],safe_mk_eq c r) in
              the_definitions := dth::(!the_definitions); dth
-    | _ -> failwith "new_basic_definition"
+    | _ -> failwith "new_basic_definition expected term of shape: var = term"
 
 (* ------------------------------------------------------------------------- *)
 (* Handling of type definitions.                                             *)

@@ -51,7 +51,7 @@ let gen_rewrite_tac_lookup tag thl =
 
 let replay_tactic_log (env : env) log : tactic =
   let rec lookup src = match src with
-    | Unknown_src -> failwith ("Can't replay Unknown_src in " ^ tactic_name log)
+    | Unknown_src _ -> failwith ("Can't replay Unknown_src in " ^ tactic_name log)
     | Premise_src th -> th
     | Hypot_src (n,k,th) -> assoc (n,k) env
     | Conj_left_src s -> ASSUME (fst (dest_conj (concl (lookup s))))
@@ -183,17 +183,21 @@ let finalize_proof_log : int -> thm proof_log -> src proof_log = fun before_thms
   let tactic env log =
     let thm th =
       try assoc th env with Not_found ->
-      if thm_id th < before_thms then Premise_src th else
-      match dest_thm th with
-          [h],c when h == c -> Assume_src c
-        | _ -> if false then (
-                 Printf.printf "Unknown src for tactic %s:\n" (tactic_name log);
-                 if false then (
-                   Printf.printf "  thm: %s\n" (string_of_thm th);
-                   List.iter (fun (th,s) -> Printf.printf "  %s: %s\n"
-                                            (print_to_string sexp_print (sexp_src s))
-                                            (string_of_thm th)) env));
-               Unknown_src
+        if thm_id th < before_thms then Premise_src th
+        else
+          match dest_thm th with
+              [h],c when h == c -> Assume_src c
+            | _ -> if false then (
+                     Printf.printf
+                         "Unknown src for tactic %s:\n"
+                         (tactic_name log);
+                     if false then (
+                       Printf.printf "  thm: %s\n" (string_of_thm th);
+                       List.iter (fun (th,s) -> Printf.printf "  %s: %s\n"
+                                                (print_to_string sexp_print
+                                                    (sexp_src s))
+                                                (string_of_thm th)) env));
+                   Unknown_src th
     in match log with
       | Fake_log -> failwith "Can't finalize Fake_log"
       | Conv_tac_log conv -> Conv_tac_log conv

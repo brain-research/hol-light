@@ -6,7 +6,11 @@ open Equal;;
 
 module Parse : sig
   val parse : string -> tactic
+  (* A named theorem can be referred to by name in a tactic parameter *)
   val name_thm : string -> thm -> unit
+  (* A theorem given index n can be referred to as "THM n" in a tactic
+   * parameter *)
+  val index_thm : int -> thm -> unit
 end =
 struct
   type data = string * int
@@ -116,6 +120,7 @@ struct
     fn Metis.ASM_METIS_TAC thl, "ASM_METIS_TAC";
     fn Ind_defs.BACKCHAIN_TAC th, "BACKCHAIN_TAC";
     fn CHEAT_TAC, "CHEAT_TAC";
+    fn CHOOSE_TAC th, "CHOOSE_TAC";
     fn CONJ_TAC, "CONJ_TAC";
     fn CONTR_TAC th, "CONTR_TAC";
     fn (CONV_TAC " ") conv, "CONV_TAC";
@@ -125,10 +130,12 @@ struct
     fn DISJ_CASES_TAC th, "DISJ_CASES_TAC";
     fn EQ_TAC, "EQ_TAC";
     fn EXISTS_TAC tm, "EXISTS_TAC";
+    fn GEN_TAC, "GEN_TAC";
     fn (Simp.GEN_REWRITE_TAC " ") convfn thl, "GEN_REWRITE_TAC";
     fn Itab.ITAUT_TAC, "ITAUT_TAC";
     fn MATCH_ACCEPT_TAC th, "MATCH_ACCEPT_TAC";
     fn MATCH_MP_TAC th, "MATCH_MP_TAC";
+    fn Meson.MESON_TAC thl, "MESON_TAC";
     fn MK_COMB_TAC, "MK_COMB_TAC";
     fn MP_TAC th, "MP_TAC";
     fn Simp.ONCE_REWRITE_TAC thl, "ONCE_REWRITE_TAC";
@@ -179,6 +186,13 @@ struct
       let remainder = String.sub s1 i (String.length s1 - i) in
       fail d "end of input" remainder)
 
+  let theorem_index = Hashtbl.create 1000
+  let thm_of_index i = try
+      Hashtbl.find theorem_index i
+    with Not_found ->
+      failwith ("No theorem exists with index "^(string_of_int i))
+  let () = add_th [fn thm_of_index n, "THM"]
   let name_thm name theorem = add_th [fn theorem, name]
+  let index_thm = Hashtbl.add theorem_index
 end
 include Parse
