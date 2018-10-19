@@ -47,6 +47,7 @@ parse_as_infix("=",(12,"right"));;
 let log_new_basic_definition tm =
   let ret_thm = new_basic_definition tm in
   global_fmt_print "fusion.new_basic_definition" ret_thm;
+  thm_db_print_definition "BASIC" ret_thm tm;
   ret_thm;;
 
 

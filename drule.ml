@@ -494,4 +494,6 @@ let new_definition tm =
                   TRANS ith (BETA_CONV(rand(concl ith)))) largs th1 in
   let rvs = filter (not o C mem avs) largs in
   let ret_thm = itlist GEN rvs (itlist GEN avs th2) in
-  global_fmt_print "drule.new_definition" ret_thm; ret_thm;;
+  global_fmt_print "drule.new_definition" ret_thm;
+  thm_db_print_definition "DRULE" ret_thm tm;
+  ret_thm;;

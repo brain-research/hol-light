@@ -111,7 +111,9 @@ let new_recursive_definition =
   fun ax tm ->
     try let th = tryfind (find_redefinition tm) (!the_recursive_definitions) in
         warn true "Benign redefinition of recursive function";
-        global_fmt_print "recursion.new_recursive_definition.lookup" th; th
+        global_fmt_print "recursion.new_recursive_definition.lookup" th;
+        thm_db_print_definition "RECURSIVE.redefinition" th tm;
+        th
     with Failure _ ->
     let rawcls = conjuncts tm in
     let spcls = map (snd o strip_forall) rawcls in
@@ -125,4 +127,6 @@ let new_recursive_definition =
     let dths = map2 SPECL fvs (CONJUNCTS dth) in
     let th = end_itlist CONJ dths in
     the_recursive_definitions := th::(!the_recursive_definitions);
-    global_fmt_print "recursion.new_recursive_definition" th; th;;
+    global_fmt_print "recursion.new_recursive_definition" th;
+    thm_db_print_definition "RECURSIVE" th tm;
+    th;;

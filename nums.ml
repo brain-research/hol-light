@@ -314,8 +314,12 @@ let new_specification =
                                names' = names && aconv (concl th') (concl th))
                              (!the_specifications)) in
           warn true ("Benign respecification");
-          global_fmt_print "nums.new_specification.lookup" sth; sth
+          global_fmt_print "nums.new_specification.lookup" sth;
+          thm_db_print_specification "SPEC.redefinition" sth names;
+          sth
       with Failure _ ->
           let sth = specifies names th in
           the_specifications := ((names,th),sth)::(!the_specifications);
-          global_fmt_print "nums.new_specification" sth; sth;;
+          global_fmt_print "nums.new_specification" sth;
+          thm_db_print_specification "SPEC" sth names;
+          sth;;

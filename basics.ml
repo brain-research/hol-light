@@ -159,12 +159,31 @@ let rec type_match vty cty sofar =
 (* Conventional matching version of mk_const (but with a sanity test).       *)
 (* ------------------------------------------------------------------------- *)
 
-let mk_mconst(c,ty) =
+let rec mk_mconst_with_hack(c,ty) =
+  try
+      let uty = get_const_type c in
+      let mat = type_match uty ty [] in
+      let con = mk_const(c,mat) in
+      if type_of con = ty then con else fail()
+  with
+  | Failure "find" ->
+    let () = Printf.eprintf "Unsoundly creating new_constant: %s\n" c in
+    let _ = new_constant(c,ty) in
+    mk_mconst_with_hack(c,ty)
+  | Failure _ ->
+    failwith ("mk_const: generic type cannot be instantiated: " ^ c)
+  ;;
+
+let cheat_builtin =
+  try let _ = Sys.getenv "CHEAT_BUILTIN" in true with _ -> false;;
+
+let mk_mconst(c,ty) = if cheat_builtin then mk_mconst_with_hack(c,ty) else
   try let uty = get_const_type c in
       let mat = type_match uty ty [] in
       let con = mk_const(c,mat) in
       if type_of con = ty then con else fail()
   with Failure _ -> failwith "mk_const: generic type cannot be instantiated";;
+
 
 (* ------------------------------------------------------------------------- *)
 (* Like mk_comb, but instantiates type variables in rator if necessary.      *)

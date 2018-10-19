@@ -182,7 +182,9 @@ let new_definition : term -> thm =
         ignore(PART_MATCH I th' (snd(strip_forall(concl th))));
         warn true "Benign redefinition";
         let ret_thm = GEN_ALL (GENL avs th') in
-        global_fmt_print "pair.new_definition.lookup" ret_thm; ret_thm
+        global_fmt_print "pair.new_definition.lookup" ret_thm;
+        thm_db_print_definition "PAIR.redefinition" ret_thm tm;
+        ret_thm
     with Failure _ ->
         let l,r = dest_eq def in
         let fn,args = strip_comb l in
@@ -196,7 +198,9 @@ let new_definition : term -> thm =
         let th3 = TRANS th2 (SYM(SUBS_CONV threps r)) in
         let th4 = GEN_ALL (GENL avs th3) in
         the_definitions := th4::(!the_definitions);
-        global_fmt_print "pair.new_definition" th4; th4;;
+        global_fmt_print "pair.new_definition" th4;
+        thm_db_print_definition "PAIR" th4 tm;
+        th4;;
 
 (* ------------------------------------------------------------------------- *)
 (* A few more useful definitions.                                            *)

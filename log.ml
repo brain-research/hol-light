@@ -410,10 +410,6 @@ let rec sexp_flat_tac (Proof_log ((ths, tm), taclog, logl)) =
   sexp_term tm :: (Sleaf (tactic_sep_name taclog) ::
                      List.concat (map sexp_flat_tac logl))
 
-(* Print the first goal (i.e. the original conjecture) from a proof log *)
-let first_goal (Proof_log (goal, taclog, logl)) : sexp =
-  Snode [Sleaf "global_thm"; (sexp_goal goal)]
-
 let referenced_thms plog =
   let seen : (int, unit) Hashtbl.t = Hashtbl.create 1 in
   let rec visit src = match src with
@@ -530,37 +526,6 @@ let get_partition data_counter : data_partition =
 (* Prooflog protobuf printing                                                 *)
 (* ---------------------------------------------------------------------------*)
 
-(* print indented string *)
-let pis fmt (i: int) (s: string) : unit =
-  let indent = String.make i ' ' in
-  pp_print_string fmt (indent ^ s);;
-
-let print_thm_pb
-    (fmt: Format.formatter)
-    (indent: int)
-    ((assumptions, conclusion): term list * term)
-    (thm_counter: int option)  (* thm_counter also controls theorem tag *)
-    : unit =
-  List.iter
-      (fun asm ->
-          pis fmt indent "hypotheses: \"";
-          sexp_print fmt (sexp_term asm);
-          pp_print_string fmt "\"\n";
-      ) assumptions;
-
-  (* CONCLUSION *)
-  pis fmt indent "conclusion: \"";
-  sexp_print fmt (sexp_term conclusion);
-  pp_print_string fmt "\"\n";
-
-  (* TAG and NAME *)
-  match thm_counter with
-    Some thm_num ->
-      pis fmt indent "tag: THEOREM\n";
-      (* TODO(mrabe): add theorem numbers that match those in thm database *)
-  | None ->
-      pis fmt indent "tag: GOAL\n";;
-
 let rec extract_thm (asm_thm: src) : thm = match asm_thm with
     Hypot_src (_, _, thm)
   | Premise_src thm
@@ -570,46 +535,46 @@ let rec extract_thm (asm_thm: src) : thm = match asm_thm with
   | Conj_right_src asm_thm -> extract_thm asm_thm
 
 let tactic_argument_term fmt (t: term) : unit =
-  pp_print_string fmt "    parameters {\n";
-  pp_print_string fmt "      parameter_type: TERM\n";
-  pp_print_string fmt "      term: \"`";
+  pp_print_string fmt " parameters {";
+  pp_print_string fmt " parameter_type: TERM";
+  pp_print_string fmt " term: \"`";
   sexp_print fmt (sexp_term t);
-  pp_print_string fmt  "`\"\n";
-  pp_print_string fmt "    }\n";;
+  pp_print_string fmt  "`\"";
+  pp_print_string fmt "}";;
 
 let tactic_argument_string
     fmt pb_type pb_field
     (print_item: 'a -> unit)
     (items: 'a list) : unit =
-  pp_print_string fmt "    parameters {\n";
-  pp_print_string fmt ("      parameter_type: " ^ pb_type ^ "\n");
+  pp_print_string fmt " parameters {";
+  pp_print_string fmt (" parameter_type: " ^ pb_type);
   List.iter
       (fun item ->
-        pp_print_string fmt ("      " ^ pb_field ^ ": \"");
+        pp_print_string fmt (" " ^ pb_field ^ ": \"");
         print_item item;
-        pp_print_string fmt "\"\n";)
+        pp_print_string fmt "\"";)
       items;
-  pp_print_string fmt "    }\n";;
+  pp_print_string fmt "}";;
 
 let tactic_argument_thms
     fmt
     (ptype: string)
     (print_item: 'a -> unit)
     (items: 'a list) : unit =
-  pp_print_string fmt "    parameters {\n";
-  pp_print_string fmt ("      parameter_type: " ^ ptype ^ "\n");
+  pp_print_string fmt " parameters {";
+  pp_print_string fmt (" parameter_type: " ^ ptype);
   List.iter
       (fun item ->
-        pp_print_string fmt "      theorems {\n";
+        pp_print_string fmt " theorems {";
         print_item item;
-        pp_print_string fmt "      }\n";)
+        pp_print_string fmt "}";)
       items;
-  pp_print_string fmt "    }\n";;
+  pp_print_string fmt "}";;
 
-let tactic_argument_thm fmt ptype (srcs: src list) : unit =
+  let tactic_argument_thm fmt ptype (srcs: src list) : unit =
   tactic_argument_thms
       fmt ptype
-      (fun thm -> print_thm_pb fmt 8 (dest_thm thm) None)
+      (fun thm -> print_thm_pb fmt (dest_thm thm) "GOAL" None None None)
       (map extract_thm srcs);;
 
 let tactic_arguments_pb fmt (taclog : src tactic_log) =
@@ -687,7 +652,7 @@ let tactic_arguments_pb fmt (taclog : src tactic_log) =
       tactic_argument_string fmt "CONV" "conv" (pp_print_string fmt) [conv];
       tactic_argument_thm fmt "THEOREM_LIST" thms;;
 
-let goal_to_thm_tuple g : term list * term =
+let goal_to_thm_tuple (g: goal) : term list * term =
   (map concl (map snd (fst g)), snd g)
 
 let print_tactic_application_pb
@@ -695,32 +660,36 @@ let print_tactic_application_pb
     (tl: src tactic_log)
     (subgoals: src proof_log list) =
   let tname: string = String.uppercase (tactic_name_short tl) in
-  pp_print_string fmt ("  proofs {\n    tactic: \"" ^ tname ^ "\"\n");
+  pp_print_string fmt (" proofs { tactic: \"" ^ tname ^ "\"");
   tactic_arguments_pb fmt tl;
   List.iter
     (fun (pl: 'a proof_log) ->
       match pl with Proof_log (subgoal, _, _) ->
-        pp_print_string fmt "    subgoals {\n";
-        print_thm_pb fmt 6 (goal_to_thm_tuple subgoal) None;
-        pp_print_string fmt "    }\n"
+        pp_print_string fmt " subgoals {";
+        print_thm_pb fmt (goal_to_thm_tuple subgoal) "GOAL"  None None None;
+        pp_print_string fmt "}"
     ) subgoals;
-  pp_print_string fmt "  }\n";;
+  pp_print_string fmt " result: SUCCESS";
+  pp_print_string fmt " closed: true";
+  pp_print_string fmt "}";;
 
 let rec print_prooflog_pb
-    (thm_counter: int option)
+    (tag: string)
     (log: src proof_log)
     (fmt: Format.formatter) : unit =
   match log with Proof_log (g, tl, subgoals) ->
-    pp_print_string fmt "nodes {\n";
-    pp_print_string fmt "  goal {\n";
-    print_thm_pb fmt 4 (goal_to_thm_tuple g) thm_counter;
-    pp_print_string fmt "  }\n";
+    pp_print_string fmt "nodes {";
+    pp_print_string fmt " goal {";
+    print_thm_pb fmt (goal_to_thm_tuple g) tag  None None None;
+    pp_print_string fmt "}";
+    pp_print_string fmt " status: PROVED";
     print_tactic_application_pb fmt tl subgoals;
-    pp_print_string fmt "}\n";
+    pp_print_string fmt "}";
 
     (* prooflog nodes for subgoals *)
-    List.iter (fun pl -> print_prooflog_pb None pl fmt) subgoals
-    ;;
+    List.iter (fun pl -> print_prooflog_pb "GOAL" pl fmt) subgoals;
+
+    if String.equal tag "THEOREM" then pp_print_string fmt "\n" else ();;
 
 (* ---------------------------------------------------------------------------*)
 (* print_logs is the entry point for all proof logging.                       *)
@@ -729,7 +698,7 @@ let rec print_prooflog_pb
 (* goes in test, valid, or train.                                             *)
 (* ---------------------------------------------------------------------------*)
 let thm_counter = ref 0;;
-let print_logs (log : 'a proof_log) =
+let print_logs (log : src proof_log) =
   incr thm_counter;
 
   try_to_print
@@ -738,9 +707,12 @@ let print_logs (log : 'a proof_log) =
   try_to_print
       (fun log -> print_sexps [sexp_subgoal_dependendies log])
       log subgoal_dependencies_fmt;
+
+  let Proof_log (goal, taclog, logl) = log in
   try_to_print
-      (fun log -> print_sexps [first_goal log])
+      (fun log -> print_sexps [Snode [Sleaf "global_thm"; (sexp_goal goal)]])
       log global_fmt;
+  thm_db_print_theorem (goal_to_thm_tuple goal);
 
   let partition : data_partition = get_partition !thm_counter in
   try_to_print
@@ -754,5 +726,5 @@ let print_logs (log : 'a proof_log) =
       log (training_proof_fmt partition);
 
   try_to_print
-      (print_prooflog_pb (Some !thm_counter))
+      (print_prooflog_pb "THEOREM")
       log prooflog_pb_fmt;;
