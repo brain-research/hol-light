@@ -88,11 +88,12 @@ let FINITE_CART_SUBSET_LEMMA = prove
 (* Index type for "multivectors" (k-vectors for all k <= N).                 *)
 (* ------------------------------------------------------------------------- *)
 
-let multivector_tybij_th = prove
- (`?s. s SUBSET (1..dimindex(:N))`,
-  MESON_TAC[EMPTY_SUBSET]);;
+let multivector_tybij_th = if Cart.need_complex_definitions then Cart.multivector_tybij_th else
+  prove
+    (`?s. s SUBSET (1..dimindex(:N))`,
+    MESON_TAC[EMPTY_SUBSET]);;
 
-let multivector_tybij =
+let multivector_tybij = if Cart.need_complex_definitions then Cart.multivector_tybij else
   new_type_definition "multivector" ("mk_multivector","dest_multivector")
     multivector_tybij_th;;
 

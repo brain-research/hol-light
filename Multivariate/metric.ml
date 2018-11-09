@@ -90,27 +90,31 @@ let CONJ_LIST = end_itlist CONJ;;
 (* General notion of a topology.                                             *)
 (* ------------------------------------------------------------------------- *)
 
-let istopology = new_definition
+let istopology = if Cart.need_complex_definitions then Cart.istopology else
+ new_definition
  `istopology L <=>
         {} IN L /\
         (!s t. s IN L /\ t IN L ==> (s INTER t) IN L) /\
         (!k. k SUBSET L ==> (UNIONS k) IN L)`;;
 
-let topology_tybij_th = prove
- (`?t:(A->bool)->bool. istopology t`,
-  EXISTS_TAC `UNIV:(A->bool)->bool` THEN REWRITE_TAC[istopology; IN_UNIV]);;
+let topology_tybij_th = if Cart.need_complex_definitions then Cart.topology_tybij_th else
+ prove
+   (`?t:(A->bool)->bool. istopology t`,
+   EXISTS_TAC `UNIV:(A->bool)->bool` THEN REWRITE_TAC[istopology; IN_UNIV]);;
 
-let topology_tybij =
+let topology_tybij = if Cart.need_complex_definitions then Cart.topology_tybij else
   new_type_definition "topology" ("topology","open_in") topology_tybij_th;;
 
-let ISTOPOLOGY_OPEN_IN = prove
- (`istopology(open_in top)`,
-  MESON_TAC[topology_tybij]);;
+let ISTOPOLOGY_OPEN_IN =
+  prove
+    (`istopology(open_in top)`,
+    MESON_TAC[topology_tybij]);;
 
-let TOPOLOGY_EQ = prove
- (`!top1 top2. top1 = top2 <=> !s. open_in top1 s <=> open_in top2 s`,
-  REPEAT GEN_TAC THEN GEN_REWRITE_TAC "Multivariate/metric.ml:RAND_CONV" RAND_CONV [GSYM FUN_EQ_THM] THEN
-  REWRITE_TAC[ETA_AX] THEN MESON_TAC[topology_tybij]);;
+let TOPOLOGY_EQ =
+  prove
+    (`!top1 top2. top1 = top2 <=> !s. open_in top1 s <=> open_in top2 s`,
+    REPEAT GEN_TAC THEN GEN_REWRITE_TAC "Multivariate/metric.ml:RAND_CONV" RAND_CONV [GSYM FUN_EQ_THM] THEN
+    REWRITE_TAC[ETA_AX] THEN MESON_TAC[topology_tybij]);;
 
 (* ------------------------------------------------------------------------- *)
 (* Infer the "universe" from union of all sets in the topology.              *)
@@ -1196,10 +1200,11 @@ let FRONTIER_OF_SUBTOPOLOGY_OPEN = prove
 (* A variant of nets (slightly non-standard but good for our purposes).      *)
 (* ------------------------------------------------------------------------- *)
 
-let net_tybij = new_type_definition "net" ("mk_net","netord")
- (prove
-   (`?g:A->A->bool. !x y. (!z. g z x ==> g z y) \/ (!z. g z y ==> g z x)`,
-    EXISTS_TAC `\x:A y:A. F` THEN REWRITE_TAC[]));;
+let net_tybij = if Cart.need_complex_definitions then Cart.net_tybij else
+  new_type_definition "net" ("mk_net","netord")
+     (prove
+       (`?g:A->A->bool. !x y. (!z. g z x ==> g z y) \/ (!z. g z y ==> g z x)`,
+       EXISTS_TAC `\x:A y:A. F` THEN REWRITE_TAC[]));;
 
 let NET = prove
  (`!n x y. (!z. netord n z x ==> netord n z y) \/
@@ -1439,15 +1444,15 @@ let EVENTUALLY_NO_SUBSEQUENCE = prove
 (* ------------------------------------------------------------------------- *)
 (* Metric spaces.                                                            *)
 (* ------------------------------------------------------------------------- *)
+let is_metric_space = if Cart.need_complex_definitions then Cart.is_metric_space else
+  new_definition
+    `is_metric_space (s,d) <=>
+     (!x y:A. x IN s /\ y IN s ==> &0 <= d(x,y)) /\
+     (!x y. x IN s /\ y IN s ==> (d(x,y) = &0 <=> x = y)) /\
+     (!x y. x IN s /\ y IN s ==> d(x,y) = d(y,x)) /\
+     (!x y z. x IN s /\ y IN s /\ z IN s ==> d(x,z) <= d(x,y) + d(y,z))`;;
 
-let is_metric_space = new_definition
-  `is_metric_space (s,d) <=>
-   (!x y:A. x IN s /\ y IN s ==> &0 <= d(x,y)) /\
-   (!x y. x IN s /\ y IN s ==> (d(x,y) = &0 <=> x = y)) /\
-   (!x y. x IN s /\ y IN s ==> d(x,y) = d(y,x)) /\
-   (!x y z. x IN s /\ y IN s /\ z IN s ==> d(x,z) <= d(x,y) + d(y,z))`;;
-
-let metric_tybij =
+let metric_tybij = if Cart.need_complex_definitions then Cart.metric_tybij else
  (new_type_definition "metric" ("metric","dest_metric") o prove)
  (`?m:(A->bool)#(A#A->real). is_metric_space m`,
   EXISTS_TAC `({}:A->bool,(\p:A#A. &0))` THEN
