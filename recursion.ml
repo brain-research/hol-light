@@ -12,6 +12,7 @@ open Lib;;
 open Fusion;;
 open Basics;;
 open Printer;;
+open Pb_printer;;
 open Equal;;
 open Bool;;
 open Drule;;
@@ -103,18 +104,32 @@ let prove_recursive_functions_exist =
 (* Version that defines function(s).                                         *)
 (* ------------------------------------------------------------------------- *)
 
-let new_recursive_definition =
-  let the_recursive_definitions = ref [] in
-  let find_redefinition tm th =
-    let th' = PART_MATCH I th tm in
-    ignore(PART_MATCH I th' (concl th)); th' in
-  fun ax tm ->
-    try let th = tryfind (find_redefinition tm) (!the_recursive_definitions) in
-        warn true "Benign redefinition of recursive function";
-        global_fmt_print "recursion.new_recursive_definition.lookup" th;
-        thm_db_print_definition "RECURSIVE.redefinition" th tm;
-        th
-    with Failure _ ->
+let the_recursive_definitions = Hashtbl.create 1024;;
+let remember_recursive_definition = Hashtbl.add the_recursive_definitions;;
+let find_recursive_definition (tm_fp: int) : thm option =
+  try Some (Hashtbl.find the_recursive_definitions tm_fp)
+  with Not_found -> None;;
+
+let new_recursive_definition ax tm =
+  let tm_fp = Theorem_fingerprint.term_fingerprint ([], tm) in
+  (* Printer.current_encoding := Printer.Sexp;
+  let term_str = Printer.str_of_sexp (Printer.sexp_term tm) in
+  Printf.eprintf "Term_str %s\n   has tm_fp %d\n%!" term_str tm_fp;
+  (try
+    let looped_tm = Parser.decode_term term_str in
+    let tm_fp' = Theorem_fingerprint.term_fingerprint ([], looped_tm) in
+    if tm_fp != tm_fp' then Printf.eprintf "Seeing fp %d vs %d\n%!" tm_fp tm_fp' else ();
+  with Failure s ->
+    Printf.eprintf "Error parsing term from sexp: %s\n  with error %s\n%!" term_str s);
+  *)
+  match find_recursive_definition tm_fp with
+    Some thm ->
+      warn true "Benign redefinition of recursive function";
+      global_fmt_print "recursion.new_recursive_definition.lookup" thm;
+      thm
+  | None ->
+    Theorem_fingerprint.register_thm ax;  (* for re-definitions *)
+    let last_known_constant = last_constant() in
     let rawcls = conjuncts tm in
     let spcls = map (snd o strip_forall) rawcls in
     let lpats = map (strip_comb o lhand) spcls in
@@ -123,10 +138,12 @@ let new_recursive_definition =
     let gcls = map2 (curry list_mk_forall) fvs rawcls in
     let eth = prove_recursive_functions_exist ax (list_mk_conj gcls) in
     let evs,bod = strip_exists(concl eth) in
-    let dth = new_specification (map (fst o dest_var) evs) eth in
+    let dth = new_specification_log_opt false (map (fst o dest_var) evs) eth in
     let dths = map2 SPECL fvs (CONJUNCTS dth) in
     let th = end_itlist CONJ dths in
-    the_recursive_definitions := th::(!the_recursive_definitions);
+    remember_recursive_definition tm_fp th;
     global_fmt_print "recursion.new_recursive_definition" th;
-    thm_db_print_definition "RECURSIVE" th tm;
+    let new_constants = constants_since last_known_constant in
+    thm_db_print_definition true "RECURSIVE" th tm (Some ax) new_constants;
+    (* Printf.eprintf "Recursive definition for: %s with fp %d\n%!" (fst (hd new_constants)) tm_fp; *)
     th;;

@@ -12,6 +12,7 @@ open Lib;;
 open Fusion;;
 open Basics;;
 open Printer;;
+open Pb_printer;;
 open Nets;;
 open Parser;;
 open Equal;;
@@ -480,20 +481,35 @@ let HIGHER_REWRITE_CONV =
 (* Derived principle of definition justifying |- c x1 .. xn = t[x1,..,xn]    *)
 (* ------------------------------------------------------------------------- *)
 
-let new_definition tm =
-  let avs,bod = strip_forall tm in
-  let l,r = try dest_eq bod
-    with Failure _ -> failwith "new_definition: Not an equation" in
-  let lv,largs = strip_comb l in
-  let rtm = try list_mk_abs(largs,r)
-    with Failure _ -> failwith "new_definition: Non-variable in LHS pattern" in
-  let def = mk_eq(lv,rtm) in
-  let th1 = log_new_basic_definition def in
-  let th2 = rev_itlist
-    (fun tm th -> let ith = AP_THM th tm in
-                  TRANS ith (BETA_CONV(rand(concl ith)))) largs th1 in
-  let rvs = filter (not o C mem avs) largs in
-  let ret_thm = itlist GEN rvs (itlist GEN avs th2) in
-  global_fmt_print "drule.new_definition" ret_thm;
-  thm_db_print_definition "DRULE" ret_thm tm;
-  ret_thm;;
+let the_drule_definitions = Hashtbl.create 1024;;
+let remember_drule_definition : term -> thm -> unit =
+  Hashtbl.add the_drule_definitions;;
+let find_drule_definition (tm : term) : thm option =
+  try Some (Hashtbl.find the_drule_definitions tm)
+  with Not_found -> None;;
+
+let new_definition_log_opt (log: bool) tm =
+  match find_drule_definition tm with
+    Some thm -> thm (* Redefinition *)
+  | None ->
+    let last_known_constant = last_constant() in
+    let avs,bod = strip_forall tm in
+    let l,r = try dest_eq bod
+      with Failure _ -> failwith "new_definition: Not an equation" in
+    let lv,largs = strip_comb l in
+    let rtm = try list_mk_abs(largs,r)
+      with Failure _ -> failwith "new_definition: Non-variable in LHS pattern" in
+    let def = mk_eq(lv,rtm) in
+    let th1 = new_basic_definition_log_opt false def in
+    let th2 = rev_itlist
+      (fun tm th -> let ith = AP_THM th tm in
+                    TRANS ith (BETA_CONV(rand(concl ith)))) largs th1 in
+    let rvs = filter (not o C mem avs) largs in
+    let ret_thm = itlist GEN rvs (itlist GEN avs th2) in
+    global_fmt_print "drule.new_definition" ret_thm;
+    thm_db_print_definition log "DRULE" ret_thm tm None
+      (constants_since last_known_constant);
+    remember_drule_definition tm ret_thm;
+    ret_thm;;
+
+let new_definition = new_definition_log_opt true;;

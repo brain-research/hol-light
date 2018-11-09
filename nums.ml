@@ -13,6 +13,7 @@ open Lib;;
 open Fusion;;
 open Basics;;
 open Printer;;
+open Pb_printer;;
 open Parser;;
 open Equal;;
 open Bool;;
@@ -272,9 +273,14 @@ let is_numeral = can dest_numeral;;
 (* want for some applications.                                               *)
 (* ------------------------------------------------------------------------- *)
 
-let the_specifications = ref [];;
+let the_specifications = Hashtbl.create 1024;;
+let remember_specification : string list * thm -> thm -> unit =
+  Hashtbl.add the_specifications;;
+let find_specification (input: string list * thm) : thm option =
+  try Some (Hashtbl.find the_specifications input)
+  with Not_found -> None;;
 
-let new_specification =
+let new_specification_log_opt (log: bool) =
   let code c = mk_small_numeral (Char.code (c.[0])) in
   let mk_code name =
       end_itlist (curry mk_pair) (map code (explode name)) in
@@ -290,7 +296,7 @@ let new_specification =
     let l,r = dest_comb(concl th1) in
     let rn = mk_comb(r,ntm) in
     let ty = type_of rn in
-    let th2 = new_definition(mk_eq(mk_var(name,ty),rn)) in
+    let th2 = new_definition_log_opt false (mk_eq(mk_var(name,ty),rn)) in
     GEN_REWRITE_RULE ONCE_DEPTH_CONV [GSYM th2]
      (SPEC ntm (CONV_RULE BETA_CONV th1)) in
   let rec specifies names th =
@@ -298,28 +304,32 @@ let new_specification =
       [] -> th
     | name::onames -> let th' = specify name th in
                       specifies onames th' in
-  fun names th ->
-    let asl,c = dest_thm th in
-    if not (asl = []) then
-      failwith "new_specification: Assumptions not allowed in theorem" else
-    if not (frees c = []) then
-      failwith "new_specification: Free variables in predicate" else
-    let avs = fst(strip_exists c) in
-    if length names = 0 || length names > length avs then
-      failwith "new_specification: Unsuitable number of constant names" else
-    if not (check_distinct names) then
-      failwith "new_specification: Constant names not distinct"
-    else
-      try let sth = snd(find (fun ((names',th'),sth') ->
-                               names' = names && aconv (concl th') (concl th))
-                             (!the_specifications)) in
-          warn true ("Benign respecification");
-          global_fmt_print "nums.new_specification.lookup" sth;
-          thm_db_print_specification "SPEC.redefinition" sth names;
-          sth
-      with Failure _ ->
+  fun (names: string list) (th: thm) ->
+    if Theorem_fingerprint.thm_is_known th then ()
+    else (Theorem_fingerprint.register_thm th;
+          thm_db_print_theorem (dest_thm th) None);
+    match find_specification (names, th) with
+      Some thm ->
+        warn true ("Benign respecification");
+        global_fmt_print "nums.new_specification.lookup" thm;
+        thm
+    | None ->
+        Theorem_fingerprint.register_thm th;  (* for re-definitions *)
+        let asl,c = dest_thm th in
+        if not (asl = []) then
+          failwith "new_specification: Assumptions not allowed in theorem" else
+        if not (frees c = []) then
+          failwith "new_specification: Free variables in predicate" else
+        let avs = fst(strip_exists c) in
+        if length names = 0 || length names > length avs then
+          failwith "new_specification: Unsuitable number of constant names" else
+        if not (check_distinct names) then
+          failwith "new_specification: Constant names not distinct"
+        else
           let sth = specifies names th in
-          the_specifications := ((names,th),sth)::(!the_specifications);
+          remember_specification (names, th) sth;
           global_fmt_print "nums.new_specification" sth;
-          thm_db_print_specification "SPEC" sth names;
+          thm_db_print_specification log "SPEC" names th sth;
           sth;;
+
+let new_specification = new_specification_log_opt true;;

@@ -39,6 +39,8 @@ module type Hol_kernel =
       val aty : hol_type
 
       val constants : unit -> (string * hol_type) list
+      val last_constant : unit -> string * hol_type
+      val constants_since : string*hol_type -> (string*hol_type) list
       val get_const_type : string -> hol_type
       val new_constant : string * hol_type -> unit
       val type_of : term -> hol_type
@@ -226,6 +228,20 @@ module Hol : Hol_kernel = struct
 (* ------------------------------------------------------------------------- *)
 
   let constants() = !the_term_constants
+
+(* ------------------------------------------------------------------------- *)
+(* Helper functions to access the most recent constant and the list of       *)
+(* constants introduced since a given constant (in order of introduction).   *)
+(* ------------------------------------------------------------------------- *)
+
+  let last_constant() = hd (constants())
+  let constants_since (const: string*hol_type) : (string*hol_type) list =
+    let rec constants_since_ accum constants =
+      match constants with
+        other :: rest ->
+          if other == const then accum else constants_since_ (other::accum) rest
+      | [] -> failwith "Need to call constants_since with a known definition"
+    in constants_since_ [] (constants())
 
 (* ------------------------------------------------------------------------- *)
 (* Gets type of constant if it succeeds.                                     *)
@@ -597,9 +613,9 @@ module Hol : Hol_kernel = struct
 (* Handling of (term) definitions.                                           *)
 (* ------------------------------------------------------------------------- *)
 
-  let the_definitions = ref ([]:thm list)
+  let the_fusion_definitions = ref ([]:thm list)
 
-  let definitions() = !the_definitions
+  let definitions() = !the_fusion_definitions
 
   let new_basic_definition tm =
     match tm with
@@ -609,7 +625,7 @@ module Hol : Hol_kernel = struct
         then failwith "new_definition: Type variables not reflected in constant"
         else let c = new_constant(cname,ty); Const(cname,ty) in
              let dth = sequent([],safe_mk_eq c r) in
-             the_definitions := dth::(!the_definitions); dth
+             the_fusion_definitions := dth::(!the_fusion_definitions); dth
     | _ -> failwith "new_basic_definition expected term of shape: var = term"
 
 (* ------------------------------------------------------------------------- *)

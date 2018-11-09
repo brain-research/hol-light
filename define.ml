@@ -9,6 +9,7 @@ open Lib;;
 open Fusion;;
 open Basics;;
 open Printer;;
+open Pb_printer;;
 open Parser;;
 open Equal;;
 open Bool;;
@@ -974,6 +975,13 @@ let instantiate_casewise_recursion,
 (* Simple "define" function.                                                 *)
 (* ------------------------------------------------------------------------- *)
 
+let the_define_definitions = Hashtbl.create 1024;;
+let remember_define_definition : term -> thm -> unit =
+  Hashtbl.add the_define_definitions;;
+let find_define_definition (tm : term) : thm option =
+  try Some (Hashtbl.find the_define_definitions tm)
+  with Not_found -> None;;
+
 let define =
   let close_definition_clauses tm =
     let avs,bod = strip_forall tm in
@@ -994,23 +1002,22 @@ let define =
     let th = ASSUME(list_mk_conj ajs) in
     f,itlist GEN avs (itlist PROVE_HYP (CONJUNCTS th) (end_itlist CONJ ths)) in
   fun tm ->
-    let tm' = snd(strip_forall tm) in
-    try let th,th' = tryfind (fun th -> th,PART_MATCH I th tm')
-                             (!the_definitions) in
-        if can (PART_MATCH I th') (concl th) then
-         (warn true "Benign redefinition";
-          global_fmt_print "define.define.lookup" th';
-          thm_db_print_definition "DEFINE.redefinition" th' tm;
-          th')
-        else failwith ""
-    with Failure _ ->
+    let last_known_constant = last_constant() in
+    match find_define_definition tm with
+      Some thm ->
+        warn true "Benign redefinition";
+        global_fmt_print "define.define.lookup" thm;
+        thm
+    | None ->
+      let tm' = snd(strip_forall tm) in
       let f,th = close_definition_clauses tm in
       let etm = mk_exists(f,hd(hyp th)) in
       let th1 = prove_general_recursive_function_exists etm in
-      let th2 = new_specification[fst(dest_var f)] th1 in
+      let th2 = new_specification_log_opt false [fst(dest_var f)] th1 in
       let g = mk_mconst(dest_var f) in
       let th3 = PROVE_HYP th2 (INST [g,f] th) in
-      the_definitions := th3::(!the_definitions);
+      remember_define_definition tm th3;
       global_fmt_print "define.define" th3;
-      thm_db_print_definition "DEFINE" th3 tm;
+      thm_db_print_definition true "DEFINE" th3 tm None
+        (constants_since last_known_constant);
       th3;;

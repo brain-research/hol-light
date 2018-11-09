@@ -12,6 +12,7 @@ open Lib;;
 open Fusion;;
 open Basics;;
 open Printer;;
+open Pb_printer;;
 open Parser;;
 open Equal;;
 open Bool;;
@@ -319,7 +320,12 @@ let prove_monotonicity_hyps =
 (* Part 3: The final user wrapper, with schematic variables added.           *)
 (* ========================================================================= *)
 
-let the_inductive_definitions = ref [];;
+let the_inductive_definitions_tbl = Hashtbl.create 1024;;
+let remember_inductive_definition = Hashtbl.add the_inductive_definitions_tbl;;
+let find_inductive_definition (tm: term) : (thm*thm*thm) option =
+  try
+    Some (Hashtbl.find the_inductive_definitions_tbl tm)
+  with Not_found _ -> None;;
 
 let prove_inductive_relations_exist,new_inductive_definition =
   let rec pare_comb qvs tm =
@@ -348,9 +354,9 @@ let prove_inductive_relations_exist,new_inductive_definition =
   and derive_existence th =
     let defs = filter is_eq (hyp th) in
     itlist EXISTS_EQUATION defs th
-  and make_definitions th =
+  and make_definitions log th =
     let defs = filter is_eq (hyp th) in
-    let dths = map new_definition defs in
+    let dths = map (new_definition_log_opt log) defs in
     let insts = zip (map (lhs o concl) dths) (map lhs defs) in
     rev_itlist (C MP) dths (INST insts (itlist DISCH defs th))
   and unschematize_clauses clauses =
@@ -379,29 +385,32 @@ let prove_inductive_relations_exist,new_inductive_definition =
     let th2 = generalize_schematic_variables true fvs th1 in
     derive_existence th2
   and new_inductive_definition (tm : term) : thm * thm * thm =
-    try let th = tryfind (find_redefinition tm) (!the_inductive_definitions) in
+    match find_inductive_definition tm with
+      Some (thtr: (thm*thm*thm)) ->
         warn true "Benign redefinition of inductive predicate";
         map_triple
           (fun theorem ->
-            global_fmt_print "ind_defs.new_inductive_definition.lookup" theorem;
-            thm_db_print_definition "INDUCTIVE" theorem tm)
-          th;
-        th
-    with Failure _ ->
-    let fvs,th1 = prove_inductive_properties tm in
-    let th2 = generalize_schematic_variables true fvs th1 in
-    let th3 = make_definitions th2 in
-    let avs = fst(strip_forall(concl th3)) in
-    let r,ic = CONJ_PAIR(SPECL avs th3) in
-    let i,c = CONJ_PAIR ic in
-    let thtr = GENL avs r,GENL avs i,GENL avs c in
-    the_inductive_definitions := thtr::(!the_inductive_definitions);
-    map_triple
-      (fun th ->
-        global_fmt_print "ind_defs.new_inductive_definition" th;
-        thm_db_print_definition "INDUCTIVE" th tm;)
-      thtr;
-    thtr in
+            global_fmt_print "ind_defs.new_inductive_definition.lookup" theorem)
+          thtr;
+        thtr
+    | None ->
+      let last_known_constant = last_constant() in
+      let fvs,th1 = prove_inductive_properties tm in
+      let th2 = generalize_schematic_variables true fvs th1 in
+      let th3 = make_definitions false th2 in
+      let avs = fst(strip_forall(concl th3)) in
+      let r,ic = CONJ_PAIR(SPECL avs th3) in
+      let i,c = CONJ_PAIR ic in
+      let thtr = GENL avs r,GENL avs i,GENL avs c in
+      remember_inductive_definition tm thtr;
+      map_triple
+        (fun th ->
+          global_fmt_print "ind_defs.new_inductive_definition" th;
+          thm_db_print_definition true "INDUCTIVE" th tm None
+            (constants_since last_known_constant);)
+        thtr;
+      thtr
+  in
   prove_inductive_relations_exist,new_inductive_definition;;
 
 (* ------------------------------------------------------------------------- *)

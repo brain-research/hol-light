@@ -9,6 +9,7 @@ open List;;
 open Fusion;;
 open Basics;;
 open Printer;;
+open Pb_printer;;
 open Equal;;
 open Drule;;
 
@@ -559,8 +560,8 @@ let tactic_argument_string
 let tactic_argument_thms
     fmt
     (ptype: string)
-    (print_item: 'a -> unit)
-    (items: 'a list) : unit =
+    (print_item: thm -> unit)
+    (items: thm list) : unit =
   pp_print_string fmt " parameters {";
   pp_print_string fmt (" parameter_type: " ^ ptype);
   List.iter
@@ -571,10 +572,11 @@ let tactic_argument_thms
       items;
   pp_print_string fmt "}";;
 
-  let tactic_argument_thm fmt ptype (srcs: src list) : unit =
+let tactic_argument_thm fmt ptype (srcs: src list) : unit =
   tactic_argument_thms
       fmt ptype
-      (fun thm -> print_thm_pb fmt (dest_thm thm) "GOAL" None None None)
+      (fun thm -> print_int_pb fmt "fingerprint"
+                                   (Theorem_fingerprint.fingerprint thm))
       (map extract_thm srcs);;
 
 let tactic_arguments_pb fmt (taclog : src tactic_log) =
@@ -666,7 +668,7 @@ let print_tactic_application_pb
     (fun (pl: 'a proof_log) ->
       match pl with Proof_log (subgoal, _, _) ->
         pp_print_string fmt " subgoals {";
-        print_thm_pb fmt (goal_to_thm_tuple subgoal) "GOAL"  None None None;
+        print_thm_pb fmt (goal_to_thm_tuple subgoal) "GOAL" None None None [] None;
         pp_print_string fmt "}"
     ) subgoals;
   pp_print_string fmt " result: SUCCESS";
@@ -675,19 +677,20 @@ let print_tactic_application_pb
 
 let rec print_prooflog_pb
     (tag: string)
+    (part: data_partition option)
     (log: src proof_log)
     (fmt: Format.formatter) : unit =
   match log with Proof_log (g, tl, subgoals) ->
     pp_print_string fmt "nodes {";
     pp_print_string fmt " goal {";
-    print_thm_pb fmt (goal_to_thm_tuple g) tag  None None None;
+    print_thm_pb fmt (goal_to_thm_tuple g) tag part None None [] None;
     pp_print_string fmt "}";
     pp_print_string fmt " status: PROVED";
     print_tactic_application_pb fmt tl subgoals;
     pp_print_string fmt "}";
 
     (* prooflog nodes for subgoals *)
-    List.iter (fun pl -> print_prooflog_pb "GOAL" pl fmt) subgoals;
+    List.iter (fun pl -> print_prooflog_pb "GOAL" None pl fmt) subgoals;
 
     if String.equal tag "THEOREM" then pp_print_string fmt "\n" else ();;
 
@@ -712,7 +715,6 @@ let print_logs (log : src proof_log) =
   try_to_print
       (fun log -> print_sexps [Snode [Sleaf "global_thm"; (sexp_goal goal)]])
       log global_fmt;
-  thm_db_print_theorem (goal_to_thm_tuple goal);
 
   let partition : data_partition = get_partition !thm_counter in
   try_to_print
@@ -726,5 +728,6 @@ let print_logs (log : src proof_log) =
       log (training_proof_fmt partition);
 
   try_to_print
-      (print_prooflog_pb "THEOREM")
-      log prooflog_pb_fmt;;
+      (print_prooflog_pb "THEOREM" (Some partition))
+      log prooflog_pb_fmt;
+  thm_db_print_theorem (goal_to_thm_tuple goal) (Some partition);;

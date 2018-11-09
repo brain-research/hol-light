@@ -362,7 +362,7 @@ let (ACCEPT_TAC: thm_tactic) =
   fun th (asl,w as g) ->
     if aconv (concl th) w then
       null_meta,[],propagate_thm th g
-    else failwith "ACCEPT_TAC";;
+    else failwith "ACCEPT_TAC: aconv failed (tactics.ml)";;
 
 (* ------------------------------------------------------------------------- *)
 (* Create tactic from a conversion. This allows the conversion to return     *)
@@ -617,7 +617,7 @@ let (MATCH_ACCEPT_TAC:thm_tactic) =
   let rawtac th ((asl,w) as goal) =
     try let ith = PART_MATCH I th w in
         null_meta,[],propagate_thm ith goal th
-    with Failure _ -> failwith "ACCEPT_TAC" in
+    with Failure _ -> failwith "ACCEPT_TAC: PART_MATCH failed (tactics.ml)" in
   fun th -> REPEAT GEN_TAC THEN rawtac th;;
 
 let (MATCH_MP_TAC :thm_tactic) =

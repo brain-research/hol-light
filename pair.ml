@@ -13,6 +13,7 @@ open Lib;;
 open Fusion;;
 open Basics;;
 open Printer;;
+open Pb_printer;;
 open Parser;;
 open Equal;;
 open Bool;;
@@ -21,7 +22,6 @@ open Tactics;;
 open Simp;;
 open Theorems;;
 open Class;;
-open Trivia;;
 open Canon;;
 open Meson;;
 
@@ -160,13 +160,23 @@ extend_basic_rewrites [FST; SND; PAIR];;
 (* Extend definitions to paired varstructs with benignity checking.          *)
 (* ------------------------------------------------------------------------- *)
 
+(*   We don't seem to need the following list anymore.
 let the_definitions = ref
  [SND_DEF; FST_DEF; COMMA_DEF; mk_pair_def; GEQ_DEF; GABS_DEF;
   LET_END_DEF; LET_DEF; one_DEF; I_DEF; o_DEF; COND_DEF; _FALSITY_;
   EXISTS_UNIQUE_DEF; NOT_DEF; F_DEF; OR_DEF; EXISTS_DEF; FORALL_DEF; IMP_DEF;
-  AND_DEF; T_DEF];;
+  AND_DEF; T_DEF; _SEQPATTERN; _UNGUARDED_PATTERN; _GUARDED_PATTERN; _MATCH;
+  _FUNCTION];;
+*)
 
-let new_definition : term -> thm =
+let the_pair_definitions = Hashtbl.create 1024;;
+let remember_pair_definition : term -> thm -> unit =
+  Hashtbl.add the_pair_definitions;;
+let find_pair_definition (tm : term) : thm option =
+  try Some (Hashtbl.find the_pair_definitions tm)
+  with Not_found -> None;;
+
+let new_definition_log_opt : bool -> term -> thm =
   let depair =
     let rec depair gv arg =
       try let l,r = dest_pair arg in
@@ -175,32 +185,33 @@ let new_definition : term -> thm =
       with Failure _ -> [gv,arg] in
     fun arg -> let gv = genvar(type_of arg) in
                gv,depair gv arg in
-  fun tm ->
-    let avs,def = strip_forall tm in
-    try let th,th' = tryfind (fun th -> th,PART_MATCH I th def)
-                             (!the_definitions) in
-        ignore(PART_MATCH I th' (snd(strip_forall(concl th))));
+  fun (log: bool) (tm: term) ->
+    match find_pair_definition tm with
+      Some thm ->
         warn true "Benign redefinition";
-        let ret_thm = GEN_ALL (GENL avs th') in
-        global_fmt_print "pair.new_definition.lookup" ret_thm;
-        thm_db_print_definition "PAIR.redefinition" ret_thm tm;
-        ret_thm
-    with Failure _ ->
+        global_fmt_print "pair.new_definition.lookup" thm;
+        thm
+    | None ->
+        let last_known_constant = last_constant() in
+        let avs,def = strip_forall tm in
         let l,r = dest_eq def in
         let fn,args = strip_comb l in
         let gargs,reps = (I F_F unions) (unzip(map depair args)) in
         let l' = list_mk_comb(fn,gargs) and r' = subst reps r in
-        let th1 = new_definition (mk_eq(l',r')) in
+        let th1 = new_definition_log_opt false (mk_eq(l',r')) in
         let slist = zip args gargs in
         let th2 = INST slist (SPEC_ALL th1) in
         let xreps = map (subst slist o fst) reps in
         let threps = map (SYM o PURE_REWRITE_CONV[FST; SND]) xreps in
         let th3 = TRANS th2 (SYM(SUBS_CONV threps r)) in
         let th4 = GEN_ALL (GENL avs th3) in
-        the_definitions := th4::(!the_definitions);
+        remember_pair_definition tm th4;
         global_fmt_print "pair.new_definition" th4;
-        thm_db_print_definition "PAIR" th4 tm;
+        thm_db_print_definition log "PAIR" th4 tm None
+          (constants_since last_known_constant);
         th4;;
+
+let new_definition = new_definition_log_opt true;;
 
 (* ------------------------------------------------------------------------- *)
 (* A few more useful definitions.                                            *)

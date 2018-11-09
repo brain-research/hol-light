@@ -12,6 +12,7 @@ open Lib;;
 open Fusion;;
 open Basics;;
 open Printer;;
+open Pb_printer;;
 open Preterm;;
 open Parser;;
 open Equal;;
@@ -44,12 +45,32 @@ parse_as_infix("=",(12,"right"));;
 (* Add logging wrapper around new_basic_definition calls.                    *)
 (* ------------------------------------------------------------------------- *)
 
-let log_new_basic_definition tm =
-  let ret_thm = new_basic_definition tm in
-  global_fmt_print "fusion.new_basic_definition" ret_thm;
-  thm_db_print_definition "BASIC" ret_thm tm;
-  ret_thm;;
+let the_basic_definitions = Hashtbl.create 1024;;
+let remember_basic_definition : term -> thm -> unit =
+  Hashtbl.add the_basic_definitions;;
+let find_basic_definition (tm : term) : thm option =
+  try Some (Hashtbl.find the_basic_definitions tm)
+  with Not_found -> None;;
 
+let new_basic_definition_log_opt (log: bool) tm =
+  match find_basic_definition tm with
+    Some thm -> thm
+  | None ->
+    let last_known_constant = last_constant() in
+    let ret_thm =
+      try new_basic_definition tm
+      with Failure msg ->
+        (* let term_string = print_to_string pp_print_term tm in *)
+        let term_string = str_of_sexp (sexp_term tm) in
+        raise (Failure ("Definition failed: " ^ term_string ^ "; " ^ msg))
+    in
+    global_fmt_print "fusion.new_basic_definition" ret_thm;
+    thm_db_print_definition log "BASIC" ret_thm tm None
+      (constants_since last_known_constant);
+    remember_basic_definition tm ret_thm;
+    ret_thm;;
+
+let log_new_basic_definition = new_basic_definition_log_opt true;;
 
 (* ------------------------------------------------------------------------- *)
 (* Special syntax for Boolean equations (IFF).                               *)
@@ -277,11 +298,11 @@ let SPEC =
     try let abs = rand(concl th) in
         CONV_RULE BETA_CONV
          (MP (PINST [snd(dest_var(bndvar abs)),aty] [abs,P; tm,x] pth) th)
-    with Failure _ -> failwith "SPEC";;
+    with Failure _ -> failwith "SPEC (bool.ml)";;
 
 let SPECL tms th =
   try rev_itlist SPEC tms th
-  with Failure _ -> failwith "SPECL";;
+  with Failure _ -> failwith "SPECL (bool.ml)";;
 
 let SPEC_VAR th =
   let bv = variant (thm_frees th) (bndvar(rand(concl th))) in
@@ -304,7 +325,7 @@ let ISPECL tms th =
       let tyins = itlist2 type_match (map (snd o dest_var) avs)
                           (map type_of tms) [] in
       SPECL tms (INST_TYPE tyins th)
-  with Failure _ -> failwith "ISPECL";;
+  with Failure _ -> failwith "ISPECL  (bool.ml)";;
 
 let GEN =
   let pth = SYM(CONV_RULE (RAND_CONV BETA_CONV)

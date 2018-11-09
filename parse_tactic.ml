@@ -3,14 +3,10 @@ open Lib;;
 open Fusion;;
 open Tactics;;
 open Equal;;
+open Theorem_fingerprint;;
 
 module Parse : sig
   val parse : string -> tactic
-  (* A named theorem can be referred to by name in a tactic parameter *)
-  val name_thm : string -> thm -> unit
-  (* A theorem given index n can be referred to as "THM n" in a tactic
-   * parameter *)
-  val index_thm : int -> thm -> unit
 end =
 struct
   type data = string * int
@@ -186,13 +182,9 @@ struct
       let remainder = String.sub s1 i (String.length s1 - i) in
       fail d "end of input" remainder)
 
-  let theorem_index = Hashtbl.create 1000
-  let thm_of_index i = try
-      Hashtbl.find theorem_index i
-    with Not_found ->
-      failwith ("No theorem exists with index "^(string_of_int i))
-  let () = add_th [fn thm_of_index n, "THM"]
+  let () = add_th [fn Theorem_fingerprint.thm_of_index n, "THM"]
+
+  (* A named theorem can be referred to by name in a tactic parameter *)
   let name_thm name theorem = add_th [fn theorem, name]
-  let index_thm = Hashtbl.add theorem_index
 end
 include Parse

@@ -171,7 +171,7 @@ let rec mk_mconst_with_hack(c,ty) =
     let _ = new_constant(c,ty) in
     mk_mconst_with_hack(c,ty)
   | Failure _ ->
-    failwith ("mk_const: generic type cannot be instantiated: " ^ c)
+    failwith ("mk_const_with_hack: generic type cannot be instantiated: " ^ c)
   ;;
 
 let cheat_builtin =
@@ -182,7 +182,9 @@ let mk_mconst(c,ty) = if cheat_builtin then mk_mconst_with_hack(c,ty) else
       let mat = type_match uty ty [] in
       let con = mk_const(c,mat) in
       if type_of con = ty then con else fail()
-  with Failure _ -> failwith "mk_const: generic type cannot be instantiated";;
+  with
+    Failure "find" -> failwith ("mk_const: constant "^c^" not found")
+  | Failure _ -> failwith "mk_const: generic type cannot be instantiated";;
 
 
 (* ------------------------------------------------------------------------- *)

@@ -700,81 +700,9 @@ let tac_params_proof_fmt : data_partition -> (Format.formatter option) =
 let training_proof_fmt : data_partition -> (Format.formatter option) =
   make_fmt_triplet_for_data_split "TRAINING_PROOF_LOG_OUTPUT";;
 
-
-(* ---------------------------------------------------------------------------*)
-(* Protobuf printer functions.                                                *)
-(* ---------------------------------------------------------------------------*)
-let print_sexp_pb_field
-    (fmt: Format.formatter) (field: string) (sexp: sexp) : unit =
-  pp_print_string fmt (" " ^ field ^ ": \"");
-  sexp_print fmt sexp;
-  pp_print_string fmt "\"";;
-
-let print_thm_pb (fmt: Format.formatter)
-    ((assumptions, conclusion): term list * term) (tag: string)
-    (def_type: string option) (def_term: term option)
-    (spec_constants: string list option) : unit =
-  List.iter
-      (fun asm ->
-        print_sexp_pb_field fmt "hypotheses" (sexp_term asm))
-      assumptions;
-  print_sexp_pb_field fmt " conclusion" (sexp_term conclusion);
-  pp_print_string fmt (" tag: " ^ tag);
-  match def_type with
-    None -> ();
-  | Some definition_type ->
-      pp_print_string fmt (" definition_type: \"" ^ definition_type ^ "\"");
-  match def_term with
-    None -> ();
-  | Some term ->
-      print_sexp_pb_field fmt " definition_term" (sexp_term term);
-  match spec_constants with
-    None -> ();
-  | Some constants ->
-      List.iter
-        (fun c -> pp_print_string fmt (" specification_constants: " ^ c))
-        constants;;
-
-(* ---------------------------------------------------------------------------*)
-(* Print functions for theorem database.                                      *)
-(*                                                                            *)
-(* Code cannot move to log.ml as it is needed for very early definitions.     *)
-(* ---------------------------------------------------------------------------*)
 let global_fmt_print source_str th =
   match global_fmt with
     Some fmt ->
       let s = (Snode [Sleaf source_str; (sexp_thm th)]) in
       sexp_print fmt s; pp_print_newline fmt ()
-  | None -> ();;
-
-let thm_db_print_definition
-    (definition_type: string) (theorem: thm) (term: term) : unit =
-  match thm_db_fmt with
-    Some fmt ->
-      pp_print_string fmt "theorems {";
-      print_thm_pb fmt (dest_thm theorem) "DEFINITION"
-          (Some definition_type) (Some term) None;
-      pp_print_string fmt "}\n";
-      Format.pp_print_flush fmt ()
-  | None -> ();;
-
-let thm_db_print_theorem (thm_tuple: term list * term) =
-  match thm_db_fmt with
-    Some fmt ->
-      pp_print_string fmt "theorems {";
-      print_thm_pb fmt thm_tuple "THEOREM" None None None;
-      pp_print_string fmt "}\n";
-      Format.pp_print_flush fmt ()
-  | None -> ();;
-
-let thm_db_print_specification
-     (definition_type: string) (theorem: thm) (constants: string list) : unit =
-  match thm_db_fmt with
-    Some fmt ->
-      pp_print_string fmt "theorems {";
-      print_thm_pb
-          fmt (dest_thm theorem) "DEFINITION"
-          (Some definition_type) None (Some constants);
-      pp_print_string fmt "}\n";
-      Format.pp_print_flush fmt ()
   | None -> ();;
