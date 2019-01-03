@@ -1,0 +1,43 @@
+FROM ocaml/opam:ubuntu-16.04_ocaml-4.03.0
+WORKDIR /home/opam/
+SHELL ["/bin/bash", "-c"]
+ENV PATH="/home/opam/.opam/4.03.0/bin:${PATH}"
+
+### Install num
+RUN opam install num
+
+### Install campl5
+RUN git clone --depth 1 -b rel617 https://github.com/camlp5/camlp5
+RUN cd camlp5 &&\
+  ./configure &&\
+  make world.opt &&\
+  make install &&\
+  # meta/Makefile in camlp5 skips these files which we need, so copy them
+  # manually.
+  cp {main/pcaml,main/quotation,etc/pa_reloc,meta/q_MLast}.{cmi,cmx,o} `camlp5 -where`
+
+### Install grpc
+RUN sudo apt-get update &&\
+  sudo apt-get install -y build-essential autoconf libtool pkg-config clang libc++-dev
+RUN git clone -b 'v1.17.1' --recurse-submodule --depth 1 https://github.com/grpc/grpc
+RUN sudo make -C grpc install-headers_c install-static_c install-pkg-config_c\
+    install-headers_cxx install-static_cxx install-pkg-config_cxx\
+    install-plugins
+RUN sudo make -C grpc/third_party/protobuf install
+
+### Install farmhash
+RUN git clone --depth 1 https://github.com/google/farmhash &&\
+  cd farmhash &&\
+  ./configure
+RUN sudo make -C farmhash install
+
+### Build binaries
+COPY --chown=opam:0 . src/
+RUN make -C src
+
+FROM alpine:latest
+WORKDIR /root/
+COPY --from=0 /home/opam/src/core .
+COPY --from=0 /home/opam/src/main .
+CMD ["./main"]
+EXPOSE 2000

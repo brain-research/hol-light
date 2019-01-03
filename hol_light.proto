@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package n2formal_hol_light;
+
+message Definition {
+  // definition_type is one of BASIC/PAIR/DRULE/DEFINE/RECURSIVE/INDUCTIVE/SPEC
+  string definition_type = 1;
+  // All but SPEC definitions define a term
+  string definition_term = 2;
+  // The constants introduced by this definition
+  repeated string constants = 3;
+  // Fingerprint of a theorem; only for RECURSIVE definitions and specifications
+  int64 theorem_arg = 4;
+}
+
+message Statement {
+  enum Tag {
+    GOAL = 0;
+    THEOREM = 1;
+    DEFINITION = 2;
+  }
+  enum Split {
+    // Default value in case the split information is not relevant.
+    UNKNOWN = 0;
+    // The theorem was trained on.
+    TRAINING = 1;
+    // The theorem was used in monitoring the training process.
+    VALIDATION = 2;
+    // The theorem was not used during the training process in any way.
+    TESTING = 3;
+  }
+  string name = 4;
+  repeated string hypotheses = 1;
+  string conclusion = 2;
+  Tag tag = 3;
+  Split training_split = 5;
+  int64 fingerprint = 6;
+  // Contains all the information needed to obtain the theorem.
+  // Only used when tag = DEFINITION is set
+  Definition definition = 7;
+}
+
+message ApplyTacticRequest {
+  Statement goal = 1;
+  // The tactic is formatted as a string in Polish notation. Supported tactics
+  // are listed in parse_tactic.ml
+  string tactic = 2;
+}
+
+message ApplyTacticResponse {
+  message GoalList {
+    repeated Statement goals = 1;
+  }
+
+  oneof result {
+    GoalList goals = 1;
+    string error = 2;
+  }
+}
+
+message VerifyProofRequest {
+  Statement goal = 1;
+  // Some quirks in HOL allow a successful proof of a goal to produce a slightly
+  // different statement. TODO(stewbasic): Remove those quirks and this field.
+  Statement theorem = 4;
+  // Tactics are formatted as in ApplyTacticRequest, and given in the order of
+  // application. That is, if a tree of goals is constructed through successive
+  // calls to ApplyTactic, preserving the order of child nodes in
+  // ApplyTacticResponse, then a depth-first search of the tree gives the list
+  // of tactics required here.
+  repeated string tactics = 2;
+}
+
+message VerifyProofResponse {
+  bool sound = 1;
+  string error_msg = 2;
+}
+
+service HolLightService {
+  // Determines the result of applying a tactic to a goal.
+  rpc ApplyTactic(ApplyTacticRequest) returns (ApplyTacticResponse) {}
+  // Verifies that a sequence of tactics proves a goal using the HOL Light core.
+  rpc VerifyProof(VerifyProofRequest) returns (VerifyProofResponse) {}
+}
