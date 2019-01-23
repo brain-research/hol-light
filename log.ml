@@ -55,6 +55,7 @@ and 'a tactic_log =
   | Raw_conjuncts_tac_log of 'a
   (* term -> tactic *)
   | Undisch_tac_log of term
+  | Undisch_el_tac_log of term  (* flyspeck specific - see tactics_jordan.ml *)
   | X_gen_tac_log of term
   | Exists_tac_log of term
   | X_meta_exists_tac_log of term
@@ -252,6 +253,7 @@ let tactic_name_short taclog =
   | Mp_tac_log _ -> "Mp_tac"
   | Eq_tac_log -> "Eq_tac"
   | Undisch_tac_log _ -> "Undisch_tac"
+  | Undisch_el_tac_log _ -> "Undisch_el_tac"
   | Spec_tac_log _ -> "Spec_tac"
   | X_gen_tac_log _ -> "X_gen_tac"
   | X_choose_tac_log _ -> "X_choose_tac"
@@ -348,6 +350,7 @@ let sexp_tactic_log f taclog =
     | Imp_subst_tac_log th -> Snode [name; f th]
     (* term -> tactic *)
     | Undisch_tac_log tm
+    | Undisch_el_tac_log tm
     | X_gen_tac_log tm
     | Exists_tac_log tm
     | Raw_subgoal_tac_log tm
@@ -430,6 +433,7 @@ let referenced_thms plog =
     | Disch_tac_log
     | Eq_tac_log
     | Undisch_tac_log _
+    | Undisch_el_tac_log _
     | Spec_tac_log _
     | X_gen_tac_log _
     | Exists_tac_log _
@@ -575,8 +579,7 @@ let tactic_argument_thms
 let tactic_argument_thm fmt ptype (srcs: src list) : unit =
   tactic_argument_thms
       fmt ptype
-      (fun thm -> print_int_pb fmt "fingerprint"
-                                   (Theorem_fingerprint.fingerprint thm))
+      (fun thm -> print_thm_pb fmt (dest_thm thm) "GOAL" None (fun _ -> ()))
       (map extract_thm srcs);;
 
 let tactic_arguments_pb fmt (taclog : src tactic_log) =
@@ -614,6 +617,7 @@ let tactic_arguments_pb fmt (taclog : src tactic_log) =
 
   (* term -> tactic *)
   | Undisch_tac_log term
+  | Undisch_el_tac_log term
   | X_gen_tac_log term
   | Exists_tac_log term
   | Raw_subgoal_tac_log term
@@ -654,8 +658,32 @@ let tactic_arguments_pb fmt (taclog : src tactic_log) =
       tactic_argument_string fmt "CONV" "conv" (pp_print_string fmt) [conv];
       tactic_argument_thm fmt "THEOREM_LIST" thms;;
 
+
+(* We assume the asl of goals contains only reflexive thms: A |- A.
+   This function prints a comment when that assumption is violated. *)
+let refl_thm_to_concl_temp (thms: thm list) : term list =
+  let assert_refl (th: thm) : term =
+    match dest_thm th with
+      (hd::[], w) when hd == w -> w
+    | (hd::[], w) -> (try ((ALPHA hd w);
+                           Printf.printf "refl_thm_to_concl[ALPHA]: %s\n"
+                                         (string_of_thm th))
+                      with Failure _ ->
+                        Printf.printf
+                          "FAILURE refl_thm_to_concl[1] assumption != concl:\n %s\n"
+                          (string_of_thm th));
+                     w
+    | (hd::tl, w) -> Printf.printf
+                       "FAILURE refl_thm_to_concl[2] too many assumptions:\n %s\n"
+                       (string_of_thm th);
+                     w
+    | (_, w) -> Printf.printf
+                  "FAILURE refl_thm_to_concl[3] can't match assumptions:\n %s\n"
+                  (string_of_thm th); w in
+  map assert_refl thms
+
 let goal_to_thm_tuple (g: goal) : term list * term =
-  (map concl (map snd (fst g)), snd g)
+  (refl_thm_to_concl_temp (map snd (fst g)), snd g);;
 
 let print_tactic_application_pb
     fmt
@@ -668,7 +696,7 @@ let print_tactic_application_pb
     (fun (pl: 'a proof_log) ->
       match pl with Proof_log (subgoal, _, _) ->
         pp_print_string fmt " subgoals {";
-        print_thm_pb fmt (goal_to_thm_tuple subgoal) "GOAL" None None None [] None;
+        print_thm_pb fmt (goal_to_thm_tuple subgoal) "GOAL" None (fun _ -> ());
         pp_print_string fmt "}"
     ) subgoals;
   pp_print_string fmt " result: SUCCESS";
@@ -676,23 +704,38 @@ let print_tactic_application_pb
   pp_print_string fmt "}";;
 
 let rec print_prooflog_pb
+    (theorem_in_database: thm)
     (tag: string)
     (part: data_partition option)
     (log: src proof_log)
     (fmt: Format.formatter) : unit =
   match log with Proof_log (g, tl, subgoals) ->
+
+    if String.equal tag "THEOREM" then
+    (pp_print_string fmt "theorem_in_database {";
+     print_thm_pb fmt (dest_thm theorem_in_database) "THEOREM" None (fun _ -> ());
+     pp_print_string fmt  "}");
+
     pp_print_string fmt "nodes {";
     pp_print_string fmt " goal {";
-    print_thm_pb fmt (goal_to_thm_tuple g) tag part None None [] None;
+    print_thm_pb fmt (goal_to_thm_tuple g) tag part (fun _ -> ());
     pp_print_string fmt "}";
     pp_print_string fmt " status: PROVED";
     print_tactic_application_pb fmt tl subgoals;
     pp_print_string fmt "}";
 
     (* prooflog nodes for subgoals *)
-    List.iter (fun pl -> print_prooflog_pb "GOAL" None pl fmt) subgoals;
+    List.iter
+      (fun pl -> print_prooflog_pb theorem_in_database "GOAL" None pl fmt)
+      subgoals;
 
-    if String.equal tag "THEOREM" then pp_print_string fmt "\n" else ();;
+    if String.equal tag "THEOREM" then pp_print_string fmt "\n";;
+
+(* ---------------------------------------------------------------------------*)
+(* A set of fingerprints of theorems already logged to suppress duplicates.   *)
+(* Also stores the theorem associated with theorems for proof checking.       *)
+(* ---------------------------------------------------------------------------*)
+let logged_theorems = Hashtbl.create 1024;;
 
 (* ---------------------------------------------------------------------------*)
 (* print_logs is the entry point for all proof logging.                       *)
@@ -701,7 +744,7 @@ let rec print_prooflog_pb
 (* goes in test, valid, or train.                                             *)
 (* ---------------------------------------------------------------------------*)
 let thm_counter = ref 0;;
-let print_logs (log : src proof_log) =
+let print_logs (log : src proof_log) (thm: thm) =
   incr thm_counter;
 
   try_to_print
@@ -727,7 +770,8 @@ let print_logs (log : src proof_log) =
       (fun log -> print_sexps (sexp_proof_log_flatten_stripped sexp_src log))
       log (training_proof_fmt partition);
 
-  try_to_print
-      (print_prooflog_pb "THEOREM" (Some partition))
-      log prooflog_pb_fmt;
-  thm_db_print_theorem (goal_to_thm_tuple goal) (Some partition);;
+  let fp = Theorem_fingerprint.fingerprint thm in
+  if not (Hashtbl.mem logged_theorems fp) then
+      (Hashtbl.add logged_theorems fp thm;
+      try_to_print (print_prooflog_pb thm "THEOREM" None) log prooflog_pb_fmt;
+      thm_db_print_theorem thm None);;

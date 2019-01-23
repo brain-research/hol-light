@@ -128,6 +128,14 @@ let handle_request() =
               " but " ^ string_of_int fingerprint ^
               "; Theorem: " ^ str_of_sexp (sexp_thm (fst (top_thm())))));
         []
+    | 11 (* = kDefineType *) ->
+        let tyname = Comms.receive_string() in
+        let absname = Comms.receive_string() in
+        let repname = Comms.receive_string() in
+        let thm_arg_fp: int = Comms.receive_int() in
+        let thm_arg : thm = thm_of_index thm_arg_fp in
+        let ret_thm = Class.new_type_definition tyname (absname, repname) thm_arg in
+        register_thm ret_thm; []
     ) in
     Sys.set_signal Sys.sigint old_handler;
     result

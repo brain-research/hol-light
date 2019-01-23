@@ -927,11 +927,6 @@ let (TAC_PROOF : goal * tactic -> thm) =
       let log = finalize_proof_log before_thms log in
       add_proof_stats Log.all_stats log;
 
-      (* Generate an index to decide which partition to put in the output:
-         training, testing or validation.
-       *)
-      print_logs log;
-
       (* Try to replay proof to ensure log is consistent *)
       (try
         if !strict then (
@@ -949,6 +944,10 @@ let (TAC_PROOF : goal * tactic -> thm) =
         add_proof_stats Log.replay_stats log
       with Failure s when not !strict ->
         Printf.printf "REPLAY FAILURE: %s\n" s);
+      (* Generate an index to decide which partition to put in the output:
+       * training, testing or validation.
+       *)
+      print_logs log th;
       th
     else failwith "TAC_PROOF: Unsolved goals";;
 
