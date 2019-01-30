@@ -6,13 +6,30 @@ open Fusion;;
 open Basics;;
 open Printer;;
 
+let library_tags = ref ["core"];;
+
+let pb_print_library_tags fmt : unit =
+  List.iter (fun library ->
+    pp_print_string fmt (" library_tag: \"" ^ library ^ "\""))
+    !library_tags;;
+
+let escape_backslashes : string -> string =
+  Str.global_replace (Str.regexp "\\\\") "\\\\\\\\";;
+
+let pp_print_string fmt s = pp_print_string fmt (escape_backslashes s);;
+
+let pb_string_of_thm (th: thm) : string =
+  let th_string = string_of_thm th in
+  let no_newlines = Str.global_replace (Str.regexp "\n") " " th_string in
+  Str.global_replace (Str.regexp "  ") " " no_newlines;;
+
 (* ---------------------------------------------------------------------------*)
 (* Protobuf printer functions.                                                *)
 (* ---------------------------------------------------------------------------*)
 let print_sexp_pb_field
     (fmt: Format.formatter) (field: string) (sexp: sexp) : unit =
   pp_print_string fmt (" " ^ field ^ ": \"");
-  sexp_print fmt sexp;
+  pp_print_string fmt (str_of_sexp sexp);
   pp_print_string fmt "\"";;
 
 let print_int_pb (fmt: Format.formatter) (field_name: string) i : unit =
@@ -76,36 +93,41 @@ let thm_db_print_definition (log: bool) (definition_type: string) (th: thm)
       pp_print_string fmt "theorems {";
       print_thm_pb fmt (dest_thm th) "DEFINITION" None
         (print_definition definition_type (Some term) recursion_thm (map fst constants));
-      pp_print_string fmt (" name: \"" ^ string_of_thm th ^ "\"");
+      pp_print_string fmt (" pretty_printed: \"" ^ pb_string_of_thm th ^ "\"");
+      pb_print_library_tags fmt;
       pp_print_string fmt "}\n";
       Format.pp_print_flush fmt ()
   | None -> ();;
 
 let print_type_definition (tyname: string) (absname: string) (repname: string)
-    (th: thm) : Format.formatter -> unit =
+    (th_arg: thm) : Format.formatter -> unit =
   fun fmt ->
       pp_print_string fmt (" type_name: \"" ^ tyname ^ "\"");
       pp_print_string fmt (" abs_name: \"" ^ absname ^ "\"");
       pp_print_string fmt (" rep_name: \"" ^ repname ^ "\"");
-      print_int_pb fmt "theorem_arg" (Theorem_fingerprint.fingerprint th);;
+      print_int_pb fmt "theorem_arg" (Theorem_fingerprint.fingerprint th_arg);;
 
 let thm_db_print_type_definition (tyname: string)
-    (absname: string) (repname: string) (th: thm) (result: thm) : unit =
+    (absname: string) (repname: string) (th_arg: thm) (th_result: thm) : unit =
   match thm_db_fmt with
     Some fmt ->
       pp_print_string fmt "theorems {";
-      print_thm_pb fmt (dest_thm result) "TYPE_DEFINITION" None
-          (print_type_definition tyname absname repname result);
+      pp_print_string fmt (" pretty_printed: \"" ^ pb_string_of_thm th_result ^ "\"");
+      print_thm_pb fmt (dest_thm th_result) "TYPE_DEFINITION" None
+          (print_type_definition tyname absname repname th_arg);
       pp_print_string fmt "}\n";
       Format.pp_print_flush fmt ()
   | None -> ();;
 
-let thm_db_print_theorem (th: thm) (part: data_partition option) : unit =
+let thm_db_print_theorem (th: thm) (part: data_partition option)
+    (source: string) : unit =
   match thm_db_fmt with
     Some fmt ->
       pp_print_string fmt "theorems {";
       print_thm_pb fmt (dest_thm th) "THEOREM" part (fun _ -> ());
-      pp_print_string fmt (" name: \"" ^ string_of_thm th ^ "\"");
+      pp_print_string fmt (" pretty_printed: \"" ^ pb_string_of_thm th ^ "\"");
+      pb_print_library_tags fmt;
+      pp_print_string fmt (" proof_function: \"" ^ source ^ "\"");
       pp_print_string fmt "}\n";
       Format.pp_print_flush fmt ()
   | None -> ();;
@@ -119,7 +141,8 @@ let thm_db_print_specification (log: bool)
       pp_print_string fmt "theorems {";
       print_thm_pb fmt (dest_thm resulting_theorem) "DEFINITION" None
           (print_definition definition_type None (Some thm_arg) constants);
-      pp_print_string fmt (" name: \"" ^ string_of_thm resulting_theorem ^ "\"");
+      pp_print_string fmt (" pretty_printed: \"" ^ pb_string_of_thm resulting_theorem ^ "\"");
+      pb_print_library_tags fmt;
       pp_print_string fmt "}\n";
       Format.pp_print_flush fmt ()
   | None -> ();;

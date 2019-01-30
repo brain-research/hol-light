@@ -16,7 +16,6 @@ open Parser;;
 open Equal;;
 open Bool;;
 open Drule;;
-open Log;;
 open Tactics;;
 open Itab;;
 open Simp;;
@@ -132,7 +131,7 @@ extend_basic_rewrites [SELECT_REFL];;
 
 let the_type_definitions = ref ([]:((string*string*string)*(thm*thm))list);;
 
-let new_type_definition tyname (absname,repname) th =
+let new_type_definition_no_log tyname (absname, repname) th =
   try let th',tth' = assoc (tyname,absname,repname) (!the_type_definitions) in
       if concl th' <> concl th then failwith "" else
       (warn true "Benign redefinition of type"; tth')
@@ -145,6 +144,11 @@ let new_type_definition tyname (absname,repname) th =
     the_type_definitions := ((tyname,absname,repname),(th,tth))::
                             (!the_type_definitions);
     tth;;
+
+let new_type_definition tyname (absname, repname) th =
+  let tth = new_type_definition_no_log tyname (absname, repname) th in
+  Pb_printer.thm_db_print_type_definition tyname absname repname th tth;
+  tth;;
 
 (* ------------------------------------------------------------------------- *)
 (* Derive excluded middle. The proof is an optimization due to Mark Adams of *)

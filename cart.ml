@@ -337,7 +337,7 @@ let define_finite_type =
     let ns' = "auto_define_finite_type_"^ns in
     let th0 = INST [mk_small_numeral n,n_tm] lemma_pre in
     let th1 = MP th0 (EQF_ELIM(NUM_EQ_CONV(rand(lhand(concl th0))))) in
-    POST_RULE(new_type_definition ns ("mk_"^ns',"dest_"^ns') th1);;
+    POST_RULE(new_type_definition_no_log ns ("mk_"^ns',"dest_"^ns') th1);;
 
 (* ------------------------------------------------------------------------- *)
 (* Predefine the cases 2, 3 and 4, which are especially useful for real^N.   *)
@@ -593,60 +593,3 @@ let PCROSS_INTERS_INTERS,PCROSS_INTERS = (CONJ_PAIR o prove)
   ASM_REWRITE_TAC[INTERS_GSPEC; EXTENSION; FORALL_PASTECART; IN_ELIM_THM;
                   PASTECART_IN_PCROSS; NOT_IN_EMPTY] THEN
   ASM SET_TAC[]);;
-
-
-(* ------------------------------------------------------------------------- *)
-(* Complex new_type_definition                                               *)
-(* ------------------------------------------------------------------------- *)
-
-(* Is fixed to true until type definitions are logged for proof verification. *)
-let need_complex_definitions = true || cheat_builtin;;
-
-(* topology from Multivariate/metric.ml *)
-let istopology =
-  if not need_complex_definitions then TRUTH
-  else new_definition
-        `istopology L <=>
-        {} IN L /\
-        (!s t. s IN L /\ t IN L ==> (s INTER t) IN L) /\
-        (!k. k SUBSET L ==> (UNIONS k) IN L)`;;
-
-let topology_tybij_th = if not need_complex_definitions then TRUTH else prove
- (`?t:(A->bool)->bool. istopology t`,
-  EXISTS_TAC `UNIV:(A->bool)->bool` THEN REWRITE_TAC[istopology; IN_UNIV]);;
-
-let topology_tybij = if not need_complex_definitions then TRUTH else
-  new_type_definition "topology" ("topology","open_in") topology_tybij_th;;
-
-(* net from Multivariate/metric.ml *)
-let net_tybij = if not need_complex_definitions then TRUTH else
- new_type_definition "net" ("mk_net","netord")
- (prove
-   (`?g:A->A->bool. !x y. (!z. g z x ==> g z y) \/ (!z. g z y ==> g z x)`,
-    EXISTS_TAC `\x:A y:A. F` THEN REWRITE_TAC[]));;
-
-(* metric from Multivariate/metric.ml *)
-let is_metric_space = if not need_complex_definitions then TRUTH else
- new_definition
-  `is_metric_space (s,d) <=>
-   (!x y:A. x IN s /\ y IN s ==> &0 <= d(x,y)) /\
-   (!x y. x IN s /\ y IN s ==> (d(x,y) = &0 <=> x = y)) /\
-   (!x y. x IN s /\ y IN s ==> d(x,y) = d(y,x)) /\
-   (!x y z. x IN s /\ y IN s /\ z IN s ==> d(x,z) <= d(x,y) + d(y,z))`;;
-
-let metric_tybij = if not need_complex_definitions then TRUTH else
- (new_type_definition "metric" ("metric","dest_metric") o prove)
- (`?m:(A->bool)#(A#A->real). is_metric_space m`,
-  EXISTS_TAC `({}:A->bool,(\p:A#A. &0))` THEN
-  REWRITE_TAC[is_metric_space; NOT_IN_EMPTY]);;
-
-(* multivector from Multivariate/clifford.ml *)
-let multivector_tybij_th = if not need_complex_definitions then TRUTH else
- prove
- (`?s. s SUBSET (1..dimindex(:N))`,
-   MESON_TAC[EMPTY_SUBSET]);;
-
-let multivector_tybij = if not need_complex_definitions then TRUTH else
-  new_type_definition "multivector" ("mk_multivector","dest_multivector")
-    multivector_tybij_th;;
-

@@ -9,8 +9,9 @@ type response_atom = String of string | Int of int
 let apply_tactic tc = let _ = e (Parse_tactic.parse tc) in []
 let rotate n = let _ = r n in []
 let undo() = let _ = b() in []
-let register_last_thm() = let thm = fst (top_thm()) in
-  register_thm thm
+let register_last_thm() =
+  let thm = fst (top_thm()) in
+  register_thm thm;;
 
 (* -------------------------------------------------------------------------- *
  * This function is hacky. We need to act differently depending on whether    *
@@ -132,10 +133,11 @@ let handle_request() =
         let tyname = Comms.receive_string() in
         let absname = Comms.receive_string() in
         let repname = Comms.receive_string() in
-        let thm_arg_fp: int = Comms.receive_int() in
+        let thm_arg_fp : int = Comms.receive_int() in
         let thm_arg : thm = thm_of_index thm_arg_fp in
         let ret_thm = Class.new_type_definition tyname (absname, repname) thm_arg in
-        register_thm ret_thm; []
+        register_thm ret_thm;
+        []
     ) in
     Sys.set_signal Sys.sigint old_handler;
     result

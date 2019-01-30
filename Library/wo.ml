@@ -24,6 +24,8 @@ open Pair;;
 open Wf;;
 open Sets;;
 
+Pb_printer.library_tags := ["complex"];;
+
 let PBETA_TAC = CONV_TAC "Library/wo.ml:(ONCE_DEPTH_CONV GEN_BETA_CONV)" (ONCE_DEPTH_CONV GEN_BETA_CONV);;
 
 let EXPAND_TAC s = FIRST_ASSUM(SUBST1_TAC o SYM o

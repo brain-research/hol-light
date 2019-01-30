@@ -307,7 +307,7 @@ let new_specification_log_opt (log: bool) =
   fun (names: string list) (th: thm) ->
     (if Theorem_fingerprint.thm_is_known th then ()
     else (Theorem_fingerprint.register_thm th;
-          thm_db_print_theorem th None));
+          thm_db_print_theorem th None "specification"));
     match find_specification (names, th) with
       Some thm ->
         warn true ("Benign respecification");

@@ -947,7 +947,7 @@ let (TAC_PROOF : goal * tactic -> thm) =
       (* Generate an index to decide which partition to put in the output:
        * training, testing or validation.
        *)
-      print_logs log th;
+      print_logs log th "TAC_PROOF";
       th
     else failwith "TAC_PROOF: Unsolved goals";;
 

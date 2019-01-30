@@ -744,7 +744,7 @@ let logged_theorems = Hashtbl.create 1024;;
 (* goes in test, valid, or train.                                             *)
 (* ---------------------------------------------------------------------------*)
 let thm_counter = ref 0;;
-let print_logs (log : src proof_log) (thm: thm) =
+let print_logs (log : src proof_log) (thm: thm) (source: string) =
   incr thm_counter;
 
   try_to_print
@@ -774,4 +774,4 @@ let print_logs (log : src proof_log) (thm: thm) =
   if not (Hashtbl.mem logged_theorems fp) then
       (Hashtbl.add logged_theorems fp thm;
       try_to_print (print_prooflog_pb thm "THEOREM" None) log prooflog_pb_fmt;
-      thm_db_print_theorem thm None);;
+      thm_db_print_theorem thm None source);;
