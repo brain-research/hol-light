@@ -2,10 +2,78 @@
 (* Results intended for Flyspeck.                                            *)
 (* ========================================================================= *)
 
-needs "Multivariate/polytope.ml";;
-needs "Multivariate/realanalysis.ml";;
-needs "Multivariate/geom.ml";;
-needs "Multivariate/cross.ml";;
+set_jrh_lexer;;
+open Lib;;
+open Fusion;;
+open Basics;;
+open Printer;;
+open Preterm;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Ind_defs;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Metis;;
+open Impconv;;
+open Pair;;
+open Nums;;
+open Recursion;;
+open Arith;;
+open Wf;;
+open Calc_num;;
+open Ind_types;;
+open Lists;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Cart;;
+open Define;;
+(* Multivariate *)
+open Wo;;
+open Card;;
+open Permutations;;
+open Products;;
+open Floor;;
+open Misc;;
+open Iter;;
+open Metric;;
+open Vectors;;
+open Determinants;;
+open Topology;;
+open Convex;;
+open Paths;;
+open Polytope;;
+open Degree;;
+open Derivatives;;
+open Integration;;
+open Measure;;
+
+(* Complex *)
+open Binomial;;
+open Complexes;;
+open Canal;;
+open Transcendentals;;
+open Realanalysis;;
+open Moretop;;
+open Cauchy;;
+
+open Geom;;
+open Cross;;
+
+open Rstc;;
+open Num_calc_simp;;
+
 
 prioritize_vector();;
 
@@ -4648,6 +4716,10 @@ let RCONE_GT_NEG = prove
     REWRITE_TAC[VECTOR_ARITH `&2 % v - x - v:real^N = --(x - v)`] THEN
     REWRITE_TAC[DOT_LNEG] THEN REAL_ARITH_TAC]);;
 
+let USING_CONJUNCT_FOR_MP = TAUT `a /\ b /\ (a /\ b ==> c) ==> a /\ b /\ c`;;
+
+Debug_mode.enable_debug_mode();;
+
 let VOLUME_FRUSTT_STRONG = prove
  (`!v0 v1:real^3 h a.
        &0 < a
@@ -4695,7 +4767,7 @@ let VOLUME_FRUSTT_STRONG = prove
   ASM_SIMP_TAC[REAL_POW_DIV; REAL_POW_LT; REAL_LT_RDIV_EQ] THEN
   REWRITE_TAC[REAL_ARITH `(&0 * x < y /\ u < v) /\ &0 < y /\ y < h <=>
                           &0 < y /\ y < h /\ u < v`] THEN
-  MATCH_MP_TAC(TAUT `a /\ b /\ (a /\ b ==> c) ==> a /\ b /\ c`) THEN
+  MATCH_MP_TAC(USING_CONJUNCT_FOR_MP) THEN
   REPEAT CONJ_TAC THENL
    [MATCH_MP_TAC BOUNDED_SUBSET THEN
     EXISTS_TAC `ball(vec 0:real^3,h / a)` THEN
@@ -4855,6 +4927,7 @@ let MEASURABLE_CONIC_CAP = prove
   SIMP_TAC[OPEN_INTER; OPEN_RCONE_GT; OPEN_BALL] THEN
   MATCH_MP_TAC BOUNDED_SUBSET THEN EXISTS_TAC `ball(v0:real^3,r)` THEN
   REWRITE_TAC[BOUNDED_BALL] THEN SET_TAC[]);;
+
 
 let VOLUME_CONIC_CAP_STRONG = prove
  (`!v0 v1:real^3 r a.
@@ -5625,7 +5698,7 @@ let HAS_MEASURE_LUNE_SIMPLE = prove
    [ASM_REWRITE_TAC[INSERT_AC; COPLANAR_3]; ALL_TAC] THEN
   REPEAT STRIP_TAC THEN MATCH_MP_TAC HAS_MEASURE_LUNE THEN
   ASM_REWRITE_TAC[] THEN
-  MATCH_MP_TAC(TAUT `a /\ b /\ (a /\ b ==> c) ==> a /\ b /\ c`) THEN
+  MATCH_MP_TAC(USING_CONJUNCT_FOR_MP) THEN
   REPEAT(CONJ_TAC THENL
    [ASM_MESON_TAC[NOT_COPLANAR_NOT_COLLINEAR; INSERT_AC]; ALL_TAC]) THEN
   REPEAT STRIP_TAC THEN
@@ -6019,7 +6092,7 @@ let VOLUME_FRUSTT_WEDGE = prove
            else azim v0 v1 w1 w2 * ((h / a) pow 2 - h pow 2) * h / &6`,
   REPEAT GEN_TAC THEN ASM_CASES_TAC `v1:real^3 = v0` THENL
    [ASM_REWRITE_TAC[INSERT_AC; COLLINEAR_2]; STRIP_TAC] THEN
-  MATCH_MP_TAC(TAUT `a /\ b /\ (a /\ b ==> c) ==> a /\ b /\ c`) THEN
+  MATCH_MP_TAC(USING_CONJUNCT_FOR_MP) THEN
   REPEAT CONJ_TAC THENL
    [MATCH_MP_TAC BOUNDED_INTER THEN ASM_SIMP_TAC[VOLUME_FRUSTT_STRONG];
     MATCH_MP_TAC MEASURABLE_BOUNDED_INTER_OPEN THEN
@@ -6158,7 +6231,7 @@ let VOLUME_CONIC_CAP_WEDGE_WEAK = prove
            else azim v0 v1 w1 w2 / &3 * (&1 - a) * r pow 3`,
   REPEAT GEN_TAC THEN ASM_CASES_TAC `v1:real^3 = v0` THENL
    [ASM_REWRITE_TAC[COLLINEAR_2; INSERT_AC]; STRIP_TAC] THEN
-  MATCH_MP_TAC(TAUT `a /\ b /\ (a /\ b ==> c) ==> a /\ b /\ c`) THEN
+  MATCH_MP_TAC(USING_CONJUNCT_FOR_MP) THEN
   REPEAT CONJ_TAC THENL
    [MATCH_MP_TAC BOUNDED_INTER THEN ASM_SIMP_TAC[VOLUME_CONIC_CAP_STRONG];
     MATCH_MP_TAC MEASURABLE_BOUNDED_INTER_OPEN THEN

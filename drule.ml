@@ -488,6 +488,15 @@ let find_drule_definition (tm : term) : thm option =
   try Some (Hashtbl.find the_drule_definitions tm)
   with Not_found -> None;;
 
+
+let the_drule_definitions2 = Hashtbl.create 1024;;  (*stores thms again by string of constant*)
+let remember_drule_definition2 : string -> thm -> unit =
+  Hashtbl.add the_drule_definitions2;;
+let find_drule_definition2 (s : string) : thm option =
+  try Some (Hashtbl.find the_drule_definitions2 s)
+  with Not_found -> None;;
+
+
 let new_definition_log_opt (log: bool) tm =
   match find_drule_definition tm with
     Some thm -> thm (* Redefinition *)
@@ -497,6 +506,12 @@ let new_definition_log_opt (log: bool) tm =
     let l,r = try dest_eq bod
       with Failure _ -> failwith "new_definition: Not an equation" in
     let lv,largs = strip_comb l in
+    let v_string = (match lv with
+        Const(s,ty) -> (Printf.printf "\nRe-definition(drule): %s\n\n%!" s; s)
+      | Var(s,ty) -> s) in
+    match find_drule_definition2 v_string with
+      Some thm -> thm
+    | None ->  (* continue as usual *)
     let rtm = try list_mk_abs(largs,r)
       with Failure _ -> failwith "new_definition: Non-variable in LHS pattern" in
     let def = mk_eq(lv,rtm) in
@@ -510,6 +525,9 @@ let new_definition_log_opt (log: bool) tm =
     thm_db_print_definition log "DRULE" ret_thm tm None
       (constants_since last_known_constant);
     remember_drule_definition tm ret_thm;
+    (* remember also by the name of the constant;
+       Needed to identify flyspeck's redefinitions; Jan 10, 2019 (mrabe) *)
+    remember_drule_definition2 v_string ret_thm;
     ret_thm;;
 
 let new_definition = new_definition_log_opt true;;

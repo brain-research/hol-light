@@ -298,7 +298,7 @@ let SPEC =
     try let abs = rand(concl th) in
         CONV_RULE BETA_CONV
          (MP (PINST [snd(dest_var(bndvar abs)),aty] [abs,P; tm,x] pth) th)
-    with Failure _ -> failwith "SPEC (bool.ml)";;
+    with Failure failtext -> failwith ("SPEC (bool.ml) (" ^ failtext ^ ")");;
 
 let SPECL tms th =
   try rev_itlist SPEC tms th
@@ -317,7 +317,7 @@ let ISPEC t th =
   let tyins = try type_match (snd(dest_var x)) (type_of t) [] with Failure _ ->
     failwith "ISPEC can't type-instantiate input theorem" in
   try SPEC t (INST_TYPE tyins th)
-  with Failure _ -> failwith "ISPEC: type variable(s) free in assumptions";;
+  with Failure failtext -> failwith ("ISPEC: type variable(s) free in assumptions (" ^ failtext ^ ")");;
 
 let ISPECL tms th =
   try if tms = [] then th else
@@ -325,7 +325,15 @@ let ISPECL tms th =
       let tyins = itlist2 type_match (map (snd o dest_var) avs)
                           (map type_of tms) [] in
       SPECL tms (INST_TYPE tyins th)
-  with Failure _ -> failwith "ISPECL  (bool.ml)";;
+  with Failure failtext -> failwith ("ISPECL  (bool.ml) (" ^ failtext ^ ")");;
+
+(* hack to prevent (but count) failures during flyspeck *)
+let ISPECL_failnice tms th =
+  try ISPECL tms th
+  with Failure failtext ->
+    if Debug_mode.is_debug_set ("(ISPECL: " ^ encode_term (snd(dest_thm th)) ^ ")")
+    then th
+    else failwith ("Re-fail ISPECL: " ^ failtext);;
 
 let GEN =
   let pth = SYM(CONV_RULE (RAND_CONV BETA_CONV)

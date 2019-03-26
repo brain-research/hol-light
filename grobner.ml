@@ -215,9 +215,9 @@ let RING_AND_IDEAL_CONV =
   (* ----------------------------------------------------------------------- *)
 
   let criterion2 basis (lcm,((p1,h1),(p2,h2))) opairs =
-    exists (fun g -> not(poly_eq (fst g) p1) && not(poly_eq (fst g) p2) &
-                     can (mdiv lcm) (hd(fst g)) &
-                     not(memx (align(g,(p1,h1))) (map snd opairs)) &
+    exists (fun g -> not(poly_eq (fst g) p1) && not(poly_eq (fst g) p2) &&
+                     can (mdiv lcm) (hd(fst g)) &&
+                     not(memx (align(g,(p1,h1))) (map snd opairs)) &&
                      not(memx (align(g,(p2,h2))) (map snd opairs))) basis in
 
   (* ----------------------------------------------------------------------- *)
@@ -232,9 +232,9 @@ let RING_AND_IDEAL_CONV =
   (* ----------------------------------------------------------------------- *)
 
   let rec grobner_basis basis pairs =
-    Format.print_string(string_of_int(length basis)^" basis elements and "^
-                        string_of_int(length pairs)^" critical pairs");
-    Format.print_newline();
+    (if !verbose then
+      Format.print_string(string_of_int(length basis) ^ " basis elements and " ^
+                          string_of_int(length pairs) ^ " critical pairs\n"));
     match pairs with
       [] -> basis
     | (l,(p1,p2))::opairs ->
@@ -543,8 +543,8 @@ let RING_AND_IDEAL_CONV =
             CONV_RULE(RAND_CONV(BINOP_CONV RING_NORMALIZE_CONV)) nth in
           let th2 = funpow deg (IDOM_RULE o CONJ th1) NOT_EQ_01 in
           vars,l,cert,th2 in
-      Format.print_string("Translating certificate to HOL inferences");
-      Format.print_newline();
+      if !verbose then
+        Format.print_string("Translating certificate to HOL inferences\n");
       let cert_pos = map
         (fun (i,p) -> i,filter (fun (c,m) -> c >/ num_0) p) cert
       and cert_neg = map
@@ -633,7 +633,7 @@ let NUM_SIMPLIFY_CONV =
     else if is_imp tm && contains_quantifier tm then
         COMB2_CONV (RAND_CONV(NUM_MULTIPLY_CONV(not pos)))
                    (NUM_MULTIPLY_CONV pos) tm
-    else if (is_conj tm || is_disj tm || is_iff tm) &
+    else if (is_conj tm || is_disj tm || is_iff tm) &&
             contains_quantifier tm
          then BINOP_CONV (NUM_MULTIPLY_CONV pos) tm
     else if is_neg tm && not pos && contains_quantifier tm then

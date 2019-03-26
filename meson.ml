@@ -375,6 +375,9 @@ module Meson = struct
   (* ----------------------------------------------------------------------- *)
 
   let meson_expand_cont loffset rules state cont =
+    if !inferences > 2000000 then
+      failwith "MESON diverged (>2000000 inferences)"
+    else
     tryfind
      (fun r -> cont (snd r) (meson_single_expand loffset r state)) rules
 
@@ -383,6 +386,9 @@ module Meson = struct
   (* ----------------------------------------------------------------------- *)
 
   let meson_expand rules ((g,ancestors),((insts,offset,size) as tup)) cont =
+    if !inferences > 2000000 then
+      failwith "MESON diverged (>2000000 inferences)"
+    else
     let pr = fst g in
     let newancestors = insertan insts g ancestors in
     let newstate = (g,newancestors),tup in
@@ -401,6 +407,9 @@ module Meson = struct
   (* ----------------------------------------------------------------------- *)
 
   let expand_goal rules =
+    if !inferences > 2000000 then
+      failwith "MESON diverged (>2000000 inferences)"
+    else
     let rec expand_goal depth ((g,_),(insts,offset,size) as state) cont =
       if depth < 0 then failwith "expand_goal: too deep" else
       meson_expand rules state
@@ -454,6 +463,9 @@ module Meson = struct
   (* ----------------------------------------------------------------------- *)
 
   let solve_goal rules incdepth min max incsize =
+    if !inferences > 2000000 then
+      failwith "MESON diverged (>2000000 inferences)"
+    else
     let rec solve n g =
       if n > max then failwith "solve_goal: Too deep" else
       (if !meson_chatty && !verbose then

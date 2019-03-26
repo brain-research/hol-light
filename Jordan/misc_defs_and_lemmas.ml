@@ -2277,9 +2277,3 @@ let recompute_pi bprec =
 reduce_local_interface("trig");;
 pop_priority();;
 
-
-
-
-
-
-

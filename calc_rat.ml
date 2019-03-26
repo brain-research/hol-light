@@ -547,7 +547,14 @@ let GEN_REAL_ARITH PROVER =
 let REAL_ARITH =
   let init = GEN_REWRITE_CONV ONCE_DEPTH_CONV [DECIMAL]
   and pure = GEN_REAL_ARITH REAL_LINEAR_PROVER in
-  fun tm -> let th = init tm in EQ_MP (SYM th) (pure(rand(concl th)));;
+  fun tm ->
+    try
+      let th = init tm
+      in EQ_MP (SYM th) (pure(rand(concl th)))
+    with Failure failtext ->
+      if Debug_mode.is_debug_set ("REAL_ARITH (term: " ^ Printer.encode_term tm ^ ", failtext: " ^ failtext ^ ")")
+      then Drule.mk_thm ([], tm)
+      else failwith ("Re-fail Calc_rat.REAL_ARITH: " ^ failtext);;
 
 let REAL_ARITH_TAC = replace_tactic_log Real_arith_tac_log
                                       (CONV_TAC "calc_rat.ml:REAL_ARITH" REAL_ARITH);;

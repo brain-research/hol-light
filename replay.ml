@@ -85,6 +85,7 @@ let replay_tactic_log (env : env) log : tactic =
     | Raw_pop_tac_log (n,th) -> RAW_POP_TAC n
     | Raw_pop_all_tac_log -> RAW_POP_ALL_TAC
     | Undisch_tac_log tm -> UNDISCH_TAC tm
+    | Undisch_el_tac_log tm -> failwith "Replay of Undisch_el_tac_log not implemented" (* UNDISCH_EL_TAC tm *)
     | Spec_tac_log (tm1, tm2) -> SPEC_TAC (tm1, tm2)
     | X_gen_tac_log tm -> X_GEN_TAC tm
     | Exists_tac_log tm -> EXISTS_TAC tm
@@ -178,89 +179,96 @@ let replay_proof_log : src proof_log -> tactic =
  * is hard, but a possible (and unimplemented) alternative is checking whether
  * METIS_TAC is capable of filling them in. *)
 
-let finalize_proof_log : int -> thm proof_log -> src proof_log = fun before_thms log ->
-  (* env : (thm * src) list *)
-  let tactic env log =
-    let thm th =
-      try assoc th env with Not_found ->
-        if thm_id th < before_thms then Premise_src th
-        else
-          match dest_thm th with
-              [h],c when h == c -> Assume_src c
-            | _ -> if false then (
-                     Printf.printf
-                         "Unknown src for tactic %s:\n"
-                         (tactic_name log);
-                     if false then (
-                       Printf.printf "  thm: %s\n" (string_of_thm th);
-                       List.iter (fun (th,s) -> Printf.printf "  %s: %s\n"
-                                                (print_to_string sexp_print
-                                                    (sexp_src s))
-                                                (string_of_thm th)) env));
-                   Unknown_src th
-    in match log with
-      | Fake_log -> failwith "Can't finalize Fake_log"
-      | Conv_tac_log conv -> Conv_tac_log conv
-      | Abs_tac_log -> Abs_tac_log
-      | Arith_tac_log -> Arith_tac_log
-      | Real_arith_tac_log -> Real_arith_tac_log
-      | Real_arith_tac2_log -> Real_arith_tac2_log
-      | Mk_comb_tac_log -> Mk_comb_tac_log
-      | Disch_tac_log -> Disch_tac_log
-      | Label_tac_log (s,th) -> Label_tac_log (s,thm th)
-      | Accept_tac_log th -> Accept_tac_log (thm th)
-      | Mp_tac_log th -> Mp_tac_log (thm th)
-      | Eq_tac_log -> Eq_tac_log
-      | Undisch_tac_log tm -> Undisch_tac_log tm
-      | Spec_tac_log (tm1,tm2) -> Spec_tac_log (tm1,tm2)
-      | X_gen_tac_log tm -> X_gen_tac_log tm
-      | X_choose_tac_log (tm,th) -> X_choose_tac_log (tm,thm th)
-      | Exists_tac_log tm -> Exists_tac_log tm
-      | Conj_tac_log -> Conj_tac_log
-      | Disj1_tac_log -> Disj1_tac_log
-      | Disj2_tac_log -> Disj2_tac_log
-      | Disj_cases_tac_log th -> Disj_cases_tac_log (thm th)
-      | Contr_tac_log th -> Contr_tac_log (thm th)
-      | Match_accept_tac_log th -> Match_accept_tac_log (thm th)
-      | Match_mp_tac_log th -> Match_mp_tac_log (thm th)
-      | Raw_conjuncts_tac_log th -> Raw_conjuncts_tac_log (thm th)
-      | Raw_subgoal_tac_log tm -> Raw_subgoal_tac_log tm
-      | Freeze_then_log th -> Freeze_then_log (thm th)
-      | X_meta_exists_tac_log tm -> X_meta_exists_tac_log tm
-      | Backchain_tac_log th -> Backchain_tac_log (thm th)
-      | Imp_subst_tac_log th -> Imp_subst_tac_log (thm th)
-      | Unify_accept_tac_log (tml,th) -> Unify_accept_tac_log (tml,thm th)
-      | Refl_tac_log -> Refl_tac_log
-      | Trans_tac_log (th,tm) -> Trans_tac_log (thm th,tm)
-      | Itaut_tac_log -> Itaut_tac_log
-      | Cheat_tac_log -> Cheat_tac_log
-      | Ants_tac_log -> Ants_tac_log
-      | Raw_pop_tac_log (n,th) -> Raw_pop_tac_log (n,thm th)
-      | Raw_pop_all_tac_log -> Raw_pop_all_tac_log
-      | Asm_meson_tac_log thl -> Asm_meson_tac_log (map thm thl)
-      | Asm_metis_tac_log thl -> Asm_metis_tac_log (map thm thl)
-      | Simp_tac_log thl -> Simp_tac_log (map thm thl)
-      | Subst1_tac_log th -> Subst1_tac_log (thm th)
-      | Gen_rewrite_tac_log (convl,thl) ->
-         Gen_rewrite_tac_log (convl, map thm thl)
-      | Rewrite_tac_log (ty,thl) -> Rewrite_tac_log (ty, map thm thl) in
-  let rec proof n env (Proof_log (asl,_ as g, tac, logs)) =
-    let rec hyp env s th =
-      let env = (th,s)::env in
-      try let l,r = dest_conj (concl th) in
-          hyp (hyp env (Conj_left_src s) (ASSUME l))
-                       (Conj_right_src s) (ASSUME r)
-      with Failure _ -> env in
-    let rec hyps k env asl = match asl with
-        [] -> env
-      | (_,th)::asl -> hyps (succ k) (hyp env (Hypot_src (n,k,th)) th) asl in
-    let env = hyps 0 env asl in
-    Proof_log (g, tactic env tac, map (proof (succ n) env) logs)
-  in
-    if false then (
-      sexp_print std_formatter (sexp_proof_log sexp_thm log);
-      Printf.printf "\n");
-    proof 0 [] log
+let is_some x = match x with Some _ -> true | None -> false;;
+let need_log = replay_proofs_flag || is_some prooflog_pb_fmt;;
+
+let finalize_proof_log (before_thms: int) (log: thm proof_log) : src proof_log =
+  if not need_log then
+    match log with Proof_log (g, _, _) -> Proof_log (g, Fake_log, [])
+  else
+    (* env : (thm * src) list *)
+    let tactic env log =
+      let thm th =
+        try assoc th env with Not_found ->
+          if thm_id th < before_thms then Premise_src th
+          else
+            match dest_thm th with
+                [h],c when h == c -> Assume_src c
+              | _ -> if false then (
+                       Printf.printf
+                           "Unknown src for tactic %s:\n"
+                           (tactic_name log);
+                       if false then (
+                         Printf.printf "  thm: %s\n" (string_of_thm th);
+                         List.iter (fun (th,s) -> Printf.printf "  %s: %s\n"
+                                                  (print_to_string sexp_print
+                                                      (sexp_src s))
+                                                  (string_of_thm th)) env));
+                     Unknown_src th
+      in match log with
+        | Fake_log -> failwith "Can't finalize Fake_log"
+        | Conv_tac_log conv -> Conv_tac_log conv
+        | Abs_tac_log -> Abs_tac_log
+        | Arith_tac_log -> Arith_tac_log
+        | Real_arith_tac_log -> Real_arith_tac_log
+        | Real_arith_tac2_log -> Real_arith_tac2_log
+        | Mk_comb_tac_log -> Mk_comb_tac_log
+        | Disch_tac_log -> Disch_tac_log
+        | Label_tac_log (s,th) -> Label_tac_log (s,thm th)
+        | Accept_tac_log th -> Accept_tac_log (thm th)
+        | Mp_tac_log th -> Mp_tac_log (thm th)
+        | Eq_tac_log -> Eq_tac_log
+        | Undisch_tac_log tm -> Undisch_tac_log tm
+        | Undisch_el_tac_log tm -> Undisch_el_tac_log tm
+        | Spec_tac_log (tm1,tm2) -> Spec_tac_log (tm1,tm2)
+        | X_gen_tac_log tm -> X_gen_tac_log tm
+        | X_choose_tac_log (tm,th) -> X_choose_tac_log (tm,thm th)
+        | Exists_tac_log tm -> Exists_tac_log tm
+        | Conj_tac_log -> Conj_tac_log
+        | Disj1_tac_log -> Disj1_tac_log
+        | Disj2_tac_log -> Disj2_tac_log
+        | Disj_cases_tac_log th -> Disj_cases_tac_log (thm th)
+        | Contr_tac_log th -> Contr_tac_log (thm th)
+        | Match_accept_tac_log th -> Match_accept_tac_log (thm th)
+        | Match_mp_tac_log th -> Match_mp_tac_log (thm th)
+        | Raw_conjuncts_tac_log th -> Raw_conjuncts_tac_log (thm th)
+        | Raw_subgoal_tac_log tm -> Raw_subgoal_tac_log tm
+        | Freeze_then_log th -> Freeze_then_log (thm th)
+        | X_meta_exists_tac_log tm -> X_meta_exists_tac_log tm
+        | Backchain_tac_log th -> Backchain_tac_log (thm th)
+        | Imp_subst_tac_log th -> Imp_subst_tac_log (thm th)
+        | Unify_accept_tac_log (tml,th) -> Unify_accept_tac_log (tml,thm th)
+        | Refl_tac_log -> Refl_tac_log
+        | Trans_tac_log (th,tm) -> Trans_tac_log (thm th,tm)
+        | Itaut_tac_log -> Itaut_tac_log
+        | Cheat_tac_log -> Cheat_tac_log
+        | Ants_tac_log -> Ants_tac_log
+        | Raw_pop_tac_log (n,th) -> Raw_pop_tac_log (n,thm th)
+        | Raw_pop_all_tac_log -> Raw_pop_all_tac_log
+        | Asm_meson_tac_log thl -> Asm_meson_tac_log (map thm thl)
+        | Asm_metis_tac_log thl -> Asm_metis_tac_log (map thm thl)
+        | Simp_tac_log thl -> Simp_tac_log (map thm thl)
+        | Subst1_tac_log th -> Subst1_tac_log (thm th)
+        | Gen_rewrite_tac_log (convl,thl) ->
+           Gen_rewrite_tac_log (convl, map thm thl)
+        | Rewrite_tac_log (ty,thl) -> Rewrite_tac_log (ty, map thm thl) in
+    let rec proof n env (Proof_log (asl,_ as g, tac, logs)) =
+      let rec hyp env s th =
+        let env = (th,s)::env in
+        try let l,r = dest_conj (concl th) in
+            hyp (hyp env (Conj_left_src s) (ASSUME l))
+                         (Conj_right_src s) (ASSUME r)
+        with Failure _ -> env in
+      let rec hyps k env asl = match asl with
+          [] -> env
+        | (_,th)::asl -> hyps (succ k) (hyp env (Hypot_src (n,k,th)) th) asl in
+      let env = hyps 0 env asl in
+      Proof_log (g, tactic env tac, map (proof (succ n) env) logs)
+    in
+      if false then (
+        sexp_print std_formatter (sexp_proof_log sexp_thm log);
+        Printf.printf "\n");
+      proof 0 [] log;;
 
 (* ------------------------------------------------------------------------- *)
 (* Make the above machinery available in log.ml for tactic.ml use            *)

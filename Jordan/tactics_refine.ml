@@ -61,7 +61,7 @@ let prove_by_refinement(t,(tacl:tactic list)) =
 (* DUMPING AND PRELOADED THEOREMS *)
 (* ------------------------------------------------------------------ *)
 
-
+(*
 let saved_thm = ref ((Hashtbl.create 300):(term,thm) Hashtbl.t);;
 let save_thm thm = Hashtbl.add !saved_thm (concl thm) thm;;
 let mem_thm tm = Hashtbl.mem !saved_thm tm;;
@@ -103,4 +103,4 @@ let prove_by_refinement (x, tacl) =
   else (let t = old_prove_by_refinement(x,tacl) in (save_thm t; t));;
 
 if (false) then (set_fast_load "thm.dump") else (fast_load:=false);; 
-
+*)

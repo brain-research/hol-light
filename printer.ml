@@ -643,7 +643,7 @@ let str_of_sexp s = sexp_print Format.str_formatter s; flush_str_formatter();;
 
 type term_encoding = Pretty | Sexp
 let current_encoding = ref Pretty
-let encode_term t = match !current_encoding with
+let encode_term t : string = match !current_encoding with
     Pretty -> string_of_term t
   | Sexp -> str_of_sexp (sexp_term t);;
 

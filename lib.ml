@@ -459,7 +459,7 @@ let warn cond s =
 (* Flags to switch on verbose mode.                                          *)
 (* ------------------------------------------------------------------------- *)
 
-let verbose = ref true;;
+let verbose = ref false;;
 let report_timing = ref true;;
 
 (* ------------------------------------------------------------------------- *)
@@ -871,3 +871,17 @@ let string_of_file filename =
 let file_of_string filename s =
   let fd = Pervasives.open_out filename in
   output_string fd s; close_out fd;;
+
+
+(* Remove duplicates from a list using a Hashtbl; O(n) *)
+let remove_duplicates__stable xs =
+  let seen_set = Hashtbl.create (List.length xs) in
+  let rec helper xs =
+    match xs with
+      [] -> []
+    | x :: xr ->
+      if Hashtbl.mem seen_set x
+      then helper xr
+      else (Hashtbl.add seen_set x (); x :: helper xr)
+  in
+  helper xs;;

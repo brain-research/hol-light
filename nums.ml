@@ -305,16 +305,12 @@ let new_specification_log_opt (log: bool) =
     | name::onames -> let th' = specify name th in
                       specifies onames th' in
   fun (names: string list) (th: thm) ->
-    (if Theorem_fingerprint.thm_is_known th then ()
-    else (Theorem_fingerprint.register_thm th;
-          thm_db_print_theorem th None "specification"));
     match find_specification (names, th) with
       Some thm ->
         warn true ("Benign respecification");
         global_fmt_print "nums.new_specification.lookup" thm;
         thm
     | None ->
-        Theorem_fingerprint.register_thm th;  (* for re-definitions *)
         let asl,c = dest_thm th in
         if not (asl = []) then
           failwith "new_specification: Assumptions not allowed in theorem" else

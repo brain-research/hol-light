@@ -1,3 +1,27 @@
+
+set_jrh_lexer;;
+
+(* EMBRYO *)
+open Lib;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Tactics;;
+open Simp;;
+(* CORE *)
+open Theorems;;
+open Ind_defs;;
+open Class;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Recursion;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Ints;;
+
+
 (* ========================================================================= *)
 (* All you wanted to know about reflexive symmetric and transitive closures. *)
 (* ========================================================================= *)

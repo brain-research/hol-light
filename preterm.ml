@@ -27,7 +27,7 @@ let ignore_constant_varstruct = ref true;;
 (* It can be treated as an error, result in a warning, or neither of those.  *)
 (* ------------------------------------------------------------------------- *)
 
-let type_invention_warning = ref true;;
+let type_invention_warning = ref false;;
 
 let type_invention_error = ref false;;
 

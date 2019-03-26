@@ -1,4 +1,15 @@
 
+set_jrh_lexer;;
+
+(* EMBRYO *)
+open Lib;;
+open Parser;;
+open Equal;;
+open Tactics;;
+open Simp;;
+(* CORE *)
+open Calc_num;;
+
 
 (* PUT BASIC ARITHMETIC OF THE NATURALS INTO THE SIMPLIFIER *)
 

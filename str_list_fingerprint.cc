@@ -8,7 +8,7 @@ namespace {
 constexpr uint64_t kMask = (static_cast<uint64_t>(1) << 62) - 1;
 }  // namespace
 
-namespace util {
+namespace farmhash {
 inline uint64_t Fingerprint(uint64_t x, uint64_t y) {
   return Fingerprint(Uint128(x, y));
 }
@@ -22,8 +22,8 @@ CAMLprim value TheoremFingerprint(value str_list) {
   uint64_t result = 0;
   while (str_list != Val_emptylist) {
     const auto& s = Field(str_list, 0);
-    uint64_t f = util::Fingerprint64(String_val(s), caml_string_length(s));
-    result = first_iteration ? f : util::Fingerprint(result, f);
+    uint64_t f = farmhash::Fingerprint64(String_val(s), caml_string_length(s));
+    result = first_iteration ? f : farmhash::Fingerprint(result, f);
     str_list = Field(str_list, 1);
     first_iteration = false;
   }

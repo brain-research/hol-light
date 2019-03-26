@@ -150,8 +150,8 @@ let (RAND_CONV:conv->conv) =
 let LAND_CONV = RATOR_CONV o RAND_CONV;;
 
 let (COMB2_CONV: conv->conv->conv) =
-  fun lconv rconv tm -> 
-   match tm with    
+  fun lconv rconv tm ->
+   match tm with
      Comb(l,r) -> MK_COMB(lconv l,rconv r)
   | _ -> failwith "COMB2_CONV: Not a combination";;
 

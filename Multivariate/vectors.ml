@@ -1284,7 +1284,14 @@ let NORM_ARITH =
              GEN_REWRITE_CONV ONCE_DEPTH_CONV [dist] THENC
              GEN_NNF_CONV true (conv1,conv2)
   and pure = GEN_REAL_ARITH REAL_VECTOR_PROVER in
-  fun tm -> let th = init tm in EQ_MP (SYM th) (pure(rand(concl th)));;
+  fun tm ->
+    try
+      let th = init tm in
+      EQ_MP (SYM th) (pure(rand(concl th)))
+    with Failure failtext ->
+      if Debug_mode.is_debug_set ("(term: " ^ encode_term tm ^ ", failtext: " ^ failtext ^ ")")
+      then Drule.mk_thm ([], tm)
+      else failwith ("Re-fail NORM_ARITH: " ^ failtext);;
 
 let NORM_ARITH_TAC = CONV_TAC "Multivariate/vectors.ml:NORM_ARITH" NORM_ARITH;;
 

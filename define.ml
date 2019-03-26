@@ -982,6 +982,14 @@ let find_define_definition (tm : term) : thm option =
   try Some (Hashtbl.find the_define_definitions tm)
   with Not_found -> None;;
 
+(* recognize by name of the constant *)
+let the_define_definitions_by_name = Hashtbl.create 1024;;
+let remember_define_definition_by_name : string -> thm -> unit =
+  Hashtbl.add the_define_definitions_by_name;;
+let find_define_definition_by_name (s : string) : thm option =
+  try Some (Hashtbl.find the_define_definitions_by_name s)
+  with Not_found -> None;;
+
 let define =
   let close_definition_clauses tm =
     let avs,bod = strip_forall tm in
@@ -1011,13 +1019,20 @@ let define =
     | None ->
       let tm' = snd(strip_forall tm) in
       let f,th = close_definition_clauses tm in
-      let etm = mk_exists(f,hd(hyp th)) in
-      let th1 = prove_general_recursive_function_exists etm in
-      let th2 = new_specification_log_opt false [fst(dest_var f)] th1 in
-      let g = mk_mconst(dest_var f) in
-      let th3 = PROVE_HYP th2 (INST [g,f] th) in
-      remember_define_definition tm th3;
-      global_fmt_print "define.define" th3;
-      thm_db_print_definition true "DEFINE" th3 tm None
-        (constants_since last_known_constant);
-      th3;;
+      let name = (match f with
+          Const(s,ty) -> (Printf.printf "\nRe-definition(define.ml): %s\n\n%!" s; s)
+        | Var(s,ty) -> s) in
+      match find_define_definition_by_name name with
+        Some thm -> thm
+      | None ->  (* continue as usual *)
+          let etm = mk_exists(f,hd(hyp th)) in
+          let th1 = prove_general_recursive_function_exists etm in
+          let th2 = new_specification_log_opt false [fst(dest_var f)] th1 in
+          let g = mk_mconst(dest_var f) in
+          let th3 = PROVE_HYP th2 (INST [g,f] th) in
+          remember_define_definition tm th3;
+          remember_define_definition_by_name name th3;
+          global_fmt_print "define.define" th3;
+          thm_db_print_definition true "DEFINE" th3 tm None
+            (constants_since last_known_constant);
+          th3;;

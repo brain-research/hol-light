@@ -7,7 +7,6 @@
 set_jrh_lexer;;
 open List;;
 open Fusion;;
-open Basics;;
 open Printer;;
 open Pb_printer;;
 open Equal;;
@@ -130,7 +129,7 @@ let register_entity registry description tag conv =
   let tag_base = get_tag_base description tag in
   let tag = tag_base in
   if Hashtbl.mem registry tag then (
-    let rconv = Hashtbl.find registry tag in
+    (* let rconv = Hashtbl.find registry tag in *)
     (if String.uppercase_ascii tag = replace_comb tag then
        conv (*Alternatively: rconv here to check failures immediately*)
      else
@@ -542,9 +541,9 @@ let rec extract_thm (asm_thm: src) : thm = match asm_thm with
 let tactic_argument_term fmt (t: term) : unit =
   pp_print_string fmt " parameters {";
   pp_print_string fmt " parameter_type: TERM";
-  pp_print_string fmt " term: \"`";
-  sexp_print fmt (sexp_term t);
-  pp_print_string fmt  "`\"";
+  pp_print_string fmt " term: \"";
+  sexp_print fmt (sexp_term (Pb_printer.normalize_term t));
+  pp_print_string fmt  "\"";
   pp_print_string fmt "}";;
 
 let tactic_argument_string
@@ -579,11 +578,11 @@ let tactic_argument_thms
 let tactic_argument_thm fmt ptype (srcs: src list) : unit =
   tactic_argument_thms
       fmt ptype
-      (fun thm -> print_thm_pb fmt (dest_thm thm) "GOAL" None (fun _ -> ()))
+      (fun th ->
+          print_thm_pb fmt (normalize_theorem th) "GOAL" None (fun _ -> ()))
       (map extract_thm srcs);;
 
 let tactic_arguments_pb fmt (taclog : src tactic_log) =
-  let name = Sleaf (tactic_name taclog) in
   match taclog with
   (* tactic *)
     Fake_log
@@ -682,7 +681,7 @@ let refl_thm_to_concl_temp (thms: thm list) : term list =
                   (string_of_thm th); w in
   map assert_refl thms
 
-let goal_to_thm_tuple (g: goal) : term list * term =
+let goal_to_tuple (g: goal) : term list * term =
   (refl_thm_to_concl_temp (map snd (fst g)), snd g);;
 
 let print_tactic_application_pb
@@ -696,7 +695,7 @@ let print_tactic_application_pb
     (fun (pl: 'a proof_log) ->
       match pl with Proof_log (subgoal, _, _) ->
         pp_print_string fmt " subgoals {";
-        print_thm_pb fmt (goal_to_thm_tuple subgoal) "GOAL" None (fun _ -> ());
+        print_goal_pb fmt (goal_to_tuple subgoal) "GOAL" None (fun _ -> ());
         pp_print_string fmt "}"
     ) subgoals;
   pp_print_string fmt " result: SUCCESS";
@@ -713,12 +712,12 @@ let rec print_prooflog_pb
 
     if String.equal tag "THEOREM" then
     (pp_print_string fmt "theorem_in_database {";
-     print_thm_pb fmt (dest_thm theorem_in_database) "THEOREM" None (fun _ -> ());
+     print_thm_pb fmt theorem_in_database "THEOREM" None (fun _ -> ());
      pp_print_string fmt  "}");
 
     pp_print_string fmt "nodes {";
     pp_print_string fmt " goal {";
-    print_thm_pb fmt (goal_to_thm_tuple g) tag part (fun _ -> ());
+    print_goal_pb fmt (goal_to_tuple g) tag part (fun _ -> ());
     pp_print_string fmt "}";
     pp_print_string fmt " status: PROVED";
     print_tactic_application_pb fmt tl subgoals;
@@ -731,11 +730,6 @@ let rec print_prooflog_pb
 
     if String.equal tag "THEOREM" then pp_print_string fmt "\n";;
 
-(* ---------------------------------------------------------------------------*)
-(* A set of fingerprints of theorems already logged to suppress duplicates.   *)
-(* Also stores the theorem associated with theorems for proof checking.       *)
-(* ---------------------------------------------------------------------------*)
-let logged_theorems = Hashtbl.create 1024;;
 
 (* ---------------------------------------------------------------------------*)
 (* print_logs is the entry point for all proof logging.                       *)
@@ -744,9 +738,8 @@ let logged_theorems = Hashtbl.create 1024;;
 (* goes in test, valid, or train.                                             *)
 (* ---------------------------------------------------------------------------*)
 let thm_counter = ref 0;;
-let print_logs (log : src proof_log) (thm: thm) (source: string) =
+let log_proof_legacy (log : src proof_log) =
   incr thm_counter;
-
   try_to_print
       (fun log -> print_sexps [sexp_proof_log sexp_src log])
       log proof_fmt;
@@ -754,7 +747,7 @@ let print_logs (log : src proof_log) (thm: thm) (source: string) =
       (fun log -> print_sexps [sexp_subgoal_dependendies log])
       log subgoal_dependencies_fmt;
 
-  let Proof_log (goal, taclog, logl) = log in
+  let Proof_log (goal, _, _) = log in
   try_to_print
       (fun log -> print_sexps [Snode [Sleaf "global_thm"; (sexp_goal goal)]])
       log global_fmt;
@@ -768,10 +761,18 @@ let print_logs (log : src proof_log) (thm: thm) (source: string) =
       log (tac_params_proof_fmt partition);
   try_to_print
       (fun log -> print_sexps (sexp_proof_log_flatten_stripped sexp_src log))
-      log (training_proof_fmt partition);
+      log (training_proof_fmt partition);;
 
-  let fp = Theorem_fingerprint.fingerprint thm in
-  if not (Hashtbl.mem logged_theorems fp) then
-      (Hashtbl.add logged_theorems fp thm;
-      try_to_print (print_prooflog_pb thm "THEOREM" None) log prooflog_pb_fmt;
-      thm_db_print_theorem thm None source);;
+let log_proof (log : src proof_log) (th: thm) : unit =
+  log_proof_legacy log;
+  if List.length (hyp th) > 0 then
+    Printf.printf
+        "Warning: Dropping theorem from database as it has assumptions.\n%!"
+  else (
+    try_to_print (print_prooflog_pb (Pb_printer.normalize_theorem th) "THEOREM" None) log prooflog_pb_fmt);;
+
+let log_theorem (th: thm) (source: string) (goal_fingerprint: int option) =
+  if List.length (hyp th) > 0 then
+    Printf.printf
+      "Warning: Dropping theorem from database as it has assumptions.\n%!"
+  else (thm_db_print_theorem th None source goal_fingerprint);;

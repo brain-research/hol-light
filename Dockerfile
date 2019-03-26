@@ -28,16 +28,18 @@ RUN sudo make -C grpc/third_party/protobuf install
 ### Install farmhash
 RUN git clone --depth 1 https://github.com/google/farmhash &&\
   cd farmhash &&\
-  ./configure
+  ./configure CXXFLAGS="-DNAMESPACE_FOR_HASH_FUNCTIONS=farmhash"
 RUN sudo make -C farmhash install
 
 ### Build binaries
 COPY --chown=opam:0 . src/
-RUN make -C src
+RUN make -C src core
+RUN make -C src/api main
 
+### COPY
 FROM alpine:latest
 WORKDIR /root/
 COPY --from=0 /home/opam/src/core .
-COPY --from=0 /home/opam/src/main .
+COPY --from=0 /home/opam/src/api/main .
 CMD ["./main"]
 EXPOSE 2000

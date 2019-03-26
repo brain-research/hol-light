@@ -62,6 +62,7 @@ module type Hol_kernel =
       val freesin : term list -> term -> bool
       val vfree_in : term -> term -> bool
       val type_vars_in_term : term -> hol_type list
+      val type_vars_in_term__stable : term -> hol_type list
       val variant : term list -> term -> term
       val vsubst : (term * term) list -> term -> term
       val inst : (hol_type * hol_type) list -> term -> term
@@ -194,6 +195,15 @@ module Hol : Hol_kernel = struct
       function
           (Tyapp(_,args)) -> itlist (union o tyvars) args []
         | (Tyvar v as tv) -> [tv]
+
+  (* order is independent of type names, but list may contain duplicates *)
+  let rec tyvars__stable_acc acc = function
+      Tyvar v as tv -> tv :: acc
+    | Tyapp (x, []) -> acc
+    | Tyapp (x, arg :: argr) ->
+        tyvars__stable_acc (tyvars__stable_acc acc arg) (Tyapp(x, argr))
+
+  let tyvars__stable = tyvars__stable_acc []
 
 (* ------------------------------------------------------------------------- *)
 (* Substitute types for type variables.                                      *)
@@ -356,6 +366,16 @@ module Hol : Hol_kernel = struct
 (* ------------------------------------------------------------------------- *)
 (* Finds the type variables (free) in a term.                                *)
 (* ------------------------------------------------------------------------- *)
+
+  let type_vars_in_term__stable (tm: term)  =
+    let rec helper acc tm =
+      match tm with
+        Var(_,ty) -> tyvars__stable_acc acc ty
+      | Const(_,ty) -> tyvars__stable_acc acc ty
+      | Comb(s,t) -> helper (helper acc s) t
+      | Abs(Var(_,ty),t) -> helper (tyvars__stable_acc acc ty) t
+      in
+    remove_duplicates__stable (helper [] tm)
 
   let rec type_vars_in_term tm =
     match tm with

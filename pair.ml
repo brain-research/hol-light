@@ -176,6 +176,16 @@ let find_pair_definition (tm : term) : thm option =
   try Some (Hashtbl.find the_pair_definitions tm)
   with Not_found -> None;;
 
+
+
+let the_pair_definitions_strings = Hashtbl.create 1024;;
+let remember_pair_definition_strings : string -> thm -> unit =
+  Hashtbl.add the_pair_definitions_strings;;
+let find_pair_definition_strings (s : string) : thm option =
+  try Some (Hashtbl.find the_pair_definitions_strings s)
+  with Not_found -> None;;
+
+
 let new_definition_log_opt : bool -> term -> thm =
   let depair =
     let rec depair gv arg =
@@ -186,7 +196,8 @@ let new_definition_log_opt : bool -> term -> thm =
     fun arg -> let gv = genvar(type_of arg) in
                gv,depair gv arg in
   fun (log: bool) (tm: term) ->
-    match find_pair_definition tm with
+    let normalized_tm = Pb_printer.normalize_term tm in
+    match find_pair_definition normalized_tm with
       Some thm ->
         warn true "Benign redefinition";
         global_fmt_print "pair.new_definition.lookup" thm;
@@ -196,6 +207,15 @@ let new_definition_log_opt : bool -> term -> thm =
         let avs,def = strip_forall tm in
         let l,r = dest_eq def in
         let fn,args = strip_comb l in
+
+        (* hack to find flyspeck redefinitions *)
+        let v_string = (match fn with
+            Const(s,ty) -> (Printf.printf "\nRe-definition(pair): %s\n\n%!" s; s)
+          | Var(s,ty) -> s) in
+        match find_pair_definition_strings v_string with
+          Some thm -> thm
+        | None ->  (* continue as usual *)
+
         let gargs,reps = (I F_F unions) (unzip(map depair args)) in
         let l' = list_mk_comb(fn,gargs) and r' = subst reps r in
         let th1 = new_definition_log_opt false (mk_eq(l',r')) in
@@ -205,7 +225,8 @@ let new_definition_log_opt : bool -> term -> thm =
         let threps = map (SYM o PURE_REWRITE_CONV[FST; SND]) xreps in
         let th3 = TRANS th2 (SYM(SUBS_CONV threps r)) in
         let th4 = GEN_ALL (GENL avs th3) in
-        remember_pair_definition tm th4;
+        remember_pair_definition normalized_tm th4;
+        remember_pair_definition_strings v_string th4;
         global_fmt_print "pair.new_definition" th4;
         thm_db_print_definition log "PAIR" th4 tm None
           (constants_since last_known_constant);

@@ -29,6 +29,9 @@ open Normalizer;;
 open Realax;;
 open Calc_int;;
 
+open Debug_mode;;
+open Printer;;
+
 (* ------------------------------------------------------------------------- *)
 (* Some lemmas needed now just to drive the decision procedure.              *)
 (* ------------------------------------------------------------------------- *)
@@ -649,9 +652,15 @@ let REAL_ARITH =
   SEMIRING_NORMALIZERS_CONV REAL_POLY_CLAUSES REAL_POLY_NEG_CLAUSES
    (is_realintconst,
     REAL_INT_ADD_CONV,REAL_INT_MUL_CONV,REAL_INT_POW_CONV)
-   (<) in
-  GEN_REAL_ARITH
-   (mk_realintconst,
-    REAL_INT_EQ_CONV,REAL_INT_GE_CONV,REAL_INT_GT_CONV,
-    REAL_POLY_CONV,REAL_POLY_NEG_CONV,REAL_POLY_ADD_CONV,REAL_POLY_MUL_CONV,
-    REAL_LINEAR_PROVER);;
+    (<) in
+  fun tm ->
+    try
+      GEN_REAL_ARITH
+       (mk_realintconst,
+        REAL_INT_EQ_CONV,REAL_INT_GE_CONV,REAL_INT_GT_CONV,
+        REAL_POLY_CONV,REAL_POLY_NEG_CONV,REAL_POLY_ADD_CONV,REAL_POLY_MUL_CONV,
+        REAL_LINEAR_PROVER) tm
+    with Failure failtext ->
+      if Debug_mode.is_debug_set ("REAL_ARITH: (term: " ^ encode_term tm ^ ", failtext: " ^ failtext ^ ")")
+      then Drule.mk_thm ([], tm)
+      else failwith ("Re-fail REAL_ARITH: " ^ failtext);;

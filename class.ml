@@ -145,10 +145,24 @@ let new_type_definition_no_log tyname (absname, repname) th =
                             (!the_type_definitions);
     tth;;
 
-let new_type_definition tyname (absname, repname) th =
-  let tth = new_type_definition_no_log tyname (absname, repname) th in
-  Pb_printer.thm_db_print_type_definition tyname absname repname th tth;
-  tth;;
+(* There are other functions in HOL Light than new_type_definition that allow
+   us to introduce types, but:
+
+   define_finite_type covered by new_type_definition
+
+   define_type_raw is only used by define_type
+
+   define_inductive_type is only used within define_type_raw
+
+   new_type is just used once in core to introduce 'ind'
+
+   define_type core, complex, or flyspeck
+
+   new_basic_type_definition only used in core *)
+let new_type_definition tyname (absname, repname) th_arg =
+  let th_result = new_type_definition_no_log tyname (absname, repname) th_arg in
+  Pb_printer.thm_db_print_type_definition tyname absname repname th_arg th_result;
+  th_result;;
 
 (* ------------------------------------------------------------------------- *)
 (* Derive excluded middle. The proof is an optimization due to Mark Adams of *)

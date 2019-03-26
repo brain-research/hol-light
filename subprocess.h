@@ -6,7 +6,7 @@
 #include <stdexcept>
 #include <string>
 
-namespace n2formal_hol_light {
+namespace hol_light {
 
 class Comms {
  public:
@@ -45,12 +45,14 @@ class Subprocess {
   Subprocess& operator=(Subprocess&&);
   ~Subprocess();
 
+  inline pid_t pid() { return pid_; }
+
  private:
   Subprocess(pid_t pid, int receive_fd, int send_fd);
   pid_t pid_;
   Comms comms_;
 };
 
-}  // namespace n2formal_hol_light
+}  // namespace hol_light
 
 #endif  // SUBPROCESS_H_

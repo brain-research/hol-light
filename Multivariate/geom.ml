@@ -1,8 +1,59 @@
+
+set_jrh_lexer;;
+open Lib;;
+open Fusion;;
+open Basics;;
+open Printer;;
+open Preterm;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Ind_defs;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Impconv;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Cart;;
+open Define;;
+open Wo;;
+open Card;;
+open Products;;
+open Floor;;
+open Misc;;
+open Metric;;
+open Vectors;;
+open Determinants;;
+open Topology;;
+open Convex;;
+open Paths;;
+open Derivatives;;
+open Integration;;
+open Measure;;
+open Binomial;;
+open Complexes;;
+open Canal;;
+open Transcendentals;;
+open Realanalysis;;
+
 (* ========================================================================= *)
 (* Some geometric notions in real^N.                                         *)
 (* ========================================================================= *)
-
-needs "Multivariate/realanalysis.ml";;
 
 prioritize_vector();;
 

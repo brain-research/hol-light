@@ -2,7 +2,7 @@
 
 #include <signal.h>
 
-namespace n2formal_hol_light {
+namespace hol_light {
 namespace {
 enum Type {
   kInt64 = 1,
@@ -103,6 +103,8 @@ Subprocess Subprocess::Start(const std::string& cmd) {
     close(fd[3]);
     SetEnv(kReceiveFd, fd[2]);
     SetEnv(kSendFd, fd[1]);
+    // TODO(kbk): Consider using excele.
+    setenv("CHEAT_BUILTIN", "", 1);
     execl(cmd.data(), cmd.data(), nullptr);
   }
 }
@@ -128,4 +130,4 @@ const void Subprocess::Signal(int signal) const { kill(pid_, signal); }
 Subprocess::Subprocess(pid_t pid, int receive_fd, int send_fd)
     : pid_(pid), comms_(receive_fd, send_fd) {}
 
-}  // namespace n2formal_hol_light
+}  // namespace hol_light
