@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["drule.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -489,16 +490,17 @@ let find_drule_definition (tm : term) : thm option =
   with Not_found -> None;;
 
 
-let the_drule_definitions2 = Hashtbl.create 1024;;  (*stores thms again by string of constant*)
+let the_drule_definitions_string = Hashtbl.create 1024;;  (*stores thms again by string of constant*)
 let remember_drule_definition2 : string -> thm -> unit =
-  Hashtbl.add the_drule_definitions2;;
-let find_drule_definition2 (s : string) : thm option =
-  try Some (Hashtbl.find the_drule_definitions2 s)
+  Hashtbl.add the_drule_definitions_string;;
+let find_drule_definition_string (s : string) : thm option =
+  try Some (Hashtbl.find the_drule_definitions_string s)
   with Not_found -> None;;
 
 
 let new_definition_log_opt (log: bool) tm =
-  match find_drule_definition tm with
+  let normalized_tm = Pb_printer.normalize_term tm in
+  match find_drule_definition normalized_tm with
     Some thm -> thm (* Redefinition *)
   | None ->
     let last_known_constant = last_constant() in
@@ -509,7 +511,7 @@ let new_definition_log_opt (log: bool) tm =
     let v_string = (match lv with
         Const(s,ty) -> (Printf.printf "\nRe-definition(drule): %s\n\n%!" s; s)
       | Var(s,ty) -> s) in
-    match find_drule_definition2 v_string with
+    match find_drule_definition_string v_string with
       Some thm -> thm
     | None ->  (* continue as usual *)
     let rtm = try list_mk_abs(largs,r)
@@ -521,13 +523,14 @@ let new_definition_log_opt (log: bool) tm =
                     TRANS ith (BETA_CONV(rand(concl ith)))) largs th1 in
     let rvs = filter (not o C mem avs) largs in
     let ret_thm = itlist GEN rvs (itlist GEN avs th2) in
-    global_fmt_print "drule.new_definition" ret_thm;
     thm_db_print_definition log "DRULE" ret_thm tm None
       (constants_since last_known_constant);
-    remember_drule_definition tm ret_thm;
+    remember_drule_definition normalized_tm ret_thm;
     (* remember also by the name of the constant;
        Needed to identify flyspeck's redefinitions; Jan 10, 2019 (mrabe) *)
     remember_drule_definition2 v_string ret_thm;
     ret_thm;;
 
 let new_definition = new_definition_log_opt true;;
+
+Pb_printer.clear_file_tags();;

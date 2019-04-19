@@ -7,6 +7,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "cauchy.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -23820,3 +23821,5 @@ let JORDAN_SCHOENFLIES_S2 = prove
       RULE_ASSUM_TAC(REWRITE_RULE[IN_UNIV; o_THM]) THEN
   REWRITE_TAC[o_THM] THEN
   FIRST_X_ASSUM MATCH_MP_TAC THEN ASM SET_TAC[]);;
+
+Pb_printer.clear_file_tags();;

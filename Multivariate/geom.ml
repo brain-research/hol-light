@@ -1,5 +1,6 @@
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "geom.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -1298,3 +1299,5 @@ let ANGLE_TRIANGLE_LAW = prove
 let VECTOR_ANGLE_TRIANGLE_LAW = prove
  (`!u v w:real^N. vector_angle u w <= vector_angle u v + vector_angle v w`,
   REWRITE_TAC[VECTOR_ANGLE_ANGLE; ANGLE_TRIANGLE_LAW]);;
+
+Pb_printer.clear_file_tags();;

@@ -9,6 +9,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["reals.ml"];;
 open Lib;;
 open Parser;;
 open Equal;;
@@ -1531,3 +1532,5 @@ let REAL_WLOG_LT = prove
  (`(!x. P x x) /\ (!x y. P x y <=> P y x) /\ (!x y. x < y ==> P x y)
    ==> !x y. P x y`,
   MESON_TAC[REAL_LT_TOTAL]);;
+
+Pb_printer.clear_file_tags();;

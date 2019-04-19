@@ -3,6 +3,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Library"; "card.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -2635,3 +2636,5 @@ let CARD_EQ_COUNTABLE_SUBSETS_REAL = prove
  (`{s:real->bool | COUNTABLE s} =_c (:real)`,
   MP_TAC(ISPEC `(:real)` CARD_EQ_COUNTABLE_SUBSETS_SUBREAL) THEN
   REWRITE_TAC[SUBSET_UNIV; CARD_LE_REFL; real_INFINITE]);;
+
+Pb_printer.clear_file_tags();;

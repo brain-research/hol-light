@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["help.ml"];;
 open Hol_native;;
 open Lib;;
 open Fusion;;
@@ -141,3 +142,5 @@ let search =
      else ());
     (if nontriv = [] && triv <> [] then []
      else itlist (filter o filterpred) pats (!theorems));;
+
+Pb_printer.clear_file_tags();;

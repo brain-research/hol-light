@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["realarith.ml"];;
 open System;;
 open Lib;;
 open Fusion;;
@@ -664,3 +665,5 @@ let REAL_ARITH =
       if Debug_mode.is_debug_set ("REAL_ARITH: (term: " ^ encode_term tm ^ ", failtext: " ^ failtext ^ ")")
       then Drule.mk_thm ([], tm)
       else failwith ("Re-fail REAL_ARITH: " ^ failtext);;
+
+Pb_printer.clear_file_tags();;

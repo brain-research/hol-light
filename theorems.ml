@@ -9,6 +9,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["theorems.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -554,3 +555,5 @@ let DESTRUCT_TAC,FIX_TAC,INTRO_TAC,HYP_TAC =
   DESTRUCT_TAC,FIX_TAC,INTRO_TAC,HYP_TAC;;
 
 let CLAIM_TAC s tm = SUBGOAL_THEN tm (DESTRUCT_TAC s);;
+
+Pb_printer.clear_file_tags();;

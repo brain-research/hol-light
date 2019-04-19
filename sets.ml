@@ -9,6 +9,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["sets.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -3807,3 +3808,5 @@ let new_inductive_set =
     insert_in_rule th_rules,
     insert_in_rule th_induct,
     insert_in_rule th_cases;;
+
+Pb_printer.clear_file_tags();;

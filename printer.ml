@@ -654,7 +654,7 @@ let encode_term t : string = match !current_encoding with
 (* ------------------------------------------------------------------------- *)
 
 let formatter_from_environment_variable (env_var : string)
-                                        (file_extension : string) 
+                                        (file_extension : string)
                                         : Format.formatter option =
   try
     let filename = Sys.getenv env_var in
@@ -662,47 +662,8 @@ let formatter_from_environment_variable (env_var : string)
     Some Format.formatter_of_out_channel proof_log_oc
   with Not_found -> None;;
 
-let proof_fmt : Format.formatter option =
-  formatter_from_environment_variable "PROOF_LOG_OUTPUT" ""
-
 let prooflog_pb_fmt : Format.formatter option =
-  formatter_from_environment_variable "PROOFLOG_PB_OUTPUT" ""
-
-let global_fmt : Format.formatter option =
-  formatter_from_environment_variable "GLOBAL_THM_DEF_OUTPUT" ""
+  formatter_from_environment_variable "PROOFLOG_PB_OUTPUT" "";;
 
 let thm_db_fmt : Format.formatter option =
-  formatter_from_environment_variable "THM_DB_OUTPUT" ""
-
-let subgoal_dependencies_fmt : Format.formatter option =
-  formatter_from_environment_variable "SUBGOAL_DEPENDENCIES_LOG_OUTPUT" ""
-
-type data_partition = Test | Valid | Train;;
-
-let make_fmt_triplet_for_data_split (env_var : string)
-                                : data_partition -> (Format.formatter option) =
-  (*The let exprs make sure that the formatters are created during startup.
-    Otherwise, the files are reset every time a new proof is written. *)
-  let fmt_test = formatter_from_environment_variable env_var ".test" in
-  let fmt_valid = formatter_from_environment_variable env_var ".valid" in
-  let fmt_train = formatter_from_environment_variable env_var ".train" in
-  fun p -> match p with
-      Test -> fmt_test
-    | Valid -> fmt_valid
-    | Train -> fmt_train
-
-let tactic_proof_fmt : data_partition -> (Format.formatter option) =
-  make_fmt_triplet_for_data_split "TACTIC_PROOF_LOG_OUTPUT"
-
-let tac_params_proof_fmt : data_partition -> (Format.formatter option) =
-  make_fmt_triplet_for_data_split "TAC_PARAMS_PROOF_LOG_OUTPUT"
-
-let training_proof_fmt : data_partition -> (Format.formatter option) =
-  make_fmt_triplet_for_data_split "TRAINING_PROOF_LOG_OUTPUT";;
-
-let global_fmt_print source_str th =
-  match global_fmt with
-    Some fmt ->
-      let s = (Snode [Sleaf source_str; (sexp_thm th)]) in
-      sexp_print fmt s; pp_print_newline fmt ()
-  | None -> ();;
+  formatter_from_environment_variable "THM_DB_OUTPUT" "";;

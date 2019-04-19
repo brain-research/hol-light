@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "convex.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -17247,3 +17248,5 @@ let CONVEX_IMP_PIECEWISE_MONOTONE = prove
     REPEAT STRIP_TAC THEN FIRST_X_ASSUM MATCH_MP_TAC THEN
     ASM_REWRITE_TAC[SEGMENT_1] THEN COND_CASES_TAC THEN
     ASM_REWRITE_TAC[IN_INTERVAL_1] THEN ASM_REAL_ARITH_TAC]);;
+
+Pb_printer.clear_file_tags();;

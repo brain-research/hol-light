@@ -15,6 +15,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["metis.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -10170,3 +10171,5 @@ Replay.asm_metis_tac := Some ASM_METIS_TAC;;
 let METIS_TAC ths = POP_ASSUM_LIST(K ALL_TAC) THEN ASM_METIS_TAC ths;;
 
 let METIS ths tm = prove(tm,METIS_TAC ths);;
+
+Pb_printer.clear_file_tags();;

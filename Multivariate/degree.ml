@@ -10,6 +10,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "degree.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -10915,3 +10916,5 @@ let PATH_CONNECTED_OPEN_ARC_COMPLEMENT = prove
   MATCH_MP_TAC PATH_CONNECTED_SUPERSET_COMPLEMENT_ARC_IMAGE THEN
   EXISTS_TAC `g:real^1->real^N` THEN
   ASM_REWRITE_TAC[] THEN ASM SET_TAC[]);;
+
+Pb_printer.clear_file_tags();;

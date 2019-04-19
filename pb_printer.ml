@@ -5,6 +5,21 @@ open Fusion;;
 open Printer;;
 
 let library_tags = ref ["core"];;
+let file_tags = ref None;;
+let is_some x =
+  match x with
+    None -> false
+  | Some _ -> true;;
+let set_file_tags tags =
+  (if is_some !file_tags then failwith "file tag is already set");
+  library_tags := List.append !library_tags tags;
+  file_tags := Some tags;;
+let clear_file_tags () =
+  match !file_tags with
+    None -> failwith ("file tag is not set")
+  | Some tags ->
+      library_tags := filter (fun s -> not (List.memq s tags)) !library_tags;
+  file_tags := None;;
 
 let pb_print_library_tags fmt : unit =
   List.iter (fun library ->
@@ -61,11 +76,14 @@ let normalize_genpvars_conv (tm: term) : Equal.conv =
 
 let assert_no_hypotheses (th: thm) : unit =
   if List.length (Fusion.hyp th) != 0 then
-    failwith "Theorem with hypotheses encountered during normalization."
+    failwith (
+      Printf.sprintf
+        "Theorem with hypotheses encountered during normalization: %s"
+        (str_of_sexp (sexp_thm th))
+      )
   else ();;
 
 let normalize_genpvars (th: thm) : thm =
-  assert_no_hypotheses th;
   Equal.CONV_RULE (normalize_genpvars_conv (concl th)) th;;
 
 let normalize_genpvars_in_term (tm: term) : term =
@@ -127,7 +145,6 @@ let print_int_pb (fmt: Format.formatter) (field_name: string) i : unit =
 
 let print_goal_pb (fmt: Format.formatter)
     ((assumptions, conclusion): term list * term) (tag: string)
-    (part: data_partition option)
     (definition_printer : Format.formatter -> unit) : unit =
   let conclusion::assumptions = normalize_terms (conclusion::assumptions) in
   print_int_pb fmt "fingerprint"
@@ -138,11 +155,6 @@ let print_goal_pb (fmt: Format.formatter)
       assumptions;
   print_sexp_pb_field fmt " conclusion" (sexp_term conclusion);
   pp_print_string fmt (" tag: " ^ tag);
-  (match part with
-    None -> ()
-  | Some Test -> pp_print_string fmt (" training_split: TESTING ")
-  | Some Valid -> pp_print_string fmt (" training_split: VALIDATION ")
-  | Some Train -> pp_print_string fmt (" training_split: TRAINING "));
   match tag with
     "DEFINITION" -> (
       pp_print_string fmt " definition {";
@@ -155,9 +167,9 @@ let print_goal_pb (fmt: Format.formatter)
   | _ -> ();;
 
 let print_thm_pb (fmt: Format.formatter)
-    (th:  thm) (tag: string) (part: data_partition option)
+    (th:  thm) (tag: string)
     (definition_printer : Format.formatter -> unit) : unit =
-  print_goal_pb fmt (dest_thm th) tag part definition_printer;;
+  print_goal_pb fmt (dest_thm th) tag definition_printer;;
 
 (* ---------------------------------------------------------------------------*)
 (* Print functions for theorem database.                                      *)
@@ -189,8 +201,9 @@ let thm_db_print_definition (log: bool) (definition_type: string) (th: thm)
   if not log then () else
   match thm_db_fmt with
     Some fmt ->
+      let term = normalize_term term in
       pp_print_string fmt "theorems {";
-      print_thm_pb fmt th "DEFINITION" None
+      print_thm_pb fmt th "DEFINITION"
         (print_definition
             definition_type (Some term) recursion_thm (map fst constants));
       pp_print_string fmt (" pretty_printed: \"" ^ pb_string_of_thm th ^ "\"");
@@ -215,14 +228,14 @@ let thm_db_print_type_definition (tyname: string)
     Some fmt ->
       pp_print_string fmt "theorems {";
       pp_print_string fmt (" pretty_printed: \"" ^ pb_string_of_thm th_result ^ "\"");
-      print_thm_pb fmt th_result "TYPE_DEFINITION" None
+      print_thm_pb fmt th_result "TYPE_DEFINITION"
           (print_type_definition tyname absname repname th_arg);
       pb_print_library_tags fmt;
       pp_print_string fmt "}\n";
       Format.pp_print_flush fmt ()
   | None -> ();;
 
-let thm_db_print_theorem (th: thm) (part: data_partition option)
+let thm_db_print_theorem (th: thm)
     (source: string) (goal_fingerprint : int option) : unit =
   let th = normalize_theorem th in
   if not (Theorem_fingerprint.thm_is_known th) then (
@@ -230,7 +243,7 @@ let thm_db_print_theorem (th: thm) (part: data_partition option)
   match thm_db_fmt with
     Some fmt ->
       pp_print_string fmt "theorems {";
-      print_thm_pb fmt th "THEOREM" part (fun _ -> ());
+      print_thm_pb fmt th "THEOREM" (fun _ -> ());
       pp_print_string fmt (" pretty_printed: \"" ^ pb_string_of_thm th ^ "\"");
       pb_print_library_tags fmt;
       pp_print_string fmt (" proof_function: \"" ^ source ^ "\"");
@@ -246,14 +259,14 @@ let thm_db_print_specification (log: bool)
      (definition_type: string) (constants: string list)
      (thm_arg: thm) (th: thm) : unit =
   let thm_arg = normalize_theorem thm_arg in
-  thm_db_print_theorem thm_arg None "specification" None;
+  thm_db_print_theorem thm_arg "specification" None;
   let th = normalize_theorem th in
   Theorem_fingerprint.register_thm th;
   if not log then () else
   match thm_db_fmt with
     Some fmt ->
       pp_print_string fmt "theorems {";
-      print_thm_pb fmt th "DEFINITION" None
+      print_thm_pb fmt th "DEFINITION"
           (print_definition definition_type None (Some thm_arg) constants);
       pp_print_string fmt (" pretty_printed: \"" ^ pb_string_of_thm th ^ "\"");
       pb_print_library_tags fmt;

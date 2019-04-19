@@ -6,6 +6,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "vectors.ml"];;
 open System;;
 open Lib;;
 open Fusion;;
@@ -10610,3 +10611,5 @@ let PARTIAL_EXPAND_QUANTS_CONV avoid th =
   conv;;
 
 let EXPAND_QUANTS_CONV = PARTIAL_EXPAND_QUANTS_CONV [];;
+
+Pb_printer.clear_file_tags();;

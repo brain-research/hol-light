@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["trivia.ml"];;
 open Printer;;
 open Parser;;
 open Equal;;
@@ -98,3 +99,5 @@ let one_Axiom = prove
 
 inductive_type_store :=
   ("1",(1,one_INDUCT,one_RECURSION))::(!inductive_type_store);;
+
+Pb_printer.clear_file_tags();;

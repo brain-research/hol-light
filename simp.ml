@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["simp.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -586,3 +587,5 @@ let () =
   Replay.once_rewrite_tac := Some ONCE_REWRITE_TAC;;
   Replay.simp_tac := Some SIMP_TAC;
   Replay.gen_rewrite_tac := Some GEN_REWRITE_TAC;;
+
+Pb_printer.clear_file_tags();;

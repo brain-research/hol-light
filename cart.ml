@@ -5,6 +5,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["cart.ml"];;
 open Lib;;
 open Fusion;;
 open Printer;;
@@ -593,3 +594,5 @@ let PCROSS_INTERS_INTERS,PCROSS_INTERS = (CONJ_PAIR o prove)
   ASM_REWRITE_TAC[INTERS_GSPEC; EXTENSION; FORALL_PASTECART; IN_ELIM_THM;
                   PASTECART_IN_PCROSS; NOT_IN_EMPTY] THEN
   ASM SET_TAC[]);;
+
+Pb_printer.clear_file_tags();;

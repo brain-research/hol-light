@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["quot.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -172,3 +173,5 @@ let lift_theorem =
     let ith = MATCH_MP pth cth in
     fun trths ->
       REWRITE_RULE (ith::trths);;
+
+Pb_printer.clear_file_tags();;

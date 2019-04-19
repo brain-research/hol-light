@@ -50,12 +50,25 @@ let to_goal string_list =
   let (asl, w) = to_term_list string_list in
   (List.map (fun t -> ("", Fusion.ASSUME t)) asl, w)
 
+let exit_on_timeout () =
+  Sys.signal Sys.sigint (Sys.Signal_handle (fun _ -> raise Sys.Break));;
+
+let ignore_timeout () =
+  Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ -> ()));;
+
+let with_timeout f x =
+  exit_on_timeout ();
+  let res = try f x
+    with e ->
+      ignore_timeout ();
+      raise e in
+  ignore_timeout ();
+  res;;
+
 let kOk = Int 0
 let kError = Int 1
 let handle_request() =
   try
-    let old_handler = Sys.signal Sys.sigint
-      (Sys.Signal_handle (fun _ -> raise Sys.Break)) in
     let result = kOk::(
     match Comms.receive_int() with
     | 0 (* = kSetGoal *) ->
@@ -64,7 +77,7 @@ let handle_request() =
     | 1 (* = kGetGoals *) -> send_goals (current_goals())
     | 2 (* = kRotate *) -> let n = Comms.receive_int() in rotate n
     | 3 (* = kApplyTactic *) ->
-        let tc = Comms.receive_string() in apply_tactic tc
+        let tc = Comms.receive_string() in with_timeout apply_tactic tc
     | 4 (* = kUndo *) -> undo()
     | 5 (* = kRegisterLastTheorem *) -> register_last_thm (); []
     | 6 (* = kDefine *) ->
@@ -110,11 +123,18 @@ let handle_request() =
     | 8 (* = kApplyTacticToGoal *) ->
         let gs = receive_string_list() in
         let ts = Comms.receive_string() in
+        (* We defer parsing the goals so that a parse failure doesn't cause
+         * the communication to get out of sync. *)
         (try
-          (* We defer parsing the goals so that a parse failure doesn't cause
-           * the communication to get out of sync. *)
-          let (g, t) = (to_goal gs, Parse_tactic.parse ts) in
-          let (_, gl, _) = t g in kOk::(send_goals gl)
+          with_timeout (fun (gs, ts) ->
+              (* Wrapping not only the tactic application, but also parsing of
+                 goals and tactics into the timeout-sensitive part, as we
+                 observed parsing to take longer than the timeout in extreme
+                 cases. This led to unintentionally ignoring the timeout.     *)
+              let (g, t) = (to_goal gs, Parse_tactic.parse ts) in
+              let (_, gl, _) = t g in
+              kOk::(send_goals gl)
+            ) (gs, ts)
         with e -> [kError;String (Printexc.to_string e)])
     | 9 (* = kRegisterTheorem *) ->
         let gs = receive_string_list() in
@@ -139,7 +159,6 @@ let handle_request() =
         register_thm ret_thm;
         []
     ) in
-    Sys.set_signal Sys.sigint old_handler;
     result
   with e -> [kError;String (Printexc.to_string e)]
 
@@ -147,8 +166,7 @@ let () =
 (* Indicate to parent process that initialization is complete. The value sent is
  * arbitrary and discarded by the parent. *)
 Comms.send_int 0;
-(* Ignore SIGINT while no request is being handled. *)
-Sys.set_signal Sys.sigint (Sys.Signal_handle (fun _ -> ()));
+ignore_timeout (); (* Ignore SIGINT while no request is being handled. *)
 while true do
   let response = handle_request() in
   List.iter (function

@@ -5,6 +5,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["define.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -1011,10 +1012,10 @@ let define =
     f,itlist GEN avs (itlist PROVE_HYP (CONJUNCTS th) (end_itlist CONJ ths)) in
   fun tm ->
     let last_known_constant = last_constant() in
-    match find_define_definition tm with
+    let normalized_tm = Pb_printer.normalize_term tm in
+    match find_define_definition normalized_tm with
       Some thm ->
         warn true "Benign redefinition";
-        global_fmt_print "define.define.lookup" thm;
         thm
     | None ->
       let tm' = snd(strip_forall tm) in
@@ -1030,9 +1031,10 @@ let define =
           let th2 = new_specification_log_opt false [fst(dest_var f)] th1 in
           let g = mk_mconst(dest_var f) in
           let th3 = PROVE_HYP th2 (INST [g,f] th) in
-          remember_define_definition tm th3;
+          remember_define_definition normalized_tm th3;
           remember_define_definition_by_name name th3;
-          global_fmt_print "define.define" th3;
           thm_db_print_definition true "DEFINE" th3 tm None
             (constants_since last_known_constant);
           th3;;
+
+Pb_printer.clear_file_tags();;

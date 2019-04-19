@@ -1,5 +1,6 @@
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Rqe"; "num_calc_simp.ml"];;
 
 (* EMBRYO *)
 open Lib;;
@@ -59,3 +60,5 @@ let ARITH_REWRITE_CONV thl =
   GENERAL_REWRITE_CONV true TOP_DEPTH_CONV (arith_net()) thl;;
 
 let ARITH_SIMP_TAC thl = CONV_TAC "Rqe/num_calc_simp.ml:(ARITH_SIMP_CONV thl)" (ARITH_SIMP_CONV thl);;
+
+Pb_printer.clear_file_tags();;

@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["class.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -517,3 +518,5 @@ let bool_RECURSION = prove
 
 let inductive_type_store = ref
  ["bool",(2,bool_INDUCT,bool_RECURSION)];;
+
+Pb_printer.clear_file_tags();;

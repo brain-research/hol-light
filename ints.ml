@@ -11,6 +11,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["ints.ml"];;
 open System;;
 open Lib;;
 open Fusion;;
@@ -1492,3 +1493,5 @@ let DIVIDES_LE = prove
 (* ------------------------------------------------------------------------- *)
 
 prioritize_num();;
+
+Pb_printer.clear_file_tags();;

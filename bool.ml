@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["bool.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -53,7 +54,8 @@ let find_basic_definition (tm : term) : thm option =
   with Not_found -> None;;
 
 let new_basic_definition_log_opt (log: bool) tm =
-  match find_basic_definition tm with
+  let normalized_tm = Pb_printer.normalize_term tm in
+  match find_basic_definition normalized_tm with
     Some thm -> thm
   | None ->
     let last_known_constant = last_constant() in
@@ -64,10 +66,9 @@ let new_basic_definition_log_opt (log: bool) tm =
         let term_string = str_of_sexp (sexp_term tm) in
         raise (Failure ("Definition failed: " ^ term_string ^ "; " ^ msg))
     in
-    global_fmt_print "fusion.new_basic_definition" ret_thm;
     thm_db_print_definition log "BASIC" ret_thm tm None
       (constants_since last_known_constant);
-    remember_basic_definition tm ret_thm;
+    remember_basic_definition normalized_tm ret_thm;
     ret_thm;;
 
 let log_new_basic_definition = new_basic_definition_log_opt true;;
@@ -529,3 +530,5 @@ let EXISTENCE =
         let ty = snd(dest_var(bndvar abs)) in
         MP (PINST [ty,aty] [abs,P] pth) th
     with Failure _ -> failwith "EXISTENCE";;
+
+Pb_printer.clear_file_tags();;

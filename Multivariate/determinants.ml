@@ -5,6 +5,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "determinants.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -4645,3 +4646,5 @@ let GEOM_EQUAL_DIMENSION_RULE =
     let th2 = GEN_REWRITE_RULE (RAND_CONV o REDEPTH_CONV) [BETA_THM;ith] th1 in
     let th3 = GEN f (DISCH bod th2) in
     MP (CONV_RULE (REWR_CONV LEFT_FORALL_IMP_THM) th3) eth;;
+
+Pb_printer.clear_file_tags();;

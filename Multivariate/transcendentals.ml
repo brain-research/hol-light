@@ -5,6 +5,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "transcendentals.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -7966,3 +7967,5 @@ let FUBINI_TONELLI_POLAR = prove
       REWRITE_TAC[IN_INTERVAL_1; LIFT_DROP; DROP_VEC] THEN
       COND_CASES_TAC THEN ASM_REWRITE_TAC[NORM_0; LIFT_NUM] THEN
       ASM_REWRITE_TAC[NORM_MUL; LIFT_CMUL; real_abs]]]);;
+
+Pb_printer.clear_file_tags();;

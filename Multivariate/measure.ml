@@ -5,6 +5,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "measure.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -29755,3 +29756,5 @@ let STEPANOV_UNIV = prove
   GEN_TAC THEN
   MP_TAC(ISPECL [`f:real^M->real^N`; `(:real^M)`] STEPANOV) THEN
   ASM_REWRITE_TAC[OPEN_UNIV; IN_UNIV]);;
+
+Pb_printer.clear_file_tags();;

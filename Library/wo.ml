@@ -7,6 +7,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Library"; "wo.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -1296,3 +1297,5 @@ let TOSET_COFINAL_WOSET = prove
   CONJ_TAC THENL
    [FIRST_X_ASSUM MATCH_MP_TAC THEN FIRST_ASSUM ACCEPT_TAC;
     ASM SET_TAC[]]);;
+
+Pb_printer.clear_file_tags();;

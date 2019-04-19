@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["recursion.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -105,9 +106,13 @@ let prove_recursive_functions_exist =
 (* ------------------------------------------------------------------------- *)
 
 let the_recursive_definitions = Hashtbl.create 1024;;
-let remember_recursive_definition = Hashtbl.add the_recursive_definitions;;
-let find_recursive_definition (tm_fp: int) : thm option =
-  try Some (Hashtbl.find the_recursive_definitions tm_fp)
+let remember_recursive_definition tm =
+  Hashtbl.add the_recursive_definitions
+    (Theorem_fingerprint.term_fingerprint ([], tm));;
+let find_recursive_definition (tm: term) : thm option =
+  try Some (Hashtbl.find
+              the_recursive_definitions
+              (Theorem_fingerprint.term_fingerprint ([], tm)))
   with Not_found -> None;;
 
 let new_recursive_definition ax tm =
@@ -122,10 +127,10 @@ let new_recursive_definition ax tm =
   with Failure s ->
     Printf.eprintf "Error parsing term from sexp: %s\n  with error %s\n%!" term_str s);
   *)
-  match find_recursive_definition tm_fp with
+  let normalized_tm = Pb_printer.normalize_term tm in
+  match find_recursive_definition normalized_tm with
     Some thm ->
       warn true "Benign redefinition of recursive function";
-      global_fmt_print "recursion.new_recursive_definition.lookup" thm;
       thm
   | None ->
     Theorem_fingerprint.register_thm ax;  (* for re-definitions *)
@@ -141,9 +146,10 @@ let new_recursive_definition ax tm =
     let dth = new_specification_log_opt false (map (fst o dest_var) evs) eth in
     let dths = map2 SPECL fvs (CONJUNCTS dth) in
     let th = end_itlist CONJ dths in
-    remember_recursive_definition tm_fp th;
-    global_fmt_print "recursion.new_recursive_definition" th;
+    remember_recursive_definition normalized_tm th;
     let new_constants = constants_since last_known_constant in
     thm_db_print_definition true "RECURSIVE" th tm (Some ax) new_constants;
     (* Printf.eprintf "Recursive definition for: %s with fp %d\n%!" (fst (hd new_constants)) tm_fp; *)
     th;;
+
+Pb_printer.clear_file_tags();;

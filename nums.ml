@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["nums.ml"];;
 open System;;
 open Lib;;
 open Fusion;;
@@ -308,7 +309,6 @@ let new_specification_log_opt (log: bool) =
     match find_specification (names, th) with
       Some thm ->
         warn true ("Benign respecification");
-        global_fmt_print "nums.new_specification.lookup" thm;
         thm
     | None ->
         let asl,c = dest_thm th in
@@ -324,8 +324,9 @@ let new_specification_log_opt (log: bool) =
         else
           let sth = specifies names th in
           remember_specification (names, th) sth;
-          global_fmt_print "nums.new_specification" sth;
           thm_db_print_specification log "SPEC" names th sth;
           sth;;
 
 let new_specification = new_specification_log_opt true;;
+
+Pb_printer.clear_file_tags();;

@@ -6,6 +6,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "metric.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -3778,3 +3779,5 @@ let DIMENSION_LE_EQ_SUBTOPOLOGY = prove
   ASM_SIMP_TAC[FRONTIER_OF_SUBSET_SUBTOPOLOGY;
                SET_RULE `v SUBSET u ==> u INTER v = v`] THEN
   STRIP_TAC THEN ONCE_REWRITE_TAC[INTER_COMM] THEN ASM_REWRITE_TAC[]);;
+
+Pb_printer.clear_file_tags();;

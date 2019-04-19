@@ -5,6 +5,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "moretop.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -8382,3 +8383,5 @@ let SPLIT_INSIDE_SIMPLE_CLOSED_CURVE = prove
    [ASM_SIMP_TAC[CONNECTED_SIMPLE_PATH_IMAGE]; ALL_TAC] THEN
   MATCH_MP_TAC EQ_IMP THEN AP_TERM_TAC THEN
   REWRITE_TAC[GSYM UNION_WITH_INSIDE] THEN ASM SET_TAC[]);;
+
+Pb_printer.clear_file_tags();;

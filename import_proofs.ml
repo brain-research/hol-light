@@ -1,5 +1,6 @@
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["import_proofs.ml"];;
 
 open Lib;;
 open Fusion;;
@@ -55,3 +56,5 @@ let process_hyps asms =
   map (fun asm -> ("", Fusion.ASSUME (Parser.decode_term asm))) asms;;
 
 let decode_goal asms concl = process_hyps asms, Parser.decode_term concl;;
+
+Pb_printer.clear_file_tags();;

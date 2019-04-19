@@ -5,6 +5,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "clifford.ml"];;
 open System;;
 open Lib;;
 open Fusion;;
@@ -1010,3 +1011,5 @@ let OUTERMORPHISM_MBASIS_EMPTY = prove
 let reversion = new_definition
  `(reversion:real^(N)multivector->real^(N)multivector) x =
     lambdas s. --(&1) pow ((CARD(s) * (CARD(s) - 1)) DIV 2) * x$$s`;;
+
+Pb_printer.clear_file_tags();;

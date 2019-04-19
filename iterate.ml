@@ -6,6 +6,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["iterate.ml"];;
 open System;;
 open Lib;;
 open Fusion;;
@@ -2543,3 +2544,5 @@ let POLYNOMIAL_FUNCTION_FINITE_ROOTS = prove
 (* ------------------------------------------------------------------------- *)
 
 prioritize_num();;
+
+Pb_printer.clear_file_tags();;

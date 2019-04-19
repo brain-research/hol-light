@@ -40,10 +40,12 @@ HolLightProver::HolLightProver(Comm* comm) : comm_(comm) {
 
 util::StatusOr<ApplyTacticResponse> HolLightProver::ApplyTactic(
     const ApplyTacticRequest& request) {
-  auto timer = comm_->GetTimer(kTacticTimeoutMilliseconds);
   RETURN_IF_ERROR(comm_->SendInt(kApplyTacticToGoal));
   RETURN_IF_ERROR(SendGoal(request.goal()));
   RETURN_IF_ERROR(comm_->SendString(request.tactic()));
+  LOG(INFO) << "Calling HOL Light to apply tactic; setting timer (in ms):"
+               << kTacticTimeoutMilliseconds;
+  auto timer = comm_->GetTimer(kTacticTimeoutMilliseconds);
   RETURN_IF_ERROR(comm_->GetStatus());
   ApplyTacticResponse response;
   int64 result;

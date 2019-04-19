@@ -10,6 +10,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["tactics.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -495,7 +496,7 @@ let (UNDISCH_TAC: term -> tactic) =
        let thm = snd sthm in
        null_meta,[asl',mk_imp(tm,w)],
        fun i [th,log] -> MP th (INSTANTIATE_ALL i thm),
-                         Proof_log( goal, Undisch_el_tac_log tm, [log])
+                         Proof_log( goal, Undisch_tac_log tm, [log])
    with Failure _ -> failwith "UNDISCH_TAC";;
 
 let (SPEC_TAC: term * term -> tactic) =
@@ -1084,3 +1085,5 @@ let top_thm() =
 
 (* Disabled for native build: #install_printer print_goal;; *)
 (* Disabled for native build: #install_printer print_goalstack;; *)
+
+Pb_printer.clear_file_tags();;

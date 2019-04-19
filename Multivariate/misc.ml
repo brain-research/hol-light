@@ -6,6 +6,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "misc.ml"];;
 open Lib;;
 open Fusion;;
 open Printer;;
@@ -1667,3 +1668,5 @@ let CARD_SUSLIN_EQ = prove
   MATCH_MP_TAC MONO_AND THEN REWRITE_TAC[CARD_SUSLIN_LE] THEN
   MATCH_MP_TAC(REWRITE_RULE[IMP_CONJ_ALT] CARD_LE_TRANS) THEN
   MATCH_MP_TAC CARD_LE_SUBSET THEN REWRITE_TAC[SUSLIN_SUPERSET]);;
+
+Pb_printer.clear_file_tags();;

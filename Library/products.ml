@@ -7,6 +7,7 @@
 (* ------------------------------------------------------------------------- *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Library"; "products.ml"];;
 open Lib;;
 open Parser;;
 open Equal;;
@@ -603,3 +604,5 @@ let th = prove
     REPEAT STRIP_TAC THEN MATCH_MP_TAC PRODUCT_EQ THEN
     ASM_SIMP_TAC[IN_ELIM_THM; IN_NUMSEG]) in
     extend_basic_congs (map SPEC_ALL (CONJUNCTS th));;
+
+Pb_printer.clear_file_tags();;

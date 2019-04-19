@@ -7,6 +7,7 @@
 (* Removed unused import for native build: needs "Multivariate/polytope.ml";; *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "realanalysis.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -16648,3 +16649,5 @@ let LEBESGUE_DENSITY_THEOREM = prove
   REWRITE_TAC[FORALL_LIFT; IN_ELIM_THM; LIFT_DROP; DIST_1] THEN
   GEN_REWRITE_TAC "Multivariate/realanalysis.ml:(LAND_CONV o ONCE_DEPTH_CONV)" (LAND_CONV o ONCE_DEPTH_CONV) [COND_RAND] THEN
   REWRITE_TAC[DROP_VEC]);;
+
+Pb_printer.clear_file_tags();;

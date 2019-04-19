@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["itab.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -80,3 +81,5 @@ let (ITAUT_TAC : tactic) =
 (* ------------------------------------------------------------------------- *)
 
 let ITAUT tm = prove(tm,ITAUT_TAC);;
+
+Pb_printer.clear_file_tags();;

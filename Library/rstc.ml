@@ -1,5 +1,6 @@
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Library"; "rstc.ml"];;
 
 (* EMBRYO *)
 open Lib;;
@@ -722,3 +723,5 @@ let RELPOW_SEQUENCE = prove
         REPEAT STRIP_TAC THEN FIRST_ASSUM MATCH_MP_TAC THEN
         ASM_REWRITE_TAC[];
         ASM_MESON_TAC[]]]]);;
+
+Pb_printer.clear_file_tags();;

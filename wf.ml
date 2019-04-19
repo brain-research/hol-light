@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["wf.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -414,3 +415,5 @@ let WF_INDUCT_TAC =
     let th2 = CONV_RULE(LAND_CONV qqconvs) (DISCH_ALL th1) in
     (MATCH_MP_TAC th2 THEN MAP_EVERY X_GEN_TAC fvs THEN
      CONV_TAC "wf.ml:(LAND_CONV qqconvs)" (LAND_CONV qqconvs) THEN DISCH_THEN ASSUME_TAC) gl;;
+
+Pb_printer.clear_file_tags();;

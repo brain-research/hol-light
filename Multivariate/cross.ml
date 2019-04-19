@@ -3,6 +3,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "cross.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -325,3 +326,5 @@ let CROSS_LINEAR_IMAGE_WEAK = prove
            CROSS_ORTHOGONAL_TRANSFORMATION]);;
 
 add_linear_invariants [CROSS_LINEAR_IMAGE_WEAK];;
+
+Pb_printer.clear_file_tags();;

@@ -9,6 +9,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["pair.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -200,7 +201,6 @@ let new_definition_log_opt : bool -> term -> thm =
     match find_pair_definition normalized_tm with
       Some thm ->
         warn true "Benign redefinition";
-        global_fmt_print "pair.new_definition.lookup" thm;
         thm
     | None ->
         let last_known_constant = last_constant() in
@@ -227,7 +227,6 @@ let new_definition_log_opt : bool -> term -> thm =
         let th4 = GEN_ALL (GENL avs th3) in
         remember_pair_definition normalized_tm th4;
         remember_pair_definition_strings v_string th4;
-        global_fmt_print "pair.new_definition" th4;
         thm_db_print_definition log "PAIR" th4 tm None
           (constants_since last_known_constant);
         th4;;
@@ -504,3 +503,4 @@ let (LET_TAC:tactic) =
      W(fun (asl',w') ->
         let tm' = follow_path path w' in
         CONV_TAC "pair.ml:(PATH_CONV path (K(let_CONV tm')))" (PATH_CONV path (K(let_CONV tm'))))) gl;;
+Pb_printer.clear_file_tags();;

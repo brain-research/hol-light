@@ -9,6 +9,7 @@
 (* Removed unused import for native build: needs "Library/iter.ml";; *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "canal.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -3943,3 +3944,5 @@ let POWER_SERIES_UNIQUE = prove
   ASM_REWRITE_TAC[REAL_LT_MIN; COMPLEX_SUB_0] THEN
   REWRITE_TAC[COMPLEX_SUB_RDISTRIB] THEN
   ASM_SIMP_TAC[SERIES_SUB]);;
+
+Pb_printer.clear_file_tags();;

@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["calc_int.ml"];;
 open System;;
 open Lib;;
 open Fusion;;
@@ -406,3 +407,5 @@ let REAL_INT_RED_CONV =
   REWRITES_CONV gconv_net;;
 
 let REAL_INT_REDUCE_CONV = DEPTH_CONV REAL_INT_RED_CONV;;
+
+Pb_printer.clear_file_tags();;

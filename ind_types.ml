@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["ind_types.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -1576,3 +1577,5 @@ let FORALL_UNWIND_CONV =
         CONV_RULE (RAND_CONV FORALL_UNWIND_CONV) (TRANS th3 th4)
     with Failure _ -> REFL tm in
   FORALL_UNWIND_CONV;;
+
+Pb_printer.clear_file_tags();;

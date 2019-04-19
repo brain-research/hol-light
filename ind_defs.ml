@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["ind_defs.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -385,13 +386,10 @@ let prove_inductive_relations_exist,new_inductive_definition =
     let th2 = generalize_schematic_variables true fvs th1 in
     derive_existence th2
   and new_inductive_definition (tm : term) : thm * thm * thm =
-    match find_inductive_definition tm with
+    let normalized_tm = Pb_printer.normalize_term tm in
+    match find_inductive_definition normalized_tm with
       Some (thtr: (thm*thm*thm)) ->
         warn true "Benign redefinition of inductive predicate";
-        map_triple
-          (fun theorem ->
-            global_fmt_print "ind_defs.new_inductive_definition.lookup" theorem)
-          thtr;
         thtr
     | None ->
       let last_known_constant = last_constant() in
@@ -402,10 +400,9 @@ let prove_inductive_relations_exist,new_inductive_definition =
       let r,ic = CONJ_PAIR(SPECL avs th3) in
       let i,c = CONJ_PAIR ic in
       let thtr = GENL avs r,GENL avs i,GENL avs c in
-      remember_inductive_definition tm thtr;
+      remember_inductive_definition normalized_tm thtr;
       map_triple
         (fun th ->
-          global_fmt_print "ind_defs.new_inductive_definition" th;
           thm_db_print_definition true "INDUCTIVE" th tm None
             (constants_since last_known_constant);)
         thtr;
@@ -476,3 +473,5 @@ let derive_strong_induction =
     let nasm = lhand(concl th3) in
     let th4 = GENL ps (DISCH nasm (weaken_triv(UNDISCH th3))) in
     GENL svs (prove_monotonicity_hyps th4);;
+
+Pb_printer.clear_file_tags();;

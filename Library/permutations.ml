@@ -3,6 +3,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Library"; "permutations.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -958,3 +959,5 @@ let SUM_OVER_PERMUTATIONS_NUMSEG = prove
   REPEAT STRIP_TAC THEN ASM_SIMP_TAC[GSYM NUMSEG_LREC] THEN
   MATCH_MP_TAC SUM_OVER_PERMUTATIONS_INSERT THEN
   REWRITE_TAC[FINITE_NUMSEG; IN_NUMSEG] THEN ARITH_TAC);;
+
+Pb_printer.clear_file_tags();;

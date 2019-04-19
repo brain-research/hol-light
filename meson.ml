@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["meson.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -777,7 +778,7 @@ module Meson = struct
         setify' (fun th th' -> dest_thm th <= dest_thm th')
                 equals_thm (mapfilter (C INST_TYPE th) tyins) in
       if ths' = [] then
-        (warn true "No useful-looking instantiations of lemma"; [th])
+        (warn false "No useful-looking instantiations of lemma"; [th])
       else ths' in
     let rec polymorph_all mconsts ths acc =
       if ths = [] then acc else
@@ -868,3 +869,5 @@ let MESON_TAC ths = POP_ASSUM_LIST(K ALL_TAC) THEN ASM_MESON_TAC ths;;
 (* ------------------------------------------------------------------------- *)
 
 let MESON ths tm = prove(tm,MESON_TAC ths);;
+
+Pb_printer.clear_file_tags();;

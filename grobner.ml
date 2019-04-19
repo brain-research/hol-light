@@ -11,6 +11,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["grobner.ml"];;
 open System;;
 open Lib;;
 open Fusion;;
@@ -714,3 +715,5 @@ let NUM_RING =
   fun tm -> let th = initconv tm in
             if rand(concl th) = t_tm then th
             else EQ_MP (SYM th) (rawring(rand(concl th)));;
+
+Pb_printer.clear_file_tags();;

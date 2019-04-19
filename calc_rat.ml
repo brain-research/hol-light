@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["calc_rat.ml"];;
 open System;;
 open Lib;;
 open Log;;
@@ -635,3 +636,5 @@ let REAL_FIELD =
     let th1 = setup_conv bod in
     let ths = map BASIC_REAL_FIELD (conjuncts(rand(concl th1))) in
     EQ_MP (SYM th0) (GENL avs (EQ_MP (SYM th1) (end_itlist CONJ ths)));;
+
+Pb_printer.clear_file_tags();;

@@ -8,6 +8,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["realax.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -1987,3 +1988,5 @@ do_list reduce_interface
   "inv",`hreal_inv:hreal->hreal`];;
 
 do_list remove_interface ["**"; "++"; "<<="; "==="; "fn"; "afn"];;
+
+Pb_printer.clear_file_tags();;

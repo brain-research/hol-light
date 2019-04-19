@@ -12,6 +12,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["impconv.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -1864,3 +1865,5 @@ Impconv.TARGET_REWRITE_TAC,
 Impconv.HINT_EXISTS_TAC,
 Impconv.SEQ_IMP_REWRITE_TAC,
 Impconv.CASE_REWRITE_TAC;;
+
+Pb_printer.clear_file_tags();;

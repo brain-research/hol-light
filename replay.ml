@@ -5,6 +5,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["replay.ml"];;
 open Lib;;
 open List;;
 open Fusion;;
@@ -276,4 +277,6 @@ let finalize_proof_log (before_thms: int) (log: thm proof_log) : src proof_log =
 
 let () =
   Log.replay_proof_log_ref := Some replay_proof_log;
-  Log.finalize_proof_log_ref := Some finalize_proof_log
+  Log.finalize_proof_log_ref := Some finalize_proof_log;;
+
+Pb_printer.clear_file_tags();;

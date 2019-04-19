@@ -3,6 +3,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Library"; "binomial.ml"];;
 open System;;
 open Lib;;
 open Fusion;;
@@ -348,3 +349,5 @@ let NUM_BINOM_CONV =
     if bop <> binom_tm then failwith "NUM_BINOM_CONV" else
     let nt,kt = dest_pair nkp in
     BINOM_RULE(dest_numeral nt,dest_numeral kt);;
+
+Pb_printer.clear_file_tags();;

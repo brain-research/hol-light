@@ -3,6 +3,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Library"; "binary.ml"];;
 open Lib;;
 open Parser;;
 open Equal;;
@@ -202,3 +203,5 @@ let BITSET_BOUND_EQ = prove
 let BINARYSUM_BOUND_EQ = prove
  (`!s k. FINITE s ==> (binarysum s < 2 EXP k <=> (!i. i IN s ==> i < k))`,
   MESON_TAC[BINARYSUM_BOUND; BITSET_BOUND; BITSET_BINARYSUM]);;
+
+Pb_printer.clear_file_tags();;

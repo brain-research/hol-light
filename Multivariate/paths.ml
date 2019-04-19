@@ -6,6 +6,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "paths.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -27208,3 +27209,5 @@ let COVERING_SPACE_SELF_FINITE_FUNDAMENTAL_GROUP = prove
   ASM_SIMP_TAC[MESON[HAS_SIZE]
    `FINITE s ==> (CARD s = n <=> s HAS_SIZE n)`] THEN
   CONV_TAC "Multivariate/paths.ml:(LAND_CONV HAS_SIZE_CONV)" (LAND_CONV HAS_SIZE_CONV) THEN ASM SET_TAC[]);;
+
+Pb_printer.clear_file_tags();;

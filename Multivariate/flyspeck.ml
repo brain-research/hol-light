@@ -3,6 +3,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "flyspeck.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -7162,3 +7163,5 @@ and equiv t1 t2 = can (term_match [] t1) t2 && can (term_match [] t2) t1 in
 let congs' =
   filter (fun th -> exists (equiv (concl th)) bcs) (basic_congs()) in
 set_basic_congs congs';;
+
+Pb_printer.clear_file_tags();;

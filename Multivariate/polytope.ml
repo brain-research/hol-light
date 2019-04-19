@@ -3,6 +3,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "polytope.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -8987,3 +8988,5 @@ let FINE_TRIANGULAR_SUBDIVISION_OF_CELL_COMPLEX = prove
   ASM_REWRITE_TAC[] THEN
   ASM_MESON_TAC[SUBSET; POLYTOPE_IMP_CONVEX; POLYTOPE_IMP_CLOSED;
                 SIMPLEX_IMP_POLYTOPE]);;
+
+Pb_printer.clear_file_tags();;

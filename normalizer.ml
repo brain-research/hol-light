@@ -5,6 +5,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["normalizer.ml"];;
 open System;;
 open Lib;;
 open Fusion;;
@@ -577,3 +578,5 @@ let NUM_NORMALIZE_CONV =
       SEMIRING_ADD_CONV,SEMIRING_MUL_CONV,SEMIRING_POW_CONV)
      (<) in
   NUM_NORMALIZE_CONV;;
+
+Pb_printer.clear_file_tags();;

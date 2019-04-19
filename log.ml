@@ -5,6 +5,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["log.ml"];;
 open List;;
 open Fusion;;
 open Printer;;
@@ -518,13 +519,6 @@ let try_to_print (f : 'a proof_log -> Format.formatter -> unit)
       Format.pp_print_flush fmt ();
   | None -> ();;
 
-(* Poor-man's data splitting into train, test, and validation.                *)
-let get_partition data_counter : data_partition =
-  match data_counter mod 5 with
-    4 -> Test
-  | 2 -> Valid
-  | _ -> Train;;
-
 
 (* ---------------------------------------------------------------------------*)
 (* Prooflog protobuf printing                                                 *)
@@ -579,7 +573,7 @@ let tactic_argument_thm fmt ptype (srcs: src list) : unit =
   tactic_argument_thms
       fmt ptype
       (fun th ->
-          print_thm_pb fmt (normalize_theorem th) "GOAL" None (fun _ -> ()))
+          print_thm_pb fmt (normalize_theorem th) "GOAL" (fun _ -> ()))
       (map extract_thm srcs);;
 
 let tactic_arguments_pb fmt (taclog : src tactic_log) =
@@ -695,7 +689,7 @@ let print_tactic_application_pb
     (fun (pl: 'a proof_log) ->
       match pl with Proof_log (subgoal, _, _) ->
         pp_print_string fmt " subgoals {";
-        print_goal_pb fmt (goal_to_tuple subgoal) "GOAL" None (fun _ -> ());
+        print_goal_pb fmt (goal_to_tuple subgoal) "GOAL" (fun _ -> ());
         pp_print_string fmt "}"
     ) subgoals;
   pp_print_string fmt " result: SUCCESS";
@@ -705,19 +699,18 @@ let print_tactic_application_pb
 let rec print_prooflog_pb
     (theorem_in_database: thm)
     (tag: string)
-    (part: data_partition option)
     (log: src proof_log)
     (fmt: Format.formatter) : unit =
   match log with Proof_log (g, tl, subgoals) ->
 
     if String.equal tag "THEOREM" then
     (pp_print_string fmt "theorem_in_database {";
-     print_thm_pb fmt theorem_in_database "THEOREM" None (fun _ -> ());
+     print_thm_pb fmt theorem_in_database "THEOREM" (fun _ -> ());
      pp_print_string fmt  "}");
 
     pp_print_string fmt "nodes {";
     pp_print_string fmt " goal {";
-    print_goal_pb fmt (goal_to_tuple g) tag part (fun _ -> ());
+    print_goal_pb fmt (goal_to_tuple g) tag (fun _ -> ());
     pp_print_string fmt "}";
     pp_print_string fmt " status: PROVED";
     print_tactic_application_pb fmt tl subgoals;
@@ -725,7 +718,7 @@ let rec print_prooflog_pb
 
     (* prooflog nodes for subgoals *)
     List.iter
-      (fun pl -> print_prooflog_pb theorem_in_database "GOAL" None pl fmt)
+      (fun pl -> print_prooflog_pb theorem_in_database "GOAL" pl fmt)
       subgoals;
 
     if String.equal tag "THEOREM" then pp_print_string fmt "\n";;
@@ -737,42 +730,20 @@ let rec print_prooflog_pb
 (* This function also decides, for every proof (not proof step) whether it    *)
 (* goes in test, valid, or train.                                             *)
 (* ---------------------------------------------------------------------------*)
-let thm_counter = ref 0;;
-let log_proof_legacy (log : src proof_log) =
-  incr thm_counter;
-  try_to_print
-      (fun log -> print_sexps [sexp_proof_log sexp_src log])
-      log proof_fmt;
-  try_to_print
-      (fun log -> print_sexps [sexp_subgoal_dependendies log])
-      log subgoal_dependencies_fmt;
-
-  let Proof_log (goal, _, _) = log in
-  try_to_print
-      (fun log -> print_sexps [Snode [Sleaf "global_thm"; (sexp_goal goal)]])
-      log global_fmt;
-
-  let partition : data_partition = get_partition !thm_counter in
-  try_to_print
-      (fun log -> print_sexps (sexp_flat_tac log))
-      log (tactic_proof_fmt partition);
-  try_to_print
-      (fun log -> print_sexps (sexp_flat_tac_params sexp_src log))
-      log (tac_params_proof_fmt partition);
-  try_to_print
-      (fun log -> print_sexps (sexp_proof_log_flatten_stripped sexp_src log))
-      log (training_proof_fmt partition);;
-
 let log_proof (log : src proof_log) (th: thm) : unit =
-  log_proof_legacy log;
   if List.length (hyp th) > 0 then
     Printf.printf
         "Warning: Dropping theorem from database as it has assumptions.\n%!"
   else (
-    try_to_print (print_prooflog_pb (Pb_printer.normalize_theorem th) "THEOREM" None) log prooflog_pb_fmt);;
+    try_to_print
+        (print_prooflog_pb (Pb_printer.normalize_theorem th) "THEOREM")
+        log
+        prooflog_pb_fmt);;
 
 let log_theorem (th: thm) (source: string) (goal_fingerprint: int option) =
   if List.length (hyp th) > 0 then
     Printf.printf
       "Warning: Dropping theorem from database as it has assumptions.\n%!"
-  else (thm_db_print_theorem th None source goal_fingerprint);;
+  else (thm_db_print_theorem th source goal_fingerprint);;
+
+Pb_printer.clear_file_tags();;

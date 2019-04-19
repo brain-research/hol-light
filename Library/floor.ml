@@ -7,6 +7,7 @@
 (* ------------------------------------------------------------------------- *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Library"; "floor.ml"];;
 open Lib;;
 open Fusion;;
 open Parser;;
@@ -778,3 +779,5 @@ let INFINITE_RATIONAL_IN_RANGE = prove
      (fun th -> MESON_TAC[LT_CASES; th; REAL_LT_REFL]) THEN
     MATCH_MP_TAC TRANSITIVE_STEPWISE_LT THEN
     ASM_MESON_TAC[REAL_LT_TRANS]]);;
+
+Pb_printer.clear_file_tags();;

@@ -6,6 +6,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "integration.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -26147,3 +26148,5 @@ let PICARD_LINDELOF_RIGHT = prove
   EXISTS_TAC `interval[t0,t0 + lift r0]` THEN HYP SIMP_TAC "v x'" [] THEN
   REMOVE_THEN "t" MP_TAC THEN
   SIMP_TAC[IN_INTERVAL_1; SUBSET_INTERVAL_1; REAL_LE_REFL]);;
+
+Pb_printer.clear_file_tags();;

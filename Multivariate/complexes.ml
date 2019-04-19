@@ -6,6 +6,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["Multivariate"; "complexes.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -2273,3 +2274,5 @@ let th = prove
   REPEAT STRIP_TAC THEN MATCH_MP_TAC CPRODUCT_EQ THEN
   ASM_SIMP_TAC[IN_ELIM_THM; IN_NUMSEG]) in
   extend_basic_congs (map SPEC_ALL (CONJUNCTS th));;
+
+Pb_printer.clear_file_tags();;

@@ -9,6 +9,7 @@
 (* ========================================================================= *)
 
 set_jrh_lexer;;
+Pb_printer.set_file_tags ["arith.ml"];;
 open Lib;;
 open Fusion;;
 open Basics;;
@@ -1597,3 +1598,5 @@ let DEPENDENT_CHOICE = prove
         (?a. P 0 a) /\ (!n x. P n x ==> ?y. P (SUC n) y /\ R n x y)
         ==> ?f. (!n. P n (f n)) /\ (!n. R n (f n) (f(SUC n)))`,
   MESON_TAC[DEPENDENT_CHOICE_FIXED]);;
+
+Pb_printer.clear_file_tags();;
