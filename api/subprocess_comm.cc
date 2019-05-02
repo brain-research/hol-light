@@ -16,7 +16,7 @@ enum Response {
   kOk = 0,
   kError = 1,
 };
-constexpr char kHolPath[] = "core";
+constexpr char kHolPath[] = "hol_light_sandboxee";
 }  // namespace
 
 SubprocessComm::~SubprocessComm() {}

@@ -33,13 +33,5 @@ RUN sudo make -C farmhash install
 
 ### Build binaries
 COPY --chown=opam:0 . src/
-RUN make -C src hol_light_sandboxee
-RUN make -C src/api main
-
-### COPY
-FROM alpine:latest
-WORKDIR /root/
-COPY --from=0 /home/opam/src/hol_light_sandboxee .
-COPY --from=0 /home/opam/src/api/main .
-CMD ["./main"]
-EXPOSE 2000
+RUN make -C src check_proofs
+CMD ["./src/check_proofs"]

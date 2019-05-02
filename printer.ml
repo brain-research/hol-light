@@ -616,6 +616,7 @@ let print_to_string printer =
 let string_of_type = print_to_string pp_print_type;;
 let string_of_term = print_to_string pp_print_term;;
 let string_of_thm = print_to_string pp_print_thm;;
+let string_of_goal = print_to_string pp_print_goal;;
 
 (* ------------------------------------------------------------------------- *)
 (* Parseable S-Expression printers                                           *)

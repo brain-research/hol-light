@@ -109,7 +109,8 @@ Status HolLightProver::ReceiveGoals(GoalList* goals) {
     RETURN_IF_ERROR(comm_->ReceiveInt(&m));
     for (int64 j = 0; j < m; ++j) {
       string* term =
-          (j == 0) ? goal->mutable_conclusion() : goal->add_hypotheses();
+          (j == 0) ? goal->mutable_pretty_printed() :
+          (j == 1) ? goal->mutable_conclusion() : goal->add_hypotheses();
       RETURN_IF_ERROR(comm_->ReceiveString(term));
     }
   }

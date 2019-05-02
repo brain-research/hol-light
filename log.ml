@@ -731,19 +731,14 @@ let rec print_prooflog_pb
 (* goes in test, valid, or train.                                             *)
 (* ---------------------------------------------------------------------------*)
 let log_proof (log : src proof_log) (th: thm) : unit =
-  if List.length (hyp th) > 0 then
-    Printf.printf
-        "Warning: Dropping theorem from database as it has assumptions.\n%!"
-  else (
+  if List.length (hyp th) == 0 then
     try_to_print
         (print_prooflog_pb (Pb_printer.normalize_theorem th) "THEOREM")
         log
-        prooflog_pb_fmt);;
+        prooflog_pb_fmt;;
 
 let log_theorem (th: thm) (source: string) (goal_fingerprint: int option) =
-  if List.length (hyp th) > 0 then
-    Printf.printf
-      "Warning: Dropping theorem from database as it has assumptions.\n%!"
-  else (thm_db_print_theorem th source goal_fingerprint);;
+  if List.length (hyp th) == 0 then
+    thm_db_print_theorem th source goal_fingerprint;;
 
 Pb_printer.clear_file_tags();;

@@ -32,9 +32,11 @@ let current_goals() = try
   with Match_failure _ -> []
 let send_goals gs =
   let str_of_tm t = String (Printer.encode_term t) in
-  let serialize (asl,w) =
-    let g = w::(List.map (fun (_,t) -> Fusion.concl t) asl) in
-    (Int (List.length g))::(List.map str_of_tm g) in
+  let serialize (asl,w) = (* Format: [pretty_printed, conclusion, assumptions]*)
+    let terms = w::(List.map (fun (_,t) -> Fusion.concl t) asl) in
+    let strings = String (string_of_goal (asl, w))
+                  :: List.map str_of_tm terms in
+    (Int (List.length strings)) :: strings in
   (Int (List.length gs))::(List.flatten (List.map serialize gs))
 let repeat n f =
   let rec repeat_tr n l = if n > 0 then repeat_tr (n-1) (f()::l) else l in

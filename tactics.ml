@@ -953,7 +953,7 @@ let TAC_PROOF ((g, tac) : goal * tactic) : thm =
       th
     else failwith "TAC_PROOF: Unsolved goals";;
 
-(* Wraps TAC_PROOF for proof importing. If generated_proofs.ml contains
+(* Wraps TAC_PROOF for proof importing. If synthetic_proofs.ml contains
    a synthetic proof for this goal, it is used to replace the human proof. *)
 let TAC_PROOF (g, tac) : thm =
   let replacement_proof =
@@ -963,7 +963,7 @@ let TAC_PROOF (g, tac) : thm =
     None -> TAC_PROOF (g, tac)  (* no replacement found; use human proof *)
   | Some (_, tac') -> (
       incr num_proofs_replaced;
-      try  (* smuggle in proofs from generated_proofs.ml *)
+      try  (* smuggle in proofs from synthetic_proofs.ml *)
         let th = TAC_PROOF (g, tac') in
         let th =
           try EQ_MP (ALPHA (concl th) (snd g)) th
