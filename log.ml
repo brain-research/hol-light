@@ -573,7 +573,7 @@ let tactic_argument_thm fmt ptype (srcs: src list) : unit =
   tactic_argument_thms
       fmt ptype
       (fun th ->
-          print_thm_pb fmt (normalize_theorem th) "GOAL" (fun _ -> ()))
+          print_thm_pb fmt (normalize_theorem th) "THEOREM" (fun _ -> ()))
       (map extract_thm srcs);;
 
 let tactic_arguments_pb fmt (taclog : src tactic_log) =

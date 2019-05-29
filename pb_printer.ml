@@ -169,6 +169,7 @@ let print_goal_pb (fmt: Format.formatter)
 let print_thm_pb (fmt: Format.formatter)
     (th:  thm) (tag: string)
     (definition_printer : Format.formatter -> unit) : unit =
+  (if tag == "GOAL" then failwith "Trying to print GOAL with print_thm_pb");
   print_goal_pb fmt (dest_thm th) tag definition_printer;;
 
 (* ---------------------------------------------------------------------------*)
@@ -212,29 +213,6 @@ let thm_db_print_definition (log: bool) (definition_type: string) (th: thm)
       Format.pp_print_flush fmt ()
   | None -> ();;
 
-let print_type_definition (tyname: string) (absname: string) (repname: string)
-    (th_arg: thm) : Format.formatter -> unit =
-  fun fmt ->
-      pp_print_string fmt (" type_name: \"" ^ tyname ^ "\"");
-      pp_print_string fmt (" abs_name: \"" ^ absname ^ "\"");
-      pp_print_string fmt (" rep_name: \"" ^ repname ^ "\"");
-      print_int_pb fmt "theorem_arg" (Theorem_fingerprint.fingerprint th_arg);;
-
-let thm_db_print_type_definition (tyname: string)
-    (absname: string) (repname: string) (th_arg: thm) (th_result: thm) : unit =
-  let th_result = normalize_theorem th_result in
-  Theorem_fingerprint.register_thm th_result;
-  match thm_db_fmt with
-    Some fmt ->
-      pp_print_string fmt "theorems {";
-      pp_print_string fmt (" pretty_printed: \"" ^ pb_string_of_thm th_result ^ "\"");
-      print_thm_pb fmt th_result "TYPE_DEFINITION"
-          (print_type_definition tyname absname repname th_arg);
-      pb_print_library_tags fmt;
-      pp_print_string fmt "}\n";
-      Format.pp_print_flush fmt ()
-  | None -> ();;
-
 let thm_db_print_theorem (th: thm)
     (source: string) (goal_fingerprint : int option) : unit =
   let th = normalize_theorem th in
@@ -254,6 +232,31 @@ let thm_db_print_theorem (th: thm)
       pp_print_string fmt "}\n";
       Format.pp_print_flush fmt ()
   | None -> ());;
+
+let print_type_definition (tyname: string) (absname: string) (repname: string)
+    (th_arg: thm) : Format.formatter -> unit =
+  let th_arg = normalize_theorem th_arg in
+  fun fmt ->
+      pp_print_string fmt (" type_name: \"" ^ tyname ^ "\"");
+      pp_print_string fmt (" abs_name: \"" ^ absname ^ "\"");
+      pp_print_string fmt (" rep_name: \"" ^ repname ^ "\"");
+      print_int_pb fmt "theorem_arg" (Theorem_fingerprint.fingerprint th_arg);;
+
+let thm_db_print_type_definition (tyname: string)
+    (absname: string) (repname: string) (th_arg: thm) (th_result: thm) : unit =
+  thm_db_print_theorem th_arg "type_definition_helper" None;
+  let th_result = normalize_theorem th_result in
+  Theorem_fingerprint.register_thm th_result;
+  match thm_db_fmt with
+    Some fmt ->
+      pp_print_string fmt "theorems {";
+      pp_print_string fmt (" pretty_printed: \"" ^ pb_string_of_thm th_result ^ "\"");
+      print_thm_pb fmt th_result "TYPE_DEFINITION"
+          (print_type_definition tyname absname repname th_arg);
+      pb_print_library_tags fmt;
+      pp_print_string fmt "}\n";
+      Format.pp_print_flush fmt ()
+  | None -> ();;
 
 let thm_db_print_specification (log: bool)
      (definition_type: string) (constants: string list)

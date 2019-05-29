@@ -198,9 +198,12 @@ module Hol : Hol_kernel = struct
 
   (* order is independent of type names, but list may contain duplicates *)
   let rec tyvars__stable_acc acc = function
-      Tyvar v as tv -> tv :: acc
+      Tyvar v -> Tyvar v :: acc
     | Tyapp (x, []) -> acc
     | Tyapp (x, arg :: argr) ->
+        (* TODO(mrabe): This is a bug. The order of processing the arguments
+         * should be swapped here. This makes the OCaml normalization of terms
+         * behave slightly different from normalization in Python.            *)
         tyvars__stable_acc (tyvars__stable_acc acc arg) (Tyapp(x, argr))
 
   let tyvars__stable = tyvars__stable_acc []

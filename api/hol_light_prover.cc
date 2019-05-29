@@ -2,6 +2,7 @@
 
 // Ignore this comment (1).
 // Ignore this comment (2).
+#include "proof_assistant.pb.h"
 #include "theorem_fingerprint.h"
 // Ignore this comment (3).
 #include "google/protobuf/stubs/status.h"
@@ -30,8 +31,6 @@ enum Request {
 // LINT.ThenChange(//hol_light/sandboxee.ml)
 
 constexpr int kTermEncodingSExpr = 2;
-
-constexpr int kTacticTimeoutMilliseconds = 5000;
 }  // namespace
 
 HolLightProver::HolLightProver(Comm* comm) : comm_(comm) {
@@ -44,8 +43,8 @@ util::StatusOr<ApplyTacticResponse> HolLightProver::ApplyTactic(
   RETURN_IF_ERROR(SendGoal(request.goal()));
   RETURN_IF_ERROR(comm_->SendString(request.tactic()));
   LOG(INFO) << "Calling HOL Light to apply tactic; setting timer (in ms):"
-               << kTacticTimeoutMilliseconds;
-  auto timer = comm_->GetTimer(kTacticTimeoutMilliseconds);
+            << request.timeout_ms();
+  auto timer = comm_->GetTimer(request.timeout_ms());
   RETURN_IF_ERROR(comm_->GetStatus());
   ApplyTacticResponse response;
   int64 result;
@@ -108,9 +107,9 @@ Status HolLightProver::ReceiveGoals(GoalList* goals) {
     goal->set_tag(Theorem::GOAL);
     RETURN_IF_ERROR(comm_->ReceiveInt(&m));
     for (int64 j = 0; j < m; ++j) {
-      string* term =
-          (j == 0) ? goal->mutable_pretty_printed() :
-          (j == 1) ? goal->mutable_conclusion() : goal->add_hypotheses();
+      string* term = (j == 0) ? goal->mutable_pretty_printed()
+                              : (j == 1) ? goal->mutable_conclusion()
+                                         : goal->add_hypotheses();
       RETURN_IF_ERROR(comm_->ReceiveString(term));
     }
   }
@@ -138,7 +137,7 @@ Status HolLightProver::SendTheorem(const Theorem& theorem) {
 }
 
 Status HolLightProver::ApplyTactic(const string& tactic) {
-  auto timer = comm_->GetTimer(kTacticTimeoutMilliseconds);
+  auto timer = comm_->GetTimer(deepmath::ApplyTacticRequest().timeout_ms());
   RETURN_IF_ERROR(comm_->SendInt(kApplyTactic));
   RETURN_IF_ERROR(comm_->SendString(tactic));
   return comm_->GetStatus();
@@ -189,19 +188,14 @@ Status HolLightProver::SetTermEncoding(int encoding) {
 StatusOr<RegisterTheoremResponse> HolLightProver::RegisterTheorem(
     const RegisterTheoremRequest& request) {
   const auto& theorem = request.theorem();
+  LOG(INFO) << "Registering " << theorem.fingerprint() << ".";
   Status status = CheatTheorem(theorem);
   RegisterTheoremResponse response;
-  if (status.ok()) {
-    status = CompareLastTheorem(theorem);
-    if (status.ok()) {
-      response.set_fingerprint(Fingerprint(theorem));
-      return response;
-    } else {
-      response.set_error_msg(status.ToString());
-    }
-  } else {
+  response.set_fingerprint(request.theorem().fingerprint());
+  if (!status.ok()) {
     response.set_error_msg(status.ToString());
   }
+  LOG(INFO) << "Registered " << theorem.fingerprint() << ".";
   return response;
 }
 
@@ -210,13 +204,6 @@ Status HolLightProver::CheatTheorem(const Theorem& theorem) {
     case Theorem::TYPE_DEFINITION:
       return DefineType(theorem.type_definition());
     case Theorem::DEFINITION: {
-      auto status = Define(theorem.definition());
-      if (status.ok()) {
-        return status;
-      }
-      // TODO(mrabe): remove the need to cheat-in.
-      LOG(WARNING) << "Definition failed, will be cheating-in. Fingerprint: "
-                   << Fingerprint(theorem) << ". Error was: " << status;
       RETURN_IF_ERROR(comm_->SendInt(kRegisterTheorem));
       RETURN_IF_ERROR(SendTheorem(theorem));
       RETURN_IF_ERROR(comm_->SendInt(Fingerprint(theorem)));
