@@ -37,10 +37,10 @@ PP=-pp "camlp5r $(CAMLP5_REVISED) ./pa_j_tweak.cmo $(OCAML_LIB)/nums.cma ./syste
 %.cmx: %.ml system.cmo pa_j_tweak.cmo
 	$(OCAMLOPT) $(OCAMLFLAGS) $(PP) -I $(CAMLP5_LIB) -c $@ $<
 
-CORE_SRCS=system hol_native lib fusion basics nets printer theorem_fingerprint preterm parser equal pb_printer debug_mode bool drule log import_proofs tactics itab replay simp theorems ind_defs class trivia canon meson metis quot impconv pair nums recursion arith wf calc_num normalizer grobner ind_types lists realax calc_int realarith reals calc_rat ints sets iterate cart define parse_tactic
+CORE_SRCS=system hol_native lib fusion basics nets printer theorem_fingerprint preterm parser equal normalize pb_printer debug_mode bool drule log import_proofs tactics itab replay simp theorems ind_defs class trivia canon meson metis quot impconv pair nums recursion arith wf calc_num normalizer grobner ind_types lists realax calc_int realarith reals calc_rat ints sets iterate cart define parse_tactic
 
 SANDBOXEE_SRCS=$(CORE_SRCS) comms sandboxee
-CORE_OBJS=str_list_fingerprint comms_wrapper subprocess
+CORE_OBJS=theorem_fingerprint_c comms_wrapper subprocess
 CORE_LIBS=nums.cmxa str.cmxa quotation.cmx
 hol_light_sandboxee: $(addsuffix .cmx, $(SANDBOXEE_SRCS)) $(addsuffix .o, $(CORE_OBJS))
 	$(OCAMLOPT) -o $@ $(OCAMLFLAGS) -I $(CAMLP5_LIB)\

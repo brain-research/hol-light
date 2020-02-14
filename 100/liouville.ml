@@ -2,8 +2,36 @@
 (* Liouville approximation theorem.                                          *)
 (* ========================================================================= *)
 
-needs "Library/floor.ml";;
-needs "Library/poly.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "liouville.ml"];;
+
+open Lib;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Lists;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+
+open Floor;;
+open Analysis;;
+open Poly;;
 
 (* ------------------------------------------------------------------------- *)
 (* Definition of algebraic and transcendental.                               *)
@@ -427,3 +455,4 @@ let TRANSCENDENTAL_LIOUVILLE = prove
   GEN_REWRITE_TAC "100/liouville.ml:LAND_CONV" LAND_CONV [ARITH_RULE `k = k * 1`] THEN
   MATCH_MP_TAC LE_MULT2 THEN REWRITE_TAC[LE_ADD] THEN
   REWRITE_TAC[FACT_LT; ARITH_RULE `1 <= x <=> 0 < x`]);;
+Pb_printer.clear_file_tags();;

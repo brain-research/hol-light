@@ -2,6 +2,28 @@
 (* Divergence of harmonic series.                                            *)
 (* ========================================================================= *)
 
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "divharmonic.ml"];;
+
+open Lib;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Iterate;;
+
+open Analysis;;
+open Transc;;
+
 prioritize_real();;
 
 let HARMONIC_DIVERGES = prove
@@ -31,7 +53,6 @@ let HARMONIC_DIVERGES = prove
 (* Formulation in terms of limits.                                           *)
 (* ------------------------------------------------------------------------- *)
 
-needs "Library/analysis.ml";;
 
 let HARMONIC_DIVERGES' = prove
  (`~(convergent (\n. sum(1..n) (\i. &1 / &i)))`,
@@ -67,7 +88,6 @@ let HARMONIC_LEMMA = prove
 (* Germ of an alternative proof.                                             *)
 (* ------------------------------------------------------------------------- *)
 
-needs "Library/transc.ml";;
 
 let LOG_BOUND = prove
  (`&0 < x /\ x < &1 ==> ln(&1 + x) >= x / &2`,
@@ -76,3 +96,4 @@ let LOG_BOUND = prove
   ASM_SIMP_TAC[LN_MONO_LE; REAL_EXP_POS_LT; REAL_LT_ADD; REAL_LT_01] THEN
   MP_TAC(SPEC `x / &2` REAL_EXP_BOUND_LEMMA) THEN
   POP_ASSUM_LIST(MP_TAC o end_itlist CONJ) THEN ARITH_TAC);;
+Pb_printer.clear_file_tags();;

@@ -2,16 +2,37 @@
 (* Birthday problem.                                                         *)
 (* ========================================================================= *)
 
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "100/birthday.ml"];;
+
+open Lib;;
+open Printer;;
+open Parser;;
+open Equal;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Ints;;
+open Sets;;
+
 prioritize_num();;
 
 (* ------------------------------------------------------------------------- *)
 (* Restricted function space.                                                *)
 (* ------------------------------------------------------------------------- *)
 
-parse_as_infix("-->",(13,"right"));;
+parse_as_infix("-->_bday",(13,"right"));;
 
 let funspace = new_definition
- `(s --> t) = {f:A->B | (!x. x IN s ==> f(x) IN t) /\
+ `(s -->_bday t) = {f:A->B | (!x. x IN s ==> f(x) IN t) /\
                         (!x. ~(x IN s) ==> f(x) = @y. T)}`;;
 
 (* ------------------------------------------------------------------------- *)
@@ -19,13 +40,13 @@ let funspace = new_definition
 (* ------------------------------------------------------------------------- *)
 
 let FUNSPACE_EMPTY = prove
- (`({} --> t) = {(\x. @y. T)}`,
+ (`({} -->_bday t) = {(\x. @y. T)}`,
   REWRITE_TAC[EXTENSION; IN_SING; funspace; IN_ELIM_THM; NOT_IN_EMPTY] THEN
   REWRITE_TAC[FUN_EQ_THM]);;
 
 let HAS_SIZE_FUNSPACE = prove
  (`!s:A->bool t:B->bool m n.
-        s HAS_SIZE m /\ t HAS_SIZE n ==> (s --> t) HAS_SIZE (n EXP m)`,
+        s HAS_SIZE m /\ t HAS_SIZE n ==> (s -->_bday t) HAS_SIZE (n EXP m)`,
   REWRITE_TAC[HAS_SIZE; GSYM CONJ_ASSOC] THEN
   ONCE_REWRITE_TAC[IMP_CONJ] THEN
   REWRITE_TAC[RIGHT_FORALL_IMP_THM] THEN
@@ -36,9 +57,9 @@ let HAS_SIZE_FUNSPACE = prove
     ALL_TAC] THEN
   REWRITE_TAC[GSYM HAS_SIZE] THEN REPEAT STRIP_TAC THEN
   SUBGOAL_THEN
-   `(x INSERT s) --> t =
+   `(x INSERT s) -->_bday t =
         IMAGE (\(y:B,g) u:A. if u = x then y else g(u))
-              {y,g | y IN t /\ g IN s --> t}`
+              {y,g | y IN t /\ g IN s -->_bday t}`
   SUBST1_TAC THENL
    [REWRITE_TAC[EXTENSION; IN_IMAGE; funspace; IN_ELIM_THM] THEN
     ONCE_REWRITE_TAC[TAUT `(a /\ b /\ c) /\ d <=> d /\ a /\ b /\ c`] THEN
@@ -90,7 +111,7 @@ let FACT_DIV_MULT = prove
 let HAS_SIZE_FUNSPACE_INJECTIVE = prove
  (`!s:A->bool t:B->bool m n.
         s HAS_SIZE m /\ t HAS_SIZE n
-        ==> {f | f IN (s --> t) /\
+        ==> {f | f IN (s -->_bday t) /\
                  (!x y. x IN s /\ y IN s /\ f x = f y ==> x = y)}
             HAS_SIZE (if n < m then 0 else (FACT n) DIV (FACT(n - m)))`,
   REWRITE_TAC[HAS_SIZE; GSYM CONJ_ASSOC] THEN
@@ -106,11 +127,11 @@ let HAS_SIZE_FUNSPACE_INJECTIVE = prove
     ALL_TAC] THEN
   REWRITE_TAC[GSYM HAS_SIZE] THEN REPEAT STRIP_TAC THEN
   SUBGOAL_THEN
-   `{f | f IN (x INSERT s) --> t /\
+   `{f | f IN (x INSERT s) -->_bday t /\
     (!u v. u IN (x INSERT s) /\ v IN (x INSERT s) /\ f u = f v ==> u = v)} =
         IMAGE (\(y:B,g) u:A. if u = x then y else g(u))
               {y,g | y IN t /\
-                     g IN {f | f IN (s --> (t DELETE y)) /\
+                     g IN {f | f IN (s -->_bday (t DELETE y)) /\
                                !u v. u IN s /\ v IN s /\ f u = f v ==> u = v}}`
   SUBST1_TAC THENL
    [REWRITE_TAC[EXTENSION; IN_IMAGE; funspace; IN_ELIM_THM] THEN
@@ -181,16 +202,16 @@ let HAS_SIZE_DIFF = prove
 let BIRTHDAY_THM = prove
  (`!s:A->bool t:B->bool m n.
         s HAS_SIZE m /\ t HAS_SIZE n
-        ==> {f | f IN (s --> t) /\
+        ==> {f | f IN (s -->_bday t) /\
                  ?x y. x IN s /\ y IN s /\ ~(x = y) /\ f(x) = f(y)}
             HAS_SIZE (if m <= n then (n EXP m) - (FACT n) DIV (FACT(n - m))
                       else n EXP m)`,
   REPEAT STRIP_TAC THEN
   REWRITE_TAC[SET_RULE
-   `{f:A->B | f IN (s --> t) /\
+   `{f:A->B | f IN (s -->_bday t) /\
               ?x y. x IN s /\ y IN s /\ ~(x = y) /\ f(x) = f(y)} =
-    (s --> t) DIFF
-    {f | f IN (s --> t) /\
+    (s -->_bday t) DIFF
+    {f | f IN (s -->_bday t) /\
                  (!x y. x IN s /\ y IN s /\ f x = f y ==> x = y)}`] THEN
   REWRITE_TAC[ARITH_RULE
    `(if a <= b then x - y else x) = x - (if b < a then 0 else y)`] THEN
@@ -217,9 +238,9 @@ let FACT_DIV_SIMP = prove
 
 let BIRTHDAY_THM_EXPLICIT = prove
  (`!s t. s HAS_SIZE 23 /\ t HAS_SIZE 365
-         ==> 2 * CARD {f | f IN (s --> t) /\
+         ==> 2 * CARD {f | f IN (s -->_bday t) /\
                            ?x y. x IN s /\ y IN s /\ ~(x = y) /\ f(x) = f(y)}
-             >= CARD (s --> t)`,
+             >= CARD (s -->_bday t)`,
   REPEAT GEN_TAC THEN DISCH_TAC THEN
   FIRST_ASSUM(MP_TAC o MATCH_MP BIRTHDAY_THM) THEN
   FIRST_ASSUM(MP_TAC o MATCH_MP HAS_SIZE_FUNSPACE) THEN
@@ -230,3 +251,5 @@ let BIRTHDAY_THM_EXPLICIT = prove
   SIMP_TAC[DIV_REFL; GSYM LT_NZ; FACT_LT] THEN
   REWRITE_TAC[HAS_SIZE] THEN REPEAT STRIP_TAC THEN ASM_REWRITE_TAC[] THEN
   CONV_TAC "100/birthday.ml:NUM_REDUCE_CONV" NUM_REDUCE_CONV);;
+
+Pb_printer.clear_file_tags();;

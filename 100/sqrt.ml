@@ -2,9 +2,28 @@
 (* Irrationality of sqrt(2) and more general results.                        *)
 (* ========================================================================= *)
 
-needs "Library/prime.ml";;              (* For number-theoretic lemmas       *)
-needs "Library/floor.ml";;              (* For definition of rationals       *)
-needs "Multivariate/vectors.ml";;       (* For square roots                  *)
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "sqrt.ml"];;
+
+open Lib;;
+open Parser;;
+open Equal;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Class;;
+open Meson;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Floor;;
+
+open Vectors;;
+open Prime;;
 
 (* ------------------------------------------------------------------------- *)
 (* Most general irrationality of square root result.                         *)
@@ -40,3 +59,4 @@ let IRRATIONAL_SQRT_PRIME = prove
 let IRRATIONAL_SQRT_2 = prove
  (`~rational(sqrt(&2))`,
   SIMP_TAC[IRRATIONAL_SQRT_PRIME; PRIME_2]);;
+Pb_printer.clear_file_tags();;

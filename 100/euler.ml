@@ -2,7 +2,38 @@
 (* Euler's partition theorem and other elementary partition theorems.        *)
 (* ========================================================================= *)
 
-loadt "Library/binary.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "euler.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Printer;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Ind_types;;
+open Realax;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Define;;
+
+open Binary;;
+
+prioritize_num();;
+
 
 (* ------------------------------------------------------------------------- *)
 (* Some lemmas.                                                              *)
@@ -29,16 +60,16 @@ let CARD_EQ_LEMMA = prove
 (* Breaking a number up into 2^something * odd_number.                       *)
 (* ------------------------------------------------------------------------- *)
 
-let index = define
- `index n = if n = 0 then 0 else if ODD n then 0 else SUC(index(n DIV 2))`;;
+let euler_index = define
+ `euler_index n = if n = 0 then 0 else if ODD n then 0 else SUC(euler_index(n DIV 2))`;;
 
 let oddpart = define
  `oddpart n = if n = 0 then 0 else if ODD n then n else oddpart(n DIV 2)`;;
 
 let INDEX_ODDPART_WORK = prove
- (`!n. n = 2 EXP (index n) * oddpart n /\ (ODD(oddpart n) <=> ~(n = 0))`,
+ (`!n. n = 2 EXP (euler_index n) * oddpart n /\ (ODD(oddpart n) <=> ~(n = 0))`,
   MATCH_MP_TAC num_WF THEN GEN_TAC THEN DISCH_TAC THEN
-  ONCE_REWRITE_TAC[index; oddpart] THEN
+  ONCE_REWRITE_TAC[euler_index; oddpart] THEN
   ASM_CASES_TAC `n = 0` THEN ASM_REWRITE_TAC[ARITH] THEN
   COND_CASES_TAC THEN ASM_REWRITE_TAC[ARITH; MULT_CLAUSES] THEN
   FIRST_X_ASSUM(MP_TAC o GEN_REWRITE_RULE I [NOT_ODD]) THEN
@@ -47,7 +78,7 @@ let INDEX_ODDPART_WORK = prove
   ASM_MESON_TAC[ARITH_RULE `~(n = 0) /\ n = 2 * m ==> m < n /\ ~(m = 0)`]);;
 
 let INDEX_ODDPART_DECOMPOSITION = prove
- (`!n. n = 2 EXP (index n) * oddpart n`,
+ (`!n. n = 2 EXP (euler_index n) * oddpart n`,
   MESON_TAC[INDEX_ODDPART_WORK]);;
 
 let ODD_ODDPART = prove
@@ -69,9 +100,9 @@ let INDEX_ODDPART_UNIQUE = prove
   ARITH_TAC);;
 
 let INDEX_ODDPART = prove
- (`!i m. ODD m ==> index(2 EXP i * m) = i /\ oddpart(2 EXP i * m) = m`,
+ (`!i m. ODD m ==> euler_index(2 EXP i * m) = i /\ oddpart(2 EXP i * m) = m`,
   REPEAT GEN_TAC THEN STRIP_TAC THEN
-  MP_TAC(SPECL [`i:num`; `m:num`; `index(2 EXP i * m)`; `oddpart(2 EXP i * m)`]
+  MP_TAC(SPECL [`i:num`; `m:num`; `euler_index(2 EXP i * m)`; `oddpart(2 EXP i * m)`]
         INDEX_ODDPART_UNIQUE) THEN
   REWRITE_TAC[GSYM INDEX_ODDPART_DECOMPOSITION; ODD_ODDPART] THEN
   ASM_REWRITE_TAC[MULT_EQ_0; EXP_EQ_0; ARITH] THEN ASM_MESON_TAC[ODD]);;
@@ -157,7 +188,7 @@ let odd_of_distinct = new_definition
     \i. if ODD i then nsum {j | p(2 EXP j * i) = 1} (\j. 2 EXP j) else 0`;;
 
 let distinct_of_odd = new_definition
- `distinct_of_odd p = \i. if (index i) IN bitset (p(oddpart i)) then 1 else 0`;;
+ `distinct_of_odd p = \i. if (euler_index i) IN bitset (p(oddpart i)) then 1 else 0`;;
 
 (* ------------------------------------------------------------------------- *)
 (* The critical properties.                                                  *)
@@ -206,8 +237,8 @@ let SUPPORT_DISTINCT_OF_ODD = prove
   GEN_TAC THEN STRIP_TAC THEN X_GEN_TAC `i:num` THEN REPEAT STRIP_TAC THENL
    [REWRITE_TAC[ARITH_RULE `1 <= i <=> ~(i = 0)`] THEN
     DISCH_THEN SUBST_ALL_TAC THEN
-    UNDISCH_TAC `index 0 IN bitset (p (oddpart 0))` THEN
-    REWRITE_TAC[index; oddpart; ARITH] THEN
+    UNDISCH_TAC `euler_index 0 IN bitset (p (oddpart 0))` THEN
+    REWRITE_TAC[euler_index; oddpart; ARITH] THEN
     UNDISCH_THEN `!i. ~(p i = 0) ==> ODD i` (MP_TAC o SPEC `0`) THEN
     SIMP_TAC[ARITH; BITSET_0; NOT_IN_EMPTY];
     ALL_TAC] THEN
@@ -276,8 +307,8 @@ let NSUM_DISTINCT_OF_ODD = prove
     ALL_TAC] THEN
   SUBGOAL_THEN
    `{x | x IN 1 .. n /\
-         ~((if index x IN bitset (p (oddpart x)) then 1 else 0) * x = 0)} =
-    {i | i IN 1..n /\ (index i) IN bitset (p(oddpart i))}`
+         ~((if euler_index x IN bitset (p (oddpart x)) then 1 else 0) * x = 0)} =
+    {i | i IN 1..n /\ (euler_index i) IN bitset (p(oddpart i))}`
   SUBST1_TAC THENL
    [REWRITE_TAC[EXTENSION; IN_ELIM_THM; MULT_EQ_0] THEN
     REWRITE_TAC[IN_NUMSEG; ARITH_RULE `(if p then 1 else 0) = 0 <=> ~p`] THEN
@@ -299,7 +330,7 @@ let NSUM_DISTINCT_OF_ODD = prove
    [ASM_MESON_TAC[BITSET_0; NOT_IN_EMPTY]; ALL_TAC] THEN
   CONJ_TAC THENL
    [X_GEN_TAC `m:num` THEN STRIP_TAC THEN CONJ_TAC THENL
-     [MAP_EVERY EXISTS_TAC [`oddpart m`; `index m`] THEN
+     [MAP_EVERY EXISTS_TAC [`oddpart m`; `euler_index m`] THEN
       ASM_REWRITE_TAC[GSYM INDEX_ODDPART_DECOMPOSITION] THEN
       ASM_MESON_TAC[ODDPART_LE; LE_TRANS; ARITH_RULE `1 <= x <=> ~(x = 0)`;
                     ODD_ODDPART; ODD];
@@ -385,3 +416,4 @@ let EULER_PARTITION_THEOREM = prove
    [MATCH_MP_TAC DISTINCT_OF_ODD_OF_DISTINCT;
     MATCH_MP_TAC ODD_OF_DISTINCT_OF_ODD] THEN
   ASM_REWRITE_TAC[]);;
+Pb_printer.clear_file_tags();;

@@ -2,9 +2,55 @@
 (* "Second proof" of Prime Number Theorem from Newman's book.                *)
 (* ========================================================================= *)
 
-needs "Multivariate/cauchy.ml";;
-needs "Library/pocklington.ml";;
-needs "Examples/mangoldt.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "pnt.ml"];;
+
+open Lib;;
+open Fusion;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Cart;;
+open Wo;;
+open Products;;
+open Floor;;
+open Misc;;
+
+open Metric;;
+open Vectors;;
+open Topology;;
+open Convex;;
+open Paths;;
+open Derivatives;;
+open Integration;;
+open Complexes;;
+open Canal;;
+open Transcendentals;;
+open Realanalysis;;
+
+open Cauchy;;
+open Prime;;
+open Pocklington;;
+open Mangoldt;;
 
 prioritize_real();;
 prioritize_complex();;
@@ -4314,3 +4360,4 @@ let PNT = prove
   ASM_SIMP_TAC[real_div; REAL_MUL_LID; REAL_SUB_LE;
                ARITH_RULE `&2 < x ==> &0 <= x`] THEN
   MATCH_MP_TAC REAL_LE_INV2 THEN ASM_REAL_ARITH_TAC);;
+Pb_printer.clear_file_tags();;

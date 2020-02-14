@@ -2,7 +2,41 @@
 (* The Cayley-Hamilton theorem (for real matrices).                          *)
 (* ========================================================================= *)
 
-needs "Multivariate/complexes.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "cayley_hamilton.ml"];;
+
+open Lib;;
+open Printer;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Cart;;
+open Define;;
+open Permutations;;
+open Products;;
+open Misc;;
+
+open Vectors;;
+open Determinants;;
 
 (* ------------------------------------------------------------------------- *)
 (* Powers of a square matrix (mpow) and sums of matrices (msum).             *)
@@ -444,3 +478,4 @@ let CAYLEY_HAMILTON = prove
     MAP_EVERY EXISTS_TAC
      [`A:real^N^N`; `(\i. B i + C i):num->real^N^N`; `dimindex(:N)-1`] THEN
     SIMP_TAC[GSYM MSUM_ADD; FINITE_NUMSEG; MATRIX_CMUL_ADD_LDISTRIB]]);;
+Pb_printer.clear_file_tags();;

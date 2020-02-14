@@ -2,7 +2,36 @@
 (* #22: non-denumerability of continuum (= uncountability of the reals).     *)
 (* ========================================================================= *)
 
-needs "Library/card.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "realsuncountable.ml"];;
+
+open Lib;;
+open Fusion;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+
+open Card;;
+
+open Analysis;;
 
 prioritize_real();;
 
@@ -121,8 +150,6 @@ let UNCOUNTABLE_CANONICAL = prove
 (* ------------------------------------------------------------------------- *)
 (* Injection of canonical digits into the reals.                             *)
 (* ------------------------------------------------------------------------- *)
-
-needs "Library/analysis.ml";;
 
 prioritize_real();;
 
@@ -254,3 +281,4 @@ let UNCOUNTABLE_REALS = prove
    [MATCH_MP_TAC(REAL_ARITH `b < a ==> a = b ==> F`);
     MATCH_MP_TAC(REAL_ARITH `a < b ==> a = b ==> F`)] THEN
   MATCH_MP_TAC SUMINF_INJ_LEMMA THEN ASM_MESON_TAC[]);;
+Pb_printer.clear_file_tags();;

@@ -2,6 +2,27 @@
 (* Binomial coefficients and relation to number of combinations.             *)
 (* ========================================================================= *)
 
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "100/combinations.ml"];;
+
+open Lib;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Grobner;;
+open Realax;;
+open Ints;;
+open Sets;;
+open Define;;
+
 prioritize_num();;
 
 (* ------------------------------------------------------------------------- *)
@@ -34,12 +55,12 @@ let BINOM_FACT = prove
   REWRITE_TAC[ADD_CLAUSES; FACT; binom] THEN CONV_TAC "100/combinations.ml:NUM_RING" NUM_RING);;
 
 let BINOM_EXPLICIT = prove
- (`!n k. binom(n,k) = 
+ (`!n k. binom(n,k) =
             if n < k then 0 else FACT(n) DIV (FACT(k) * FACT(n - k))`,
   REPEAT STRIP_TAC THEN COND_CASES_TAC THEN ASM_SIMP_TAC[BINOM_LT] THEN
   POP_ASSUM MP_TAC THEN REWRITE_TAC[NOT_LT; LE_EXISTS] THEN
   STRIP_TAC THEN ASM_REWRITE_TAC[ADD_SUB2] THEN CONV_TAC "100/combinations.ml:SYM_CONV" SYM_CONV THEN
-  MATCH_MP_TAC DIV_UNIQ THEN EXISTS_TAC `0` THEN 
+  MATCH_MP_TAC DIV_UNIQ THEN EXISTS_TAC `0` THEN
   SIMP_TAC[LT_MULT; FACT_LT; ADD_CLAUSES] THEN
   ONCE_REWRITE_TAC[ADD_SYM] THEN REWRITE_TAC[GSYM BINOM_FACT] THEN
   REWRITE_TAC[MULT_AC]);;
@@ -74,11 +95,11 @@ let lemma = prove
 (* ------------------------------------------------------------------------- *)
 
 let BINOM_INDUCT = prove
- (`!P. (!n. P n 0) /\       
-       (!k. P 0 (SUC k)) /\                
+ (`!P. (!n. P n 0) /\
+       (!k. P 0 (SUC k)) /\
        (!n k. P n (SUC k) /\ P n k ==> P (SUC n) (SUC k))
-       ==> !m n. P m n`,                                                       
-  GEN_TAC THEN STRIP_TAC THEN REPEAT INDUCT_TAC THEN ASM_MESON_TAC[]);;     
+       ==> !m n. P m n`,
+  GEN_TAC THEN STRIP_TAC THEN REPEAT INDUCT_TAC THEN ASM_MESON_TAC[]);;
 
 let NUMBER_OF_COMBINATIONS = prove
  (`!n m s:A->bool.
@@ -108,9 +129,11 @@ let NUMBER_OF_COMBINATIONS = prove
 (* Explicit version.                                                         *)
 (* ------------------------------------------------------------------------- *)
 
-let NUMBER_OF_COMBINATIONS_EXPLICIT = prove                                     
- (`!n m s:A->bool.                                                     
-        s HAS_SIZE n                                                   
+let NUMBER_OF_COMBINATIONS_EXPLICIT = prove
+ (`!n m s:A->bool.
+        s HAS_SIZE n
         ==> {t | t SUBSET s /\ t HAS_SIZE m} HAS_SIZE
             (if n < m then 0 else FACT(n) DIV (FACT(m) * FACT(n - m)))`,
   REWRITE_TAC[REWRITE_RULE[BINOM_EXPLICIT] NUMBER_OF_COMBINATIONS]);;
+
+Pb_printer.clear_file_tags();;

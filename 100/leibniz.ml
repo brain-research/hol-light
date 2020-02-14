@@ -2,7 +2,34 @@
 (* #26: Leibniz's series for pi                                              *)
 (* ========================================================================= *)
 
-needs "Library/transc.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "leibniz.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Iterate;;
+
+open Analysis;;
+open Transc;;
 
 prioritize_real();;
 
@@ -300,3 +327,4 @@ let LEIBNIZ_PI = prove
    `abs(s1 - sx) < e / &6
     ==> ~(abs(sx - s) < e / &2) ==> ~(abs(s1 - s) < e / &3)`)) THEN
   ASM_REAL_ARITH_TAC);;
+Pb_printer.clear_file_tags();;

@@ -2,8 +2,38 @@
 (* Area of a circle.                                                         *)
 (* ========================================================================= *)
 
-needs "Multivariate/measure.ml";;
-needs "Multivariate/realanalysis.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "circle.ml"];;
+
+open Lib;;
+open Fusion;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Trivia;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Sets;;
+open Cart;;
+open Misc;;
+
+open Vectors;;
+open Determinants;;
+open Topology;;
+open Convex;;
+open Integration;;
+open Measure;;
+open Transcendentals;;
+open Realanalysis;;
 
 (* ------------------------------------------------------------------------- *)
 (* Circle area. Should maybe extend WLOG tactics for such scaling.           *)
@@ -138,3 +168,4 @@ let VOLUME_BALL = prove
   SIMP_TAC[GSYM INTERIOR_CBALL; GSYM VOLUME_CBALL] THEN
   REPEAT STRIP_TAC THEN MATCH_MP_TAC MEASURE_INTERIOR THEN
   SIMP_TAC[BOUNDED_CBALL; NEGLIGIBLE_CONVEX_FRONTIER; CONVEX_CBALL]);;
+Pb_printer.clear_file_tags();;

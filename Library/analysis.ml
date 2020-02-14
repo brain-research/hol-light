@@ -1859,6 +1859,9 @@ let sum_EXISTS = prove
 
 let sum_DEF = new_specification ["psum"] sum_EXISTS;;
 
+(* sum will be overwritten, but e_is_transcendental still needs the old one. *)
+let OLD_SUM = sum;;
+
 let sum = prove
  (`(sum(n,0) f = &0) /\
    (sum(n,SUC m) f = sum(n,m) f + f(n + m))`,

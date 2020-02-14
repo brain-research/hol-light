@@ -3,10 +3,12 @@ open Lib;;
 open Fusion;;
 open Tactics;;
 open Equal;;
+open Simp;;
 open Theorem_fingerprint;;
 
 module Parse : sig
-  val parse : string -> tactic
+  val parse : string -> tactic;;
+  val parse_rule : string -> thm;;
 end =
 struct
   type data = string * int
@@ -72,6 +74,8 @@ struct
 
   let (thp : thm parser), add_th = keyword_parser "thm"
   let (tcp : tactic parser), add_tc = keyword_parser "tactic"
+  let (rule_p : thm parser), add_rule = keyword_parser "rule"
+  let (term_rule_p : (term -> thm) parser), add_term_rule = keyword_parser "term_rule"
   let (convp : conv parser), add_conv = keyword_parser "conv"
   let (convfnp : (conv -> conv) parser), add_convfn = keyword_parser "convfn"
 
@@ -114,6 +118,7 @@ struct
     fn Ints.ARITH_TAC, "ARITH_TAC";
     fn Meson.ASM_MESON_TAC thl, "ASM_MESON_TAC";
     fn Metis.ASM_METIS_TAC thl, "ASM_METIS_TAC";
+    fn Metis.METIS_TAC thl, "METIS_TAC";
     fn Ind_defs.BACKCHAIN_TAC th, "BACKCHAIN_TAC";
     fn CHEAT_TAC, "CHEAT_TAC";
     fn CHOOSE_TAC th, "CHOOSE_TAC";
@@ -153,6 +158,73 @@ struct
     fn X_CHOOSE_TAC tm th, "X_CHOOSE_TAC";
     fn X_GEN_TAC tm, "X_GEN_TAC";
   ]
+  let EQ_IMP_RULE_LEFT = (fun th ->
+    fst (Bool.EQ_IMP_RULE th))
+  let EQ_IMP_RULE_RIGHT = (fun th ->
+    snd (Bool.EQ_IMP_RULE th))
+  let () = add_rule [
+    (* A rule produces a thm from various arguments, usually another thm. *)
+    fn ASM_REWRITE_RULE thl th, "ASM_REWRITE_RULE";
+    fn BETA_RULE th, "BETA_RULE";
+    fn CONV_RULE conv th, "CONV_RULE";
+    fn DEDUCT_ANTISYM_RULE th th, "DEDUCT_ANTISYM_RULE";
+    (* EQ_IMP_RULE thm->thm*thm so split into left and right. *)
+    fn EQ_IMP_RULE_LEFT th, "EQ_IMP_RULE_LEFT";
+    fn EQ_IMP_RULE_RIGHT th, "EQ_IMP_RULE_RIGHT";
+    fn Bool.IMP_ANTISYM_RULE th th, "IMP_ANTISYM_RULE";
+    fn ONCE_ASM_REWRITE_RULE thl th, "ONCE_ASM_REWRITE_RULE";
+    fn ONCE_REWRITE_RULE thl th, "ONCE_REWRITE_RULE";
+    fn ONCE_SIMP_RULE thl th, "ONCE_SIMP_RULE";
+    fn PURE_ASM_REWRITE_RULE thl th, "PURE_ASM_REWRITE_RULE";
+    fn PURE_ONCE_ASM_REWRITE_RULE thl th, "PURE_ONCE_ASM_REWRITE_RULE";
+    fn PURE_ONCE_REWRITE_RULE thl th, "PURE_ONCE_REWRITE_RULE";
+    fn PURE_REWRITE_RULE thl th, "PURE_REWRITE_RULE";
+    fn PURE_SIMP_RULE thl th, "PURE_SIMP_RULE";
+    fn REWRITE_RULE thl th, "REWRITE_RULE";
+    fn Class.SELECT_RULE th, "SELECT_RULE";
+    fn SIMP_RULE thl th, "SIMP_RULE";
+    (* Other rule-like transformations, but not named *_RULE *)
+    fn Bool.SPEC_ALL th, "SPEC_ALL";
+    fn Bool.CONJ th th, "CONJ";
+    fn Bool.CONJUNCT1 th, "CONJUNCT1";
+    fn Bool.CONJUNCT2 th, "CONJUNCT2";
+    fn Bool.DISCH_ALL th, "DISCH_ALL";
+    fn Bool.DISJ_CASES th th th, "DISJ_CASES";
+    fn Bool.EQF_ELIM th, "EQF_ELIM";
+    fn Bool.EQF_INTRO th, "EQF_INTRO";
+    fn Bool.EQT_ELIM th, "EQT_ELIM";
+    fn Bool.EQT_INTRO th, "EQT_INTRO";
+    fn Fusion.EQ_MP th th, "EQ_MP";
+    fn Bool.EXISTENCE th, "EXISTENCE";
+    fn Bool.GEN_ALL th, "GEN_ALL";
+    fn Equal.GSYM th, "GSYM";
+    fn Bool.IMP_TRANS th th, "IMP_TRANS";
+    fn Ints.INT_OF_REAL_THM th, "INT_OF_REAL_THM";
+    fn Arith.LE_IMP th, "LE_IMP";
+    fn Drule.MATCH_MP th th, "MATCH_MP";
+    fn Drule.MK_CONJ th th, "MK_CONJ";
+    fn Drule.MK_DISJ th th, "MK_DISJ";
+    fn Bool.MP th th, "MP";
+    fn Bool.NOT_ELIM th, "NOT_ELIM";
+    fn Bool.NOT_INTRO th, "NOT_INTRO";
+    fn Bool.PROVE_HYP th th, "PROVE_HYP";
+    fn Reals.REAL_LET_IMP th, "REAL_LET_IMP";
+    fn Reals.REAL_LE_IMP th, "REAL_LE_IMP";
+    fn Bool.SIMPLE_DISJ_CASES th th, "SIMPLE_DISJ_CASES";
+    fn Equal.SUBS thl th, "SUBS";
+    fn Equal.SYM th, "SYM";
+    fn Fusion.TRANS th th, "TRANS";
+    fn Bool.UNDISCH th, "UNDISCH";
+    fn Bool.UNDISCH_ALL th, "UNDISCH_ALL";
+    (* RULES that require a term argument *)
+    (* NOTE: these are only the term rules that end _RULE *)
+    fn Ints.ARITH_RULE tm, "ARITH_RULE";
+    fn Canon.CONJ_ACI_RULE tm, "CONJ_ACI_RULE";
+    fn Canon.DISJ_ACI_RULE tm, "DISJ_ACI_RULE";
+    fn Ints.INTEGER_RULE tm, "INTEGER_RULE";
+    fn Ints.NUMBER_RULE tm, "NUMBER_RULE";
+    fn Sets.SET_RULE tm, "SET_RULE";
+  ]
   let () = add_conv [
     fn BETA_CONV, "BETA_CONV";
     fn Class.CONTRAPOS_CONV, "CONTRAPOS_CONV";
@@ -175,16 +247,27 @@ struct
     fn composel convfnl, "COMPOSE";
   ]
 
-  let parse s = ASSUM_LIST (fun thl ->
-    let (tc, d) = tcp thl (s, 0) in
-    if empty d then tc else
+  let return_if_empty retv d =
+    if empty d then retv else
       let (s1, i) = d in
       let remainder = String.sub s1 i (String.length s1 - i) in
-      fail d "end of input" remainder)
+      fail d "end of input" remainder
+
+  let parse s = ASSUM_LIST (fun thl ->
+    let (tc, d) = tcp thl (s, 0) in
+    return_if_empty tc d)
 
   let () = add_th [fn Theorem_fingerprint.thm_of_index n, "THM"]
 
   (* A named theorem can be referred to by name in a tactic parameter *)
   let name_thm name theorem = add_th [fn theorem, name]
+
+  (* Parse strings into corresponding rules *)
+  let parse_rule (s:string):thm =
+    (* Piggy-backing on generic parser, which expects asl as env.
+       passing empty list for env, ASSUM params are always illegal *)
+    let (rulec, d) = rule_p [] (s, 0) in
+    return_if_empty rulec d
+
 end
 include Parse

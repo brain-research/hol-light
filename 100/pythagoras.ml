@@ -3,8 +3,17 @@
 (* implicit in the definition of "norm", but maybe this is still nontrivial. *)
 (* ========================================================================= *)
 
-needs "Multivariate/misc.ml";;
-needs "Multivariate/vectors.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "pythagoras.ml"];;
+
+open Parser;;
+open Tactics;;
+open Simp;;
+open Calc_num;;
+open Calc_rat;;
+open Cart;;
+
+open Vectors;;
 
 (* ------------------------------------------------------------------------- *)
 (* Direct vector proof (could replace 2 by N and the proof still runs).      *)
@@ -28,3 +37,4 @@ let PYTHAGORAS = prove
   SIMP_TAC[NORM_POW_2; orthogonal; dot; SUM_2; DIMINDEX_2;
            VECTOR_SUB_COMPONENT; ARITH] THEN
   CONV_TAC "100/pythagoras.ml:REAL_RING" REAL_RING);;
+Pb_printer.clear_file_tags();;

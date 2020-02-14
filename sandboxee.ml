@@ -3,6 +3,9 @@ open Fusion;;
 open Printer;;
 open Tactics;;
 open Theorem_fingerprint;;
+open List;;
+
+let MAX_TERM_LENGTH = 10000;;  (* 10k characters*)
 
 type response_atom = String of string | Int of int
 
@@ -23,7 +26,7 @@ let define_inductive (tm: term) : unit =
   let th1, th2, th3 = Ind_defs.new_inductive_definition tm in
   List.map register_thm [th1; th2; th3]; ();;
 
-let specification (constants: string list) (spec_thm_fingerprint: int) : unit =
+let specification (constants: string list) (spec_thm_fingerprint: int) : int =
   let spec_thm : thm = thm_of_index spec_thm_fingerprint in
   register_thm (Nums.new_specification constants spec_thm);;
 
@@ -31,13 +34,28 @@ let current_goals() = try
     let (_,gs,_)::_ = !current_goalstack in gs
   with Match_failure _ -> []
 let send_goals gs =
-  let str_of_tm t = String (Printer.encode_term t) in
+  let str_of_tm t =
+    let raw_string = Printer.encode_term t in
+    (if String.length raw_string > MAX_TERM_LENGTH then
+      raise (Failure "HOL Light term in resulting goal exceeds MAX_TERM_LENGTH."));
+    String raw_string in
   let serialize (asl,w) = (* Format: [pretty_printed, conclusion, assumptions]*)
     let terms = w::(List.map (fun (_,t) -> Fusion.concl t) asl) in
     let strings = String (string_of_goal (asl, w))
                   :: List.map str_of_tm terms in
     (Int (List.length strings)) :: strings in
   (Int (List.length gs))::(List.flatten (List.map serialize gs))
+let send_thm th = (* Format: [pretty_printed, conclusion, hypotheses] *)
+  let str_of_tm t =
+    let raw_string = Printer.encode_term t in
+    (if String.length raw_string > MAX_TERM_LENGTH then
+      raise (Failure "HOL Light term in resulting goal exceeds MAX_TERM_LENGTH."));
+    String raw_string in
+  let hyps, w = dest_thm(th) in
+  let terms = w::hyps in
+  let strings = String (string_of_thm th)
+                  :: List.map str_of_tm terms in
+  (Int (List.length strings)) :: strings
 let repeat n f =
   let rec repeat_tr n l = if n > 0 then repeat_tr (n-1) (f()::l) else l in
   List.rev (repeat_tr n [])
@@ -67,6 +85,31 @@ let with_timeout f x =
   ignore_timeout ();
   res;;
 
+(******************* Support negating a goal. *******************)
+
+(* Tactic to bind a free variable in a goal. *)
+let SPEC_OUTERMOST_TAC g = SPEC_TAC (hd (frees (snd g)), hd (frees (snd g))) g;;
+
+(* Tactic to move to conclusion first assumption is the assumption list.*)
+let UNDISCH_HD_TAC (asm, c) = UNDISCH_TAC (concl (snd (hd asm))) (asm, c);;
+
+(* Takes as input a goal, and returns a term which is supposed to represent
+ * the negation of the goal *)
+let negate_goal input_goal =
+  let _, no_asm_subgoals, _ = REPEAT UNDISCH_HD_TAC input_goal in
+  let no_asm_goal = (match no_asm_subgoals with
+    | g::[] -> g
+    | _ -> failwith "negate_goal: expected 1 subgoal pulling assumptions."
+  ) in
+  let _, no_frees_subgoals, _ = REPEAT SPEC_OUTERMOST_TAC no_asm_goal in
+  let input_goal_as_term = (match no_frees_subgoals with
+    | (_, t)::[] -> t
+    | _ -> failwith "negate_goal: expected 1 subgoal with no assumptions here"
+  ) in
+  Bool.mk_neg input_goal_as_term;;
+
+(******************* handle_request *******************)
+
 let kOk = Int 0
 let kError = Int 1
 let handle_request() =
@@ -88,13 +131,16 @@ let handle_request() =
         (match definition_type with
           "BASIC" ->
           let tm : term = Parser.decode_term def_term in
-          register_thm (Bool.log_new_basic_definition tm)
+          register_thm (Bool.log_new_basic_definition tm);
+          ()
         | "DRULE" ->
           let tm : term = Parser.decode_term def_term in
-          register_thm (Drule.new_definition tm)
+          register_thm (Drule.new_definition tm);
+          ()
         | "PAIR" ->
           let tm : term = Parser.decode_term def_term in
-          register_thm (Pair.new_definition tm)
+          register_thm (Pair.new_definition tm);
+          ()
         | "SPEC" ->
             let spec_thm: int = Comms.receive_int() in
             let num_constants: int = Comms.receive_int() in
@@ -103,21 +149,25 @@ let handle_request() =
               else (let c = Comms.receive_string() in
                     c::read_constants (n-1)) in
             let constants : string list = read_constants num_constants in
-            specification constants spec_thm
+            specification constants spec_thm;
+            ()
         | "RECURSIVE" ->
             let tm : term = Parser.decode_term def_term in
             (*Printf.eprintf "Decoded term: %s\n%!" (str_of_sexp (sexp_term tm));*)
             let rec_thm_fp: int = Comms.receive_int() in
             let rec_thm: thm = thm_of_index rec_thm_fp in
             let ret_thm: thm = Recursion.new_recursive_definition rec_thm tm in
-            register_thm ret_thm
+            register_thm ret_thm;
+            ()
         | "INDUCTIVE" ->
           let tm : term = Parser.decode_term def_term in
           define_inductive tm
         | "DEFINE" ->
           let tm : term = Parser.decode_term def_term in
           let ret_thm = Define.define tm in
-          register_thm ret_thm); []
+          register_thm ret_thm;
+          ()
+        ); []  (* end of match definition_type *)
     | 7 (* = kSetEncoding *) ->
         let _ = Printer.current_encoding := (match Comms.receive_int() with
         | 1 (* = TE_PRETTY *) -> Printer.Pretty
@@ -140,11 +190,15 @@ let handle_request() =
         with e -> [kError;String (Printexc.to_string e)])
     | 9 (* = kRegisterTheorem *) ->
         let gs = receive_string_list() in
-        let index = Comms.receive_int() in
-        Theorem_fingerprint.index_thm index (Drule.mk_thm (to_term_list gs));
-        []
+        let thm_to_register = Drule.mk_thm (to_term_list gs) in
+(*         let fingerprint = Theorem_fingerprint.fingerprint(thm_to_register) in *)
+        let fingerprint = register_thm thm_to_register in
+(*         Theorem_fingerprint.index_thm fingerprint (thm_to_register); *)
+        [Int fingerprint]
     | 10 (* = kCompareLastTheorem *) ->
-        let expected = Comms.receive_int() in
+        let gs = receive_string_list() in
+        let thm_to_register = Drule.mk_thm (to_term_list gs) in
+        let expected = Theorem_fingerprint.fingerprint(thm_to_register) in
         let fingerprint = Theorem_fingerprint.fingerprint(fst (top_thm())) in
         (if fingerprint != expected then
           failwith ("Last theorem is not THM " ^ string_of_int expected ^
@@ -158,10 +212,24 @@ let handle_request() =
         let thm_arg_fp : int = Comms.receive_int() in
         let thm_arg : thm = thm_of_index thm_arg_fp in
         let ret_thm = Class.new_type_definition tyname (absname, repname) thm_arg in
-        register_thm ret_thm;
-        []
+        let fingerprint = register_thm ret_thm in
+        [Int fingerprint]
+    | 12 (* = kNegateGoal *) ->
+        let gs = receive_string_list() in
+        let negated_goal_as_term = negate_goal (to_goal gs) in
+        [String (Printer.encode_term negated_goal_as_term)]
+    | 13 (* = kApplyRule *) ->
+        let rule_str = Comms.receive_string() in
+        (try
+          with_timeout (fun rule_str ->
+          (* Wrapping the rule application in the timeout-sensitive part *)
+            let th = Parse_tactic.parse_rule rule_str in
+              kOk::(send_thm th)
+            ) rule_str
+        with e -> [kError;String (Printexc.to_string e)])
     ) in
     result
+
   with e -> [kError;String (Printexc.to_string e)]
 
 let () =

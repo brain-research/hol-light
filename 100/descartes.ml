@@ -2,7 +2,37 @@
 (* Rob Arthan's "Descartes's Rule of Signs by an Easy Induction".            *)
 (* ========================================================================= *)
 
-needs "Multivariate/realanalysis.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "descartes.ml"];;
+
+open Lib;;
+open Fusion;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Wf;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Wo;;
+
+open Realanalysis;;
+
 
 (* ------------------------------------------------------------------------- *)
 (* A couple of handy lemmas.                                                 *)
@@ -832,3 +862,4 @@ let DESCARTES_RULE_OF_SIGNS = prove
   REPEAT STRIP_TAC THEN
   UNDISCH_TAC `~(sum (0..m) (\j. b j * r pow j) = &0)` THEN ASM_SIMP_TAC[] THEN
   REWRITE_TAC[REAL_MUL_LZERO; SUM_0]);;
+Pb_printer.clear_file_tags();;

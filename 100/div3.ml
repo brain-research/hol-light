@@ -2,8 +2,20 @@
 (* #85: divisibility by 3 rule                                               *)
 (* ========================================================================= *)
 
-needs "Library/prime.ml";;
-needs "Library/pocklington.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "div3.ml"];;
+
+open Parser;;
+open Equal;;
+open Tactics;;
+open Simp;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Ints;;
+open Iterate;;
+
+open Pocklington;;
 
 let EXP_10_CONG_3 = prove
  (`!n. (10 EXP n == 1) (mod 3)`,
@@ -25,3 +37,4 @@ let DIVISIBILITY_BY_3 = prove
  (`3 divides (nsum(0..n) (\i. 10 EXP i * d(i))) <=>
    3 divides (nsum(0..n) (\i. d i))`,
   MATCH_MP_TAC CONG_DIVIDES THEN REWRITE_TAC[SUM_CONG_3]);;
+Pb_printer.clear_file_tags();;

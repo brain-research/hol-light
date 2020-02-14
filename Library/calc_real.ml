@@ -2,7 +2,59 @@
 (* Calculation with real numbers (Boehm-style but by inference).             *)
 (* ========================================================================= *)
 
-needs "Library/transc.ml";;
+set_jrh_lexer;;
+open System;;
+open Lib;;
+open Fusion;;
+open Basics;;
+open Nets;;
+open Printer;;
+open Preterm;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Log;;
+open Import_proofs;;
+open Tactics;;
+open Itab;;
+open Replay;;
+open Simp;;
+open Embryo_extra;;
+open Theorems;;
+open Ind_defs;;
+open Class;;
+open Trivia;;
+open Canon;;
+open Meson;;
+open Metis;;
+open Quot;;
+open Impconv;;
+open Pair;;
+open Nums;;
+open Recursion;;
+open Arith;;
+open Wf;;
+open Calc_num;;
+open Normalizer;;
+open Grobner;;
+open Ind_types;;
+open Lists;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Cart;;
+open Define;;
+open Help;;
+
+open Analysis;;
+open Transc;;
+
 
 let REAL_SUB_SUM0 = prove
  (`!x y m. sum(0,m) x - sum(0,m) y = sum(0,m) (\i. x i - y i)`,

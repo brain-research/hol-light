@@ -2,8 +2,42 @@
 (* Formalization of Alain Connes's paper "A new proof of Morley's theorem".  *)
 (* ========================================================================= *)
 
-needs "Library/iter.ml";;
-needs "Multivariate/geom.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "morley.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Sets;;
+
+open Floor;;
+open Iter;;
+
+open Vectors;;
+open Convex;;
+open Complexes;;
+open Transcendentals;;
+
+open Geom;;
 
 (* ------------------------------------------------------------------------- *)
 (* Reflection about the line[0,e^{i t}]                                      *)
@@ -464,3 +498,4 @@ let MORLEY = prove
   MATCH_MP_TAC ALGEBRAIC_LEMMA THEN
   MAP_EVERY EXISTS_TAC [`b1:complex`; `b2:complex`; `b3:complex`] THEN
   PURE_ASM_REWRITE_TAC[] THEN REWRITE_TAC[]);;
+Pb_printer.clear_file_tags();;

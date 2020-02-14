@@ -96,6 +96,18 @@ let unparse_as_infix,parse_as_infix,get_infix_status,infixes =
   (fun n     -> assoc n (!infix_list)),
   (fun ()    -> !infix_list);;
 
+(* Helpful print methods for inspecting the infix_list. *)
+let report_infix =
+  (fun inf ->
+    (report ((fst inf) ^ " "
+    ^ (string_of_int (fst (snd inf))) ^ " "
+    ^ (snd (snd inf)))))
+
+let report_infixes =
+  let infxs = infixes() in
+  (fun () ->
+    (map report_infix infxs));;
+
 (* ------------------------------------------------------------------------- *)
 (* Interface mapping.                                                        *)
 (* ------------------------------------------------------------------------- *)

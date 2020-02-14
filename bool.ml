@@ -54,7 +54,7 @@ let find_basic_definition (tm : term) : thm option =
   with Not_found -> None;;
 
 let new_basic_definition_log_opt (log: bool) tm =
-  let normalized_tm = Pb_printer.normalize_term tm in
+  let normalized_tm = Normalize.normalize_term tm in
   match find_basic_definition normalized_tm with
     Some thm -> thm
   | None ->

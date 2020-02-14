@@ -536,7 +536,7 @@ let tactic_argument_term fmt (t: term) : unit =
   pp_print_string fmt " parameters {";
   pp_print_string fmt " parameter_type: TERM";
   pp_print_string fmt " term: \"";
-  sexp_print fmt (sexp_term (Pb_printer.normalize_term t));
+  sexp_print fmt (sexp_term (Normalize.normalize_term t));
   pp_print_string fmt  "\"";
   pp_print_string fmt "}";;
 
@@ -573,7 +573,7 @@ let tactic_argument_thm fmt ptype (srcs: src list) : unit =
   tactic_argument_thms
       fmt ptype
       (fun th ->
-          print_thm_pb fmt (normalize_theorem th) "THEOREM" (fun _ -> ()))
+          print_thm_pb fmt (Normalize.normalize_theorem th) "THEOREM" (fun _ -> ()))
       (map extract_thm srcs);;
 
 let tactic_arguments_pb fmt (taclog : src tactic_log) =
@@ -710,7 +710,7 @@ let rec print_prooflog_pb
 
     pp_print_string fmt "nodes {";
     pp_print_string fmt " goal {";
-    print_goal_pb fmt (goal_to_tuple g) tag (fun _ -> ());
+    print_goal_pb fmt (goal_to_tuple g) "GOAL" (fun _ -> ());
     pp_print_string fmt "}";
     pp_print_string fmt " status: PROVED";
     print_tactic_application_pb fmt tl subgoals;
@@ -733,7 +733,7 @@ let rec print_prooflog_pb
 let log_proof (log : src proof_log) (th: thm) : unit =
   if List.length (hyp th) == 0 then
     try_to_print
-        (print_prooflog_pb (Pb_printer.normalize_theorem th) "THEOREM")
+        (print_prooflog_pb (Normalize.normalize_theorem th) "THEOREM")
         log
         prooflog_pb_fmt;;
 

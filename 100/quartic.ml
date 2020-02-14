@@ -1,3 +1,14 @@
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "100/quartic.ml"];;
+
+open Parser;;
+open Tactics;;
+open Simp;;
+open Class;;
+open Realax;;
+open Calc_rat;;
+
+
 prioritize_real();;
 
 (* ------------------------------------------------------------------------- *)
@@ -200,3 +211,5 @@ let QUARTIC_CASES = prove
         x = --a / &4 - R / &2 + E / &2 \/
         x = --a / &4 - R / &2 - E / &2)`,
   CONV_TAC "100/quartic.ml:REAL_FIELD" REAL_FIELD);;
+
+Pb_printer.clear_file_tags();;

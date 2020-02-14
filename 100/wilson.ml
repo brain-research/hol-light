@@ -2,8 +2,31 @@
 (* Wilson's theorem.                                                         *)
 (* ========================================================================= *)
 
-needs "Library/prime.ml";;
-needs "Library/pocklington.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "wilson.ml"];;
+
+open Lib;;
+open Fusion;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Ints;;
+open Sets;;
+open Iterate;;
+
+open Prime;;
+open Pocklington;;
 
 prioritize_num();;
 
@@ -11,14 +34,14 @@ prioritize_num();;
 (* Definition of iterated product.                                           *)
 (* ------------------------------------------------------------------------- *)
 
-let product = new_definition `product = iterate ( * )`;;
+let iterated_product = new_definition `iterated_product = iterate ( * )`;;
 
 let PRODUCT_CLAUSES = prove
- (`(!f. product {} f = 1) /\
+ (`(!f. iterated_product {} f = 1) /\
    (!x f s. FINITE(s)
-            ==> (product (x INSERT s) f =
-                 if x IN s then product s f else f(x) * product s f))`,
-  REWRITE_TAC[product; GSYM NEUTRAL_MUL] THEN
+            ==> (iterated_product (x INSERT s) f =
+                 if x IN s then iterated_product s f else f(x) * iterated_product s f))`,
+  REWRITE_TAC[iterated_product; GSYM NEUTRAL_MUL] THEN
   ONCE_REWRITE_TAC[SWAP_FORALL_THM] THEN
   MATCH_MP_TAC ITERATE_CLAUSES THEN REWRITE_TAC[MONOIDAL_MUL]);;
 
@@ -27,14 +50,14 @@ let PRODUCT_CLAUSES = prove
 (* ------------------------------------------------------------------------- *)
 
 let FACT_PRODUCT = prove
- (`!n. FACT(n) = product(1..n) (\i. i)`,
+ (`!n. FACT(n) = iterated_product(1..n) (\i. i)`,
   INDUCT_TAC THEN
   REWRITE_TAC[FACT; NUMSEG_CLAUSES; ARITH; PRODUCT_CLAUSES] THEN
   ASM_SIMP_TAC[ARITH_RULE `1 <= SUC n`; PRODUCT_CLAUSES; FINITE_NUMSEG] THEN
   REWRITE_TAC[IN_NUMSEG] THEN ARITH_TAC);;
 
 let FACT_PRODUCT_ALT = prove
- (`!n. FACT(n) = product(2..n) (\i. i)`,
+ (`!n. FACT(n) = iterated_product(2..n) (\i. i)`,
   GEN_TAC THEN REWRITE_TAC[FACT_PRODUCT] THEN
   DISJ_CASES_TAC(ARITH_RULE `n = 0 \/ 1 <= n`) THEN
   ASM_REWRITE_TAC[num_CONV `1`; NUMSEG_CLAUSES] THEN
@@ -51,7 +74,7 @@ let PRODUCT_PAIRUP_INDUCT = prove
  (`!f r n s. FINITE s /\ CARD s = n /\
              (!x:A. x IN s ==> ?!y. y IN s /\ ~(y = x) /\
                                     (f(x) * f(y) == 1) (mod r))
-             ==> (product s f == 1) (mod r)`,
+             ==> (iterated_product s f == 1) (mod r)`,
   GEN_TAC THEN GEN_TAC THEN
   MATCH_MP_TAC num_WF THEN X_GEN_TAC `n:num` THEN DISCH_TAC THEN
   X_GEN_TAC `s:A->bool` THEN ASM_CASES_TAC `s:A->bool = {}` THEN
@@ -94,7 +117,7 @@ let PRODUCT_PAIRUP = prove
  (`!f r s. FINITE s /\
            (!x:A. x IN s ==> ?!y. y IN s /\ ~(y = x) /\
                                   (f(x) * f(y) == 1) (mod r))
-           ==> (product s f == 1) (mod r)`,
+           ==> (iterated_product s f == 1) (mod r)`,
   REPEAT STRIP_TAC THEN MATCH_MP_TAC PRODUCT_PAIRUP_INDUCT THEN
   EXISTS_TAC `CARD(s:A->bool)` THEN ASM_REWRITE_TAC[]);;
 
@@ -198,3 +221,4 @@ let WILSON_EQ = prove
    [MATCH_MP_TAC DIVIDES_ADD_REVR THEN EXISTS_TAC `n - 1` THEN
     ASM_SIMP_TAC[ARITH_RULE `~(n = 0) ==> n - 1 + 1 = n`];
     REWRITE_TAC[DIVIDES_ONE] THEN ASM_MESON_TAC[PRIME_1]]);;
+Pb_printer.clear_file_tags();;

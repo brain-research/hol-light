@@ -2,7 +2,29 @@
 (* Euclidean GCD algorithm.                                                  *)
 (* ========================================================================= *)
 
-needs "Library/prime.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "gcd.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Class;;
+open Meson;;
+open Arith;;
+open Wf;;
+open Realax;;
+open Ints;;
+open Define;;
+
+open Prime;;
+
+prioritize_num();;
+
 
 let egcd = define
  `egcd(m,n) = if m = 0 then n
@@ -39,3 +61,4 @@ let EGCD = prove
  (`!a b. (egcd (a,b) divides a /\ egcd (a,b) divides b) /\
          (!e. e divides a /\ e divides b ==> e divides egcd (a,b))`,
   REWRITE_TAC[EGCD_GCD; GCD]);;
+Pb_printer.clear_file_tags();;

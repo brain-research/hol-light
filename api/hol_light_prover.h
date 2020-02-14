@@ -4,6 +4,7 @@
 #include "compatibility.h"
 
 #include <memory>
+
 #include "proof_assistant.pb.h"
 #include "comm.h"
 // Ignore this comment (4).
@@ -23,6 +24,10 @@ class HolLightProver {
   // internal error which has put the prover into a corrupted state.
   util::StatusOr<ApplyTacticResponse> ApplyTactic(
       const ApplyTacticRequest& request);
+
+  // Apply a rule. The response is either a new theorem, or a string indicating
+  // why application of the rule failed. Not expected to return non-OK status.
+  util::StatusOr<ApplyRuleResponse> ApplyRule(const ApplyRuleRequest& request);
 
   // Verifies that a proof is sound.
   util::StatusOr<VerifyProofResponse> VerifyProof(
@@ -57,15 +62,16 @@ class HolLightProver {
   util::Status CompareLastTheorem(const Theorem& theorem);
 
   // Cheats the given theorem, so that it can be specified later using
-  // ToTacticArgument.
-  util::Status CheatTheorem(const Theorem& theorem);
+  // ToTacticArgument. Returns the fingerprint computed by OCaml.
+  util::Status CheatTheorem(const Theorem& theorem, int64* fingerprint_result);
 
   // Defines a new symbol, where the definition contains the type of definition
   // and the defining term. Some definition types require additional parameters.
   util::Status Define(const Definition& definition);
 
   // Defines a new type.
-  util::Status DefineType(const TypeDefinition& definition);
+  util::Status DefineType(const TypeDefinition& definition,
+                          int64* fingerprint_result);
 
   // Determines how terms will be represented as strings henceforth.
   // (1=pretty printed, 2=sexpr)
@@ -76,7 +82,10 @@ class HolLightProver {
   util::Status VerifyProofImpl(const VerifyProofRequest& request);
   util::Status SendGoal(const Theorem& goal);
   util::Status SendTheorem(const Theorem& theorem);
+  util::Status ReceiveTheorem(Theorem* theorem);
   util::Status ReceiveGoals(GoalList* goals);
+
+  util::StatusOr<string> NegateGoal(const Theorem& goal);
 
  private:
   Comm* comm_;

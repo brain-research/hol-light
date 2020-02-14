@@ -2,8 +2,57 @@
 (* #61: Ceva's theorem.                                                      *)
 (* ========================================================================= *)
 
-needs "Multivariate/convex.ml";;
-needs "Examples/sos.ml";;
+set_jrh_lexer;;
+open System;;
+open Lib;;
+open Fusion;;
+open Basics;;
+open Printer;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Log;;
+open Import_proofs;;
+open Tactics;;
+open Itab;;
+open Replay;;
+open Simp;;
+open Embryo_extra;;
+open Theorems;;
+open Ind_defs;;
+open Class;;
+open Trivia;;
+open Canon;;
+open Meson;;
+open Metis;;
+open Quot;;
+open Impconv;;
+open Pair;;
+open Nums;;
+open Recursion;;
+open Arith;;
+open Wf;;
+open Calc_num;;
+open Normalizer;;
+open Grobner;;
+open Ind_types;;
+open Lists;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Cart;;
+open Define;;
+open Help;;
+
+open Vectors;;
+open Convex;;
+open Sos;;
 
 prioritize_real();;
 

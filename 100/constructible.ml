@@ -8,9 +8,44 @@
 (* Dickson's "First Course in the Theory of Equations", chapter III.         *)
 (* ========================================================================= *)
 
-needs "Library/prime.ml";;
-needs "Library/floor.ml";;
-needs "Multivariate/transcendentals.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "constructible.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Ind_defs;;
+open Class;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Grobner;;
+open Ind_types;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Cart;;
+open Define;;
+open Wo;;
+open Floor;;
+open Misc;;
+
+open Vectors;;
+open Transcendentals;;
+open Prime;;
 
 prioritize_real();;
 
@@ -896,3 +931,4 @@ let TRISECT_60_DEGREES = prove
    `&1 / &2 = &4 * c pow 3 - &3 * c <=>
     (&2 * c) pow 3 - &3 * (&2 * c) - &1 = &0`] THEN
   ASM_MESON_TAC[TRISECT_60_DEGREES_ALGEBRA; RADICAL_RULES]);;
+Pb_printer.clear_file_tags();;

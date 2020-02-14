@@ -6,6 +6,7 @@
 namespace deepmath {
 
 // Returns a stable fingerprint of the given theorem.
+// DEPRECATED: use either the python or the ocaml version.
 int64 Fingerprint(const Theorem& theorem);
 
 // Returns tactic parameter referencing the given theorem, in a format

@@ -2,6 +2,31 @@
 (* Basic theory of divisibility, gcd, coprimality and primality (over N).    *)
 (* ========================================================================= *)
 
+set_jrh_lexer;;
+open System;;
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Grobner;;
+open Realax;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Cart;;
+
 prioritize_num();;
 
 (* ------------------------------------------------------------------------- *)

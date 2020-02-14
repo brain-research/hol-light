@@ -2,9 +2,38 @@
 (* Bernoulli numbers and polynomials; sum of kth powers.                     *)
 (* ========================================================================= *)
 
-needs "Library/binomial.ml";;
-needs "Library/analysis.ml";;
-needs "Library/transc.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "bernoulli.ml"];;
+
+open System;;
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Iterate;;
+open Define;;
+
+open Binomial;;
+open Analysis;;
+open Transc;;
 
 prioritize_real();;
 
@@ -272,3 +301,4 @@ time SOP_CONV `sum(0..n) (\k. &k pow 18)`;;
 time SOP_CONV `sum(0..n) (\k. &k pow 19)`;;
 time SOP_CONV `sum(0..n) (\k. &k pow 20)`;;
 time SOP_CONV `sum(0..n) (\k. &k pow 21)`;;
+Pb_printer.clear_file_tags();;

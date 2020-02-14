@@ -2,7 +2,52 @@
 (* Square integrable functions R->R and basics of Fourier series.            *)
 (* ========================================================================= *)
 
-needs "Multivariate/lpspaces.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "fourier.ml"];;
+
+open Lib;;
+open Fusion;;
+open Printer;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Ind_defs;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Lists;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Wo;;
+open Card;;
+open Floor;;
+open Misc;;
+
+open Metric;;
+open Vectors;;
+open Determinants;;
+open Topology;;
+open Integration;;
+open Complexes;;
+open Canal;;
+open Transcendentals;;
+open Realanalysis;;
+
+open Lpspaces;;
 
 (* ------------------------------------------------------------------------- *)
 (* Somewhat general lemmas, but perhaps not enough to be installed.          *)
@@ -4633,3 +4678,4 @@ let FOURIER_FEJER_CESARO_SUMMABLE_SIMPLE = prove
     REWRITE_TAC[GSYM REAL_CONTINUOUS_ATREAL] THEN
     ASM_MESON_TAC[REAL_CONTINUOUS_ON_EQ_REAL_CONTINUOUS_AT; REAL_OPEN_UNIV;
                   IN_UNIV]]);;
+Pb_printer.clear_file_tags();;

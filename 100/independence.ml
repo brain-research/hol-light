@@ -23,8 +23,42 @@
 (* for geometry see "http://en.wikipedia.org/wiki/Tarski's_axioms".          *)
 (* ========================================================================= *)
 
-needs "Multivariate/tarski.ml";;
-needs "Multivariate/cauchy.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "independence.ml"];;
+
+open Lib;;
+open Fusion;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Pair;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Cart;;
+open Wo;;
+open Misc;;
+
+open Vectors;;
+open Topology;;
+open Convex;;
+open Complexes;;
+open Transcendentals;;
+
+open Cauchy;;
+open Tarski;;
 
 (* ------------------------------------------------------------------------- *)
 (* The semimetric we will use, directly on real^N first. Choose a sensible   *)
@@ -783,3 +817,4 @@ let TARSKI_AXIOM_11_NONEUCLIDEAN = prove
         TARSKI_AXIOM_11_EUCLIDEAN) THEN REWRITE_TAC[IN_IMAGE] THEN
   ANTS_TAC THENL [ASM SET_TAC[]; MATCH_MP_TAC MONO_EXISTS] THEN
   ASM_MESON_TAC[MEMBER_NOT_EMPTY; DEST_PLANE_NORM_LT; BETWEEN_NORM_LT]);;
+Pb_printer.clear_file_tags();;

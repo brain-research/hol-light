@@ -2,9 +2,40 @@
 (* #88: Formula for the number of derangements: round[n!/e]                  *)
 (* ========================================================================= *)
 
-needs "Library/transc.ml";;
-needs "Library/calc_real.ml";;
-needs "Library/floor.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "derangements.ml"];;
+
+open Lib;;
+open Fusion;;
+open Printer;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Define;;
+
+
+open Analysis;;
+open Transc;;
+open Calc_real;;
+open Floor;;
 
 let PAIR_BETA_THM = GEN_BETA_CONV `(\(x,y). P x y) (a,b)`;;
 
@@ -595,3 +626,4 @@ let THE_DERANGEMENTS_FORMULA = prove
   REPEAT STRIP_TAC THEN
   FIRST_X_ASSUM(MP_TAC o MATCH_MP NUMBER_OF_DERANGEMENTS) THEN
   ASM_SIMP_TAC[HAS_SIZE; DERANGEMENTS_EXP]);;
+Pb_printer.clear_file_tags();;

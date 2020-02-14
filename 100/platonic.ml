@@ -2,8 +2,48 @@
 (* The five Platonic solids exist and there are no others.                   *)
 (* ========================================================================= *)
 
-needs "100/polyhedron.ml";;
-needs "Multivariate/cross.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "platonic.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Printer;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Pair;;
+open Arith;;
+open Calc_num;;
+open Grobner;;
+open Lists;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Cart;;
+open Wo;;
+open Misc;;
+
+open Vectors;;
+open Determinants;;
+open Topology;;
+open Convex;;
+open Polytope;;
+
+open Polyhedron;;
+open Cross;;
 
 prioritize_real();;
 
@@ -2175,3 +2215,4 @@ let ICOSAHEDRON_CONGRUENT_FACETS = prove
            f2 face_of std_icosahedron /\ aff_dim f2 = &2
            ==> f1 congruent f2`,
   CONGRUENT_FACES_TAC ICOSAHEDRON_FACETS);;
+Pb_printer.clear_file_tags();;

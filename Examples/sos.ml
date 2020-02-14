@@ -24,7 +24,6 @@ open Realarith;;
 open Reals;;
 open Calc_rat;;
 open Ints;;
-open Analysis;;
 
 prioritize_real();;
 

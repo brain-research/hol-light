@@ -2,10 +2,45 @@
 (* Formalization of Jim Lawrence's proof of Euler's relation.                *)
 (* ========================================================================= *)
 
-needs "Multivariate/polytope.ml";;
-needs "Library/binomial.ml";;
-needs "100/inclusion_exclusion.ml";;
-needs "100/combinations.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "polyhedron.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Pair;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Cart;;
+open Wo;;
+open Misc;;
+
+open Metric;;
+open Vectors;;
+open Topology;;
+open Convex;;
+open Polytope;;
+open Binomial;;
+open Inclusion_exclusion;;
+open Combinations;;
 
 prioritize_real();;
 
@@ -2203,3 +2238,4 @@ let EULER_RELATION = prove
                             x + z = y + &2`] THEN
     REWRITE_TAC[REAL_OF_NUM_ADD; REAL_OF_NUM_EQ] THEN
     DISCH_THEN SUBST1_TAC THEN REWRITE_TAC[ADD_SUB2]]);;
+Pb_printer.clear_file_tags();;

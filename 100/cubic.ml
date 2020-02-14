@@ -2,7 +2,19 @@
 (* Cubic formula.                                                            *)
 (* ========================================================================= *)
 
-needs "Complex/complex_transc.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "cubic.ml"];;
+
+open Parser;;
+open Equal;;
+open Tactics;;
+open Simp;;
+open Class;;
+open Meson;;
+open Pair;;
+
+open Complexnumbers;;
+open Complex_transc;;
 
 prioritize_complex();;
 
@@ -96,3 +108,4 @@ let CUBIC = prove
     ASM_MESON_TAC[CCBRT];
     MP_TAC COMPLEX_POW_II_2 THEN CONV_TAC "100/cubic.ml:COMPLEX_RING" COMPLEX_RING;
     ASM_MESON_TAC[CSQRT]]);;
+Pb_printer.clear_file_tags();;

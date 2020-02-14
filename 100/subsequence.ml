@@ -2,9 +2,34 @@
 (* #73: Erdos-Szekeres theorem on ascending / descending subsequences.       *)
 (* ========================================================================= *)
 
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "100/subsequence.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Realarith;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Define;;
+
+
+
 let lemma = prove
  (`!f s. s = UNIONS (IMAGE (\a. {x | x IN s /\ f(x) = a}) (IMAGE f s))`,
-  REPEAT GEN_TAC THEN GEN_REWRITE_TAC "100/subsequence.ml:I" I [EXTENSION] THEN GEN_TAC THEN 
+  REPEAT GEN_TAC THEN GEN_REWRITE_TAC "100/subsequence.ml:I" I [EXTENSION] THEN GEN_TAC THEN
   REWRITE_TAC[IN_UNIONS; IN_ELIM_THM; IN_IMAGE] THEN
   REWRITE_TAC[LEFT_AND_EXISTS_THM] THEN
   GEN_REWRITE_TAC "100/subsequence.ml:RAND_CONV" RAND_CONV [SWAP_EXISTS_THM] THEN
@@ -15,11 +40,11 @@ let lemma = prove
 (* ------------------------------------------------------------------------- *)
 
 let PIGEONHOLE_LEMMA = prove
- (`!f:A->B s n. 
+ (`!f:A->B s n.
         FINITE s /\ (n - 1) * CARD(IMAGE f s) < CARD s
         ==> ?t a. t SUBSET s /\ t HAS_SIZE n /\ (!x. x IN t ==> f(x) = a)`,
   REPEAT GEN_TAC THEN DISCH_THEN(CONJUNCTS_THEN2 ASSUME_TAC MP_TAC) THEN
-  MP_TAC(ISPECL [`f:A->B`; `s:A->bool`] lemma) THEN DISCH_THEN(fun th -> 
+  MP_TAC(ISPECL [`f:A->B`; `s:A->bool`] lemma) THEN DISCH_THEN(fun th ->
     GEN_REWRITE_TAC "100/subsequence.ml:(LAND_CONV o funpow 2 RAND_CONV)" (LAND_CONV o funpow 2 RAND_CONV) [th]) THEN
   ONCE_REWRITE_TAC[GSYM CONTRAPOS_THM] THEN REWRITE_TAC[NOT_LT] THEN
   STRIP_TAC THEN GEN_REWRITE_TAC "100/subsequence.ml:RAND_CONV" RAND_CONV [MULT_SYM] THEN MATCH_MP_TAC
@@ -42,7 +67,7 @@ let PIGEONHOLE_LEMMA = prove
 (* ------------------------------------------------------------------------- *)
 
 let mono_on = define
- `mono_on (f:num->real) r s <=> 
+ `mono_on (f:num->real) r s <=>
     !i j. i IN s /\ j IN s /\ i <= j ==> r (f i) (f j)`;;
 
 let MONO_ON_SUBSET = prove
@@ -60,7 +85,7 @@ let ERDOS_SZEKERES = prove
   REPEAT STRIP_TAC THEN
   SUBGOAL_THEN
    `!i. i IN (1..m*n+1)
-        ==> ?k. (?s. s SUBSET (1..m*n+1) /\ s HAS_SIZE k /\ 
+        ==> ?k. (?s. s SUBSET (1..m*n+1) /\ s HAS_SIZE k /\
                      mono_on f (<=) s /\ i IN s /\ (!j. j IN s ==> i <= j)) /\
                 (!l. (?s. s SUBSET (1..m*n+1) /\ s HAS_SIZE l /\
                      mono_on f (<=) s /\ i IN s /\ (!j. j IN s ==> i <= j))
@@ -100,25 +125,25 @@ let ERDOS_SZEKERES = prove
   MP_TAC THENL
    [MATCH_MP_TAC PIGEONHOLE_LEMMA THEN
     REWRITE_TAC[FINITE_NUMSEG; CARD_NUMSEG_1; ADD_SUB] THEN
-    MATCH_MP_TAC LET_TRANS THEN EXISTS_TAC `n * CARD(1..m)` THEN 
+    MATCH_MP_TAC LET_TRANS THEN EXISTS_TAC `n * CARD(1..m)` THEN
     CONJ_TAC THENL [ALL_TAC; REWRITE_TAC[CARD_NUMSEG_1] THEN ARITH_TAC] THEN
-    REWRITE_TAC[LE_MULT_LCANCEL] THEN DISJ2_TAC THEN 
+    REWRITE_TAC[LE_MULT_LCANCEL] THEN DISJ2_TAC THEN
     MATCH_MP_TAC CARD_SUBSET THEN REWRITE_TAC[FINITE_NUMSEG] THEN
     ASM_REWRITE_TAC[SUBSET; FORALL_IN_IMAGE] THEN ASM_MESON_TAC[IN_NUMSEG];
     ALL_TAC] THEN
   MATCH_MP_TAC MONO_EXISTS THEN X_GEN_TAC `u:num->bool` THEN
-  DISCH_THEN(X_CHOOSE_THEN `k:num` STRIP_ASSUME_TAC) THEN 
+  DISCH_THEN(X_CHOOSE_THEN `k:num` STRIP_ASSUME_TAC) THEN
   ASM_REWRITE_TAC[mono_on] THEN MAP_EVERY X_GEN_TAC [`i:num`; `j:num`] THEN
-  REWRITE_TAC[LE_LT; real_ge] THEN STRIP_TAC THEN 
+  REWRITE_TAC[LE_LT; real_ge] THEN STRIP_TAC THEN
   ASM_REWRITE_TAC[REAL_LE_REFL] THEN
-  REMOVE_THEN "*" (fun th -> 
+  REMOVE_THEN "*" (fun th ->
     MP_TAC(SPEC `i:num` th) THEN MP_TAC(SPEC `j:num` th)) THEN
   ANTS_TAC THENL [ASM_MESON_TAC[SUBSET]; ALL_TAC] THEN
   DISCH_THEN(X_CHOOSE_THEN `s:num->bool` STRIP_ASSUME_TAC o CONJUNCT1) THEN
   ANTS_TAC THENL [ASM_MESON_TAC[SUBSET]; ALL_TAC] THEN
   DISCH_THEN(MP_TAC o SPEC `k + 1` o CONJUNCT2) THEN
   ASM_SIMP_TAC[ARITH_RULE `~(k + 1 <= k)`; GSYM REAL_NOT_LT] THEN
-  REWRITE_TAC[CONTRAPOS_THM] THEN 
+  REWRITE_TAC[CONTRAPOS_THM] THEN
   DISCH_TAC THEN EXISTS_TAC `(i:num) INSERT s` THEN REPEAT CONJ_TAC THENL
    [ASM SET_TAC[];
     REWRITE_TAC[HAS_SIZE_CLAUSES; GSYM ADD1] THEN ASM_MESON_TAC[NOT_LT];
@@ -129,3 +154,5 @@ let ERDOS_SZEKERES = prove
   REWRITE_TAC[mono_on; IN_INSERT] THEN
   ASM_MESON_TAC[REAL_LE_REFL; REAL_LE_TRANS; REAL_LT_IMP_LE; NOT_LE;
                 LT_REFL; LE_TRANS]);;
+
+Pb_printer.clear_file_tags();;

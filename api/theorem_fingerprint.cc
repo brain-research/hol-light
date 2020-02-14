@@ -14,6 +14,9 @@ constexpr uint64 kMask = (static_cast<uint64>(1) << 62) - 1;
 
 int64 Fingerprint(const Theorem& theorem) {
   // LINT.IfChange
+  if (!theorem.hypotheses().empty() && !theorem.assumptions().empty()) {
+    LOG(ERROR) << "Goal can only have one of hypotheses or assumptions.";
+  }
   if (!theorem.has_conclusion() && theorem.has_fingerprint()) {
     // Needed for theorems in tactic parameters that may only be logged as fps.
     return theorem.fingerprint();
@@ -23,8 +26,13 @@ int64 Fingerprint(const Theorem& theorem) {
     uint64 tmp = farmhash::Fingerprint64(hypothesis);
     fp = farmhash::Fingerprint(fp, tmp);
   }
+  for (const auto& assumption : theorem.assumptions()) {
+    uint64 tmp = Fingerprint(assumption);
+    tmp = tmp + 1;  // Ensures that "[t1 |- t2], t3", "[|-t1, |-t2], t3" differ
+    fp = farmhash::Fingerprint(fp, tmp);
+  }
   int64 result = static_cast<int64>(fp & kMask);
-  // LINT.ThenChange(//hol_light/theorem_fingerprint.cc)
+  // LINT.ThenChange(//hol_light/theorem_fingerprint_c.cc)
   if (theorem.has_fingerprint() && theorem.fingerprint() != result) {
     LOG(ERROR) << "Inconsistent fingerprints in Theorem protobuf.";
   }

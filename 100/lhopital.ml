@@ -2,7 +2,28 @@
 (* #64: L'Hopital's rule.                                                    *)
 (* ========================================================================= *)
 
-needs "Library/analysis.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "lhopital.ml"];;
+
+open Lib;;
+open Fusion;;
+open Preterm;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+
+open Analysis;;
 
 override_interface ("-->",`(tends_real_real)`);;
 
@@ -198,3 +219,4 @@ let LHOPITAL = prove
   ASM_SIMP_TAC[REAL_ARITH
    `&0 < abs(x - c) /\ &0 < abs z /\ abs z < abs(x - c) ==> ~(x + z = c)`] THEN
   ASM_REWRITE_TAC[REAL_SUB_REFL; REAL_ABS_NUM]);;
+Pb_printer.clear_file_tags();;

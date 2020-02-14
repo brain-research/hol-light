@@ -5,8 +5,66 @@
 (* MathOlymp.com, 2001. Apparently due to J. Q. Longyear and T. D. Parsons.  *)
 (* ========================================================================= *)
 
-needs "Library/prime.ml";;
-needs "Library/pocklington.ml";;
+set_jrh_lexer;;
+open System;;
+open Lib;;
+open Fusion;;
+open Basics;;
+open Nets;;
+open Printer;;
+open Preterm;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Log;;
+open Import_proofs;;
+open Tactics;;
+open Itab;;
+open Replay;;
+open Simp;;
+open Embryo_extra;;
+open Theorems;;
+open Ind_defs;;
+open Class;;
+open Trivia;;
+open Canon;;
+open Meson;;
+open Metis;;
+open Quot;;
+open Impconv;;
+open Pair;;
+open Nums;;
+open Recursion;;
+open Arith;;
+open Wf;;
+open Calc_num;;
+open Normalizer;;
+open Grobner;;
+open Ind_types;;
+open Lists;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Cart;;
+open Define;;
+open Help;;
+open Wo;;
+open Binary;;
+open Card;;
+open Permutations;;
+open Products;;
+open Floor;;
+open Misc;;
+open Iter;;
+
+open Prime;;
+open Pocklington;;
 
 (* ------------------------------------------------------------------------- *)
 (* Useful inductive breakdown principle ending at gcd.                       *)
@@ -139,8 +197,8 @@ let ELEMENTS_PAIR_UP = prove
 let cycle = new_definition
  `cycle r k x <=> (!i. r (x i) (x(i + 1))) /\ (!i. x(i + k) = x(i))`;;
 
-let path = new_definition
- `path r k x <=> (!i. i < k ==> r (x i) (x(i + 1))) /\
+let friendship_path = new_definition
+ `friendship_path r k x <=> (!i. i < k ==> r (x i) (x(i + 1))) /\
                  (!i. k < i ==> x(i) = @x. T)`;;
 
 (* ------------------------------------------------------------------------- *)
@@ -158,33 +216,33 @@ let CYCLE_MOD = prove
   MESON_TAC[CYCLE_OFFSET; DIVISION]);;
 
 let PATHS_MONO = prove
- (`(!x y. r x y ==> s x y) ==> {x | path r k x} SUBSET {x | path s k x}`,
-  REWRITE_TAC[path; IN_ELIM_THM; SUBSET] THEN MESON_TAC[]);;
+ (`(!x y. r x y ==> s x y) ==> {x | friendship_path r k x} SUBSET {x | friendship_path s k x}`,
+  REWRITE_TAC[friendship_path; IN_ELIM_THM; SUBSET] THEN MESON_TAC[]);;
 
 let HAS_SIZE_PATHS = prove
  (`!N m r k. (:A) HAS_SIZE N /\ (!x. {y | r x y} HAS_SIZE m)
-             ==> {x:num->A | path r k x} HAS_SIZE (N * m EXP k)`,
+             ==> {x:num->A | friendship_path r k x} HAS_SIZE (N * m EXP k)`,
   REWRITE_TAC[RIGHT_FORALL_IMP_THM] THEN REPEAT GEN_TAC THEN STRIP_TAC THEN
   INDUCT_TAC THEN REWRITE_TAC[EXP; MULT_CLAUSES] THENL
-   [SUBGOAL_THEN `{x:num->A | path r 0 x} =
+   [SUBGOAL_THEN `{x:num->A | friendship_path r 0 x} =
                   IMAGE (\a i. if i = 0 then a else @x. T) (:A)`
     SUBST1_TAC THENL
-     [REWRITE_TAC[EXTENSION; IN_ELIM_THM; IN_IMAGE; IN_UNIV; path; LT] THEN
+     [REWRITE_TAC[EXTENSION; IN_ELIM_THM; IN_IMAGE; IN_UNIV; friendship_path; LT] THEN
       REWRITE_TAC[FUN_EQ_THM; LT_NZ] THEN MESON_TAC[];
       ALL_TAC] THEN
     MATCH_MP_TAC HAS_SIZE_IMAGE_INJ THEN ASM_REWRITE_TAC[IN_UNIV] THEN
     REWRITE_TAC[FUN_EQ_THM] THEN MESON_TAC[];
     ALL_TAC] THEN
   SUBGOAL_THEN
-   `{x:num->A | path r (SUC k) x} =
+   `{x:num->A | friendship_path r (SUC k) x} =
     IMAGE (\(x,a) i. if i = SUC k then a else x i)
-          {x,a | x IN {x | path r k x} /\ a IN {u | r (x k) u}}`
+          {x,a | x IN {x | friendship_path r k x} /\ a IN {u | r (x k) u}}`
   SUBST1_TAC THENL
    [REWRITE_TAC[EXTENSION; IN_ELIM_THM; IN_IMAGE; EXISTS_PAIR_THM] THEN
     X_GEN_TAC `x:num->A` THEN REWRITE_TAC[PAIR_EQ] THEN
     ONCE_REWRITE_TAC[TAUT `(a /\ b) /\ c /\ d <=> c /\ d /\ a /\ b`] THEN
     REWRITE_TAC[RIGHT_EXISTS_AND_THM; UNWIND_THM1] THEN
-    REWRITE_TAC[FUN_EQ_THM; path; LT] THEN EQ_TAC THENL
+    REWRITE_TAC[FUN_EQ_THM; friendship_path; LT] THEN EQ_TAC THENL
      [STRIP_TAC THEN EXISTS_TAC `\i. if i = SUC k then @x. T else x(i):A` THEN
       EXISTS_TAC `x(SUC k):A` THEN SIMP_TAC[] THEN
       CONJ_TAC THENL [MESON_TAC[]; ALL_TAC] THEN
@@ -202,7 +260,7 @@ let HAS_SIZE_PATHS = prove
   ONCE_REWRITE_TAC[ARITH_RULE `N * m * m EXP k = (N * m EXP k) * m`] THEN
   MATCH_MP_TAC HAS_SIZE_IMAGE_INJ THEN CONJ_TAC THENL
    [REWRITE_TAC[FORALL_PAIR_THM; IN_ELIM_PAIR_THM; IN_ELIM_THM] THEN
-    REWRITE_TAC[FUN_EQ_THM; path; PAIR_EQ] THEN REPEAT GEN_TAC THEN
+    REWRITE_TAC[FUN_EQ_THM; friendship_path; PAIR_EQ] THEN REPEAT GEN_TAC THEN
     STRIP_TAC THEN CONJ_TAC THENL [ALL_TAC; ASM_MESON_TAC[]] THEN
     X_GEN_TAC `i:num` THEN ASM_CASES_TAC `i = SUC k` THEN
     ASM_MESON_TAC[ARITH_RULE `k < SUC k`];
@@ -210,9 +268,9 @@ let HAS_SIZE_PATHS = prove
   ASM_SIMP_TAC[HAS_SIZE_PRODUCT_DEPENDENT]);;
 
 let FINITE_PATHS = prove
- (`!r k. FINITE(:A) ==> FINITE {x:num->A | path r k x}`,
+ (`!r k. FINITE(:A) ==> FINITE {x:num->A | friendship_path r k x}`,
   REPEAT STRIP_TAC THEN MATCH_MP_TAC FINITE_SUBSET THEN
-  EXISTS_TAC `{x:num->A | path (\a b. T) k x}` THEN SIMP_TAC[PATHS_MONO] THEN
+  EXISTS_TAC `{x:num->A | friendship_path (\a b. T) k x}` THEN SIMP_TAC[PATHS_MONO] THEN
   MP_TAC(ISPECL [`CARD(:A)`; `CARD(:A)`; `\a:A b:A. T`; `k:num`]
                 HAS_SIZE_PATHS) THEN
   ANTS_TAC THEN ASM_SIMP_TAC[HAS_SIZE; SET_RULE `{y | T} = (:A)`]);;
@@ -220,11 +278,11 @@ let FINITE_PATHS = prove
 let HAS_SIZE_CYCLES = prove
  (`!r k. FINITE(:A) /\ ~(k = 0)
          ==> {x:num->A | cycle r k x} HAS_SIZE
-             CARD{x:num->A | path r k x /\ x(k) = x(0)}`,
+             CARD{x:num->A | friendship_path r k x /\ x(k) = x(0)}`,
   REPEAT STRIP_TAC THEN
   SUBGOAL_THEN
    `{x:num->A | cycle r k x} =
-    IMAGE (\x i. x(i MOD k)) {x | path r k x /\ x(k) = x(0)}`
+    IMAGE (\x i. x(i MOD k)) {x | friendship_path r k x /\ x(k) = x(0)}`
   SUBST1_TAC THENL
    [REWRITE_TAC[EXTENSION; IN_IMAGE; IN_ELIM_THM] THEN
     X_GEN_TAC `x:num->A` THEN EQ_TAC THENL
@@ -233,7 +291,7 @@ let HAS_SIZE_CYCLES = prove
       REPEAT CONJ_TAC THENL
        [ASM_SIMP_TAC[FUN_EQ_THM; LT_IMP_LE; DIVISION] THEN
         ASM_MESON_TAC[CYCLE_MOD];
-        SIMP_TAC[path; LT_IMP_LE] THEN REWRITE_TAC[GSYM NOT_LT] THEN
+        SIMP_TAC[friendship_path; LT_IMP_LE] THEN REWRITE_TAC[GSYM NOT_LT] THEN
         SIMP_TAC[ARITH_RULE `i < k ==> ~(k < i + 1)`] THEN
         ASM_MESON_TAC[cycle];
         REWRITE_TAC[LE_0; LE_REFL] THEN ASM_MESON_TAC[cycle; ADD_CLAUSES]];
@@ -244,7 +302,7 @@ let HAS_SIZE_CYCLES = prove
         AP_TERM_TAC THEN MATCH_MP_TAC MOD_EQ THEN EXISTS_TAC `1` THEN
         REWRITE_TAC[MULT_CLAUSES]] THEN
       SUBGOAL_THEN `y((i + 1) MOD k):A = y(i MOD k + 1)` SUBST1_TAC THENL
-       [ALL_TAC; ASM_MESON_TAC[path; DIVISION]] THEN
+       [ALL_TAC; ASM_MESON_TAC[friendship_path; DIVISION]] THEN
       SUBGOAL_THEN `(i + 1) MOD k = (i MOD k + 1) MOD k` SUBST1_TAC THENL
        [MATCH_MP_TAC MOD_EQ THEN EXISTS_TAC `i DIV k` THEN
         REWRITE_TAC[ARITH_RULE `i + 1 = (m + 1) + ik <=> i = ik + m`] THEN
@@ -260,10 +318,10 @@ let HAS_SIZE_CYCLES = prove
   MATCH_MP_TAC HAS_SIZE_IMAGE_INJ THEN CONJ_TAC THENL
    [ALL_TAC;
     REWRITE_TAC[HAS_SIZE] THEN MATCH_MP_TAC FINITE_SUBSET THEN
-    EXISTS_TAC `{x:num->A | path r k x}` THEN
+    EXISTS_TAC `{x:num->A | friendship_path r k x}` THEN
     ASM_SIMP_TAC[FINITE_PATHS] THEN SET_TAC[]] THEN
   MAP_EVERY X_GEN_TAC [`x:num->A`; `y:num->A`] THEN SIMP_TAC[IN_ELIM_THM] THEN
-  REWRITE_TAC[path; FUN_EQ_THM] THEN STRIP_TAC THEN X_GEN_TAC `i:num` THEN
+  REWRITE_TAC[friendship_path; FUN_EQ_THM] THEN STRIP_TAC THEN X_GEN_TAC `i:num` THEN
   REPEAT_TCL DISJ_CASES_THEN ASSUME_TAC
    (SPECL [`i:num`; `k:num`] LT_CASES)
   THENL [ASM_MESON_TAC[MOD_LT]; ASM_MESON_TAC[]; ASM_REWRITE_TAC[]] THEN
@@ -279,22 +337,22 @@ let CARD_PATHCYCLES_STEP = prove
      (!x:A. {y | r x y} HAS_SIZE m) /\
      (!x y. r x y ==> r y x) /\
      (!x y. ~(x = y) ==> ?!z. r x z /\ r z y)
-     ==> {x | path r (k + 2) x /\ x(k + 2) = x(0)} HAS_SIZE
-         (m * CARD {x | path r k x /\ x(k) = x(0)} +
-          CARD {x | path r (k) x /\ ~(x(k) = x(0))})`,
+     ==> {x | friendship_path r (k + 2) x /\ x(k + 2) = x(0)} HAS_SIZE
+         (m * CARD {x | friendship_path r k x /\ x(k) = x(0)} +
+          CARD {x | friendship_path r (k) x /\ ~(x(k) = x(0))})`,
   REPEAT STRIP_TAC THEN
   REWRITE_TAC[SET_RULE
-   `{x | path r (k + 2) x /\ x(k + 2) = x(0)} =
-    {x | path r (k + 2) x /\ x k = x 0 /\ x(k + 2) = x(0)} UNION
-    {x | path r (k + 2) x /\ ~(x k = x 0) /\ x(k + 2) = x(0)}`] THEN
+   `{x | friendship_path r (k + 2) x /\ x(k + 2) = x(0)} =
+    {x | friendship_path r (k + 2) x /\ x k = x 0 /\ x(k + 2) = x(0)} UNION
+    {x | friendship_path r (k + 2) x /\ ~(x k = x 0) /\ x(k + 2) = x(0)}`] THEN
   MATCH_MP_TAC HAS_SIZE_UNION THEN GEN_REWRITE_TAC "100/friendship.ml:I" I [CONJ_ASSOC] THEN
   CONJ_TAC THENL [ALL_TAC; SET_TAC[]] THEN CONJ_TAC THENL
    [SUBGOAL_THEN
-     `{x:num->A | path r (k + 2) x /\ x k = x 0 /\ x (k + 2) = x 0} =
+     `{x:num->A | friendship_path r (k + 2) x /\ x k = x 0 /\ x (k + 2) = x 0} =
       IMAGE (\(x,a) i. if i = k + 1 then a
                      else if i = k + 2 then x(0)
                      else x(i))
-            {x,a | x IN {x | path r k x /\ x(k) = x(0)} /\
+            {x,a | x IN {x | friendship_path r k x /\ x(k) = x(0)} /\
                    a IN {u | r (x k) u}}`
     SUBST1_TAC THENL
      [ALL_TAC;
@@ -309,7 +367,7 @@ let CARD_PATHCYCLES_STEP = prove
         DISCH_THEN(fun th -> MP_TAC th THEN MP_TAC(SPEC `0` th)) THEN
         REWRITE_TAC[ARITH_RULE `~(0 = k + 1) /\ ~(0 = k + 2)`] THEN
         DISCH_TAC THEN ASM_CASES_TAC `k:num < i` THENL
-         [ASM_MESON_TAC[path]; ALL_TAC] THEN
+         [ASM_MESON_TAC[friendship_path]; ALL_TAC] THEN
         DISCH_THEN(MP_TAC o SPEC `i:num`) THEN
         ASM_MESON_TAC[ARITH_RULE `k < k + 1 /\ k < k + 2`];
         ALL_TAC] THEN
@@ -317,7 +375,7 @@ let CARD_PATHCYCLES_STEP = prove
       MATCH_MP_TAC HAS_SIZE_PRODUCT_DEPENDENT THEN
       ASM_REWRITE_TAC[] THEN REWRITE_TAC[HAS_SIZE] THEN
       MATCH_MP_TAC FINITE_SUBSET THEN
-      EXISTS_TAC `{x:num->A | path r k x}` THEN CONJ_TAC THENL
+      EXISTS_TAC `{x:num->A | friendship_path r k x}` THEN CONJ_TAC THENL
        [ALL_TAC; SET_TAC[]] THEN
       ASM_MESON_TAC[HAS_SIZE; FINITE_PATHS]] THEN
     REWRITE_TAC[EXTENSION; IN_IMAGE] THEN
@@ -329,17 +387,17 @@ let CARD_PATHCYCLES_STEP = prove
       EXISTS_TAC `(x:num->A) (k + 1)` THEN
       REWRITE_TAC[IN_ELIM_THM; LE_REFL; LE_0] THEN
       ASM_REWRITE_TAC[CONJ_ASSOC] THEN CONJ_TAC THENL
-       [ALL_TAC; ASM_MESON_TAC[path; ARITH_RULE `k < k + 2`]] THEN
+       [ALL_TAC; ASM_MESON_TAC[friendship_path; ARITH_RULE `k < k + 2`]] THEN
       CONJ_TAC THENL
        [ALL_TAC;
-        UNDISCH_TAC `path r (k + 2) (x:num->A)` THEN
-        SIMP_TAC[path; LT_IMP_LE; ARITH_RULE `i < k ==> i + 1 <= k`] THEN
+        UNDISCH_TAC `friendship_path r (k + 2) (x:num->A)` THEN
+        SIMP_TAC[friendship_path; LT_IMP_LE; ARITH_RULE `i < k ==> i + 1 <= k`] THEN
         SIMP_TAC[GSYM NOT_LT] THEN
         MESON_TAC[ARITH_RULE `i < k ==> i < k + 2`]] THEN
       X_GEN_TAC `i:num` THEN
       ASM_CASES_TAC `i = k + 1` THEN ASM_REWRITE_TAC[] THEN
       ASM_CASES_TAC `i = k + 2` THEN ASM_REWRITE_TAC[] THEN
-      FIRST_X_ASSUM(MP_TAC o GEN_REWRITE_RULE I [path]) THEN
+      FIRST_X_ASSUM(MP_TAC o GEN_REWRITE_RULE I [friendship_path]) THEN
       COND_CASES_TAC THEN ASM_REWRITE_TAC[] THEN
       DISCH_THEN(MP_TAC o SPEC `i:num` o CONJUNCT2) THEN
       ASM_REWRITE_TAC[ARITH_RULE
@@ -356,7 +414,7 @@ let CARD_PATHCYCLES_STEP = prove
     CONJ_TAC THENL
      [ALL_TAC; REMOVE_THEN "*" (MP_TAC o SPEC `k:num`) THEN
       ASM_REWRITE_TAC[ARITH_RULE `~(k = k + 2) /\ ~(k = k + 1)`]] THEN
-    UNDISCH_TAC `path r k (z:num->A)` THEN ASM_REWRITE_TAC[path] THEN
+    UNDISCH_TAC `friendship_path r k (z:num->A)` THEN ASM_REWRITE_TAC[friendship_path] THEN
     SIMP_TAC[ARITH_RULE
      `k + 2 < i ==> k < i /\ ~(i = k + 1) /\ ~(i = k + 2)`] THEN
     STRIP_TAC THEN X_GEN_TAC `i:num` THEN DISCH_TAC THEN
@@ -370,25 +428,25 @@ let CARD_PATHCYCLES_STEP = prove
                               ==> i < k`];
     ALL_TAC] THEN
   SUBGOAL_THEN
-   `{x:num->A | path r (k + 2) x /\ ~(x k = x 0) /\ x (k + 2) = x 0} =
+   `{x:num->A | friendship_path r (k + 2) x /\ ~(x k = x 0) /\ x (k + 2) = x 0} =
     IMAGE (\x i. if i = k + 1 then @z. r (x k) z /\ r z (x 0)
                else if i = k + 2 then x(0)
                else x(i))
-        {x | path r k x /\ ~(x(k) = x(0))}`
+        {x | friendship_path r k x /\ ~(x(k) = x(0))}`
   SUBST1_TAC THENL
    [ALL_TAC;
     MATCH_MP_TAC HAS_SIZE_IMAGE_INJ THEN CONJ_TAC THENL
      [ALL_TAC;
       REWRITE_TAC[HAS_SIZE] THEN
       MATCH_MP_TAC FINITE_SUBSET THEN
-      EXISTS_TAC `{x:num->A | path r k x}` THEN CONJ_TAC THENL
+      EXISTS_TAC `{x:num->A | friendship_path r k x}` THEN CONJ_TAC THENL
        [ALL_TAC; SET_TAC[]] THEN
       ASM_MESON_TAC[HAS_SIZE; FINITE_PATHS]] THEN
     MAP_EVERY X_GEN_TAC [`x:num->A`; `y:num->A`] THEN
     REWRITE_TAC[IN_ELIM_THM] THEN STRIP_TAC THEN
     REWRITE_TAC[FUN_EQ_THM] THEN X_GEN_TAC `i:num` THEN
     ASM_CASES_TAC `k:num < i` THENL
-     [ASM_MESON_TAC[path]; ALL_TAC] THEN
+     [ASM_MESON_TAC[friendship_path]; ALL_TAC] THEN
     FIRST_X_ASSUM(MP_TAC o GEN_REWRITE_RULE I [FUN_EQ_THM]) THEN
     DISCH_THEN(MP_TAC o SPEC `i:num`) THEN
     ASM_MESON_TAC[ARITH_RULE `k < k + 1 /\ k < k + 2`]] THEN
@@ -398,14 +456,14 @@ let CARD_PATHCYCLES_STEP = prove
     EXISTS_TAC `\i. if i <= k then x(i):A else @x. T` THEN
     ASM_REWRITE_TAC[LE_REFL; LE_0] THEN CONJ_TAC THENL
      [ALL_TAC;
-      UNDISCH_TAC `path r (k + 2) (x:num->A)` THEN
-      SIMP_TAC[path; LT_IMP_LE; ARITH_RULE `i < k ==> i + 1 <= k`] THEN
+      UNDISCH_TAC `friendship_path r (k + 2) (x:num->A)` THEN
+      SIMP_TAC[friendship_path; LT_IMP_LE; ARITH_RULE `i < k ==> i + 1 <= k`] THEN
       SIMP_TAC[GSYM NOT_LT] THEN
       MESON_TAC[ARITH_RULE `i < k ==> i < k + 2`]] THEN
     REWRITE_TAC[FUN_EQ_THM] THEN X_GEN_TAC `i:num` THEN
     ASM_CASES_TAC `i = k + 1` THEN ASM_REWRITE_TAC[] THENL
      [CONV_TAC "100/friendship.ml:SYM_CONV" SYM_CONV THEN MATCH_MP_TAC SELECT_UNIQUE THEN
-      UNDISCH_TAC `path r (k + 2) (x:num->A)` THEN REWRITE_TAC[path] THEN
+      UNDISCH_TAC `friendship_path r (k + 2) (x:num->A)` THEN REWRITE_TAC[friendship_path] THEN
       DISCH_THEN(MP_TAC o CONJUNCT1) THEN
       DISCH_THEN(fun th -> MP_TAC(SPEC `k:num` th) THEN
                            MP_TAC(SPEC `k + 1` th)) THEN
@@ -414,7 +472,7 @@ let CARD_PATHCYCLES_STEP = prove
       ALL_TAC] THEN
     ASM_CASES_TAC `i = k + 2` THEN ASM_REWRITE_TAC[] THEN
     COND_CASES_TAC THEN ASM_REWRITE_TAC[] THEN
-    UNDISCH_TAC `path r (k + 2) (x:num->A)` THEN REWRITE_TAC[path] THEN
+    UNDISCH_TAC `friendship_path r (k + 2) (x:num->A)` THEN REWRITE_TAC[friendship_path] THEN
     DISCH_THEN(MP_TAC o CONJUNCT2) THEN
     ASM_MESON_TAC[ARITH_RULE `~(i <= k) /\ ~(i = k + 1) /\ ~(i = k + 2)
                               ==> k + 2 < i`];
@@ -423,7 +481,7 @@ let CARD_PATHCYCLES_STEP = prove
   ASM_REWRITE_TAC[ARITH_RULE
    `~(k + 2 = k + 1) /\ ~(0 = k + 1) /\ ~(0 = k + 2) /\ ~(k = k + 1) /\
     ~(k = k + 2)`] THEN
-  REWRITE_TAC[path] THEN CONJ_TAC THEN X_GEN_TAC `i:num` THEN DISCH_TAC THENL
+  REWRITE_TAC[friendship_path] THEN CONJ_TAC THEN X_GEN_TAC `i:num` THEN DISCH_TAC THENL
    [REWRITE_TAC[ARITH_RULE `i + 1 = k + 2 <=> i = k + 1`] THEN
     ASM_CASES_TAC `i = k + 1` THEN ASM_REWRITE_TAC[] THENL
      [REWRITE_TAC[ARITH_RULE `(k + 1) + 1 = k + 1 <=> F`] THEN ASM_MESON_TAC[];
@@ -431,13 +489,13 @@ let CARD_PATHCYCLES_STEP = prove
     ASM_SIMP_TAC[ARITH_RULE `i < k + 2 ==> ~(i = k + 2)`] THEN
     REWRITE_TAC[EQ_ADD_RCANCEL] THEN COND_CASES_TAC THEN ASM_SIMP_TAC[] THENL
      [ASM_MESON_TAC[]; ALL_TAC] THEN
-    UNDISCH_TAC `path r k (y:num->A)` THEN REWRITE_TAC[path] THEN
+    UNDISCH_TAC `friendship_path r k (y:num->A)` THEN REWRITE_TAC[friendship_path] THEN
     DISCH_THEN(MATCH_MP_TAC o CONJUNCT1) THEN
     MAP_EVERY UNDISCH_TAC [`~(i:num = k)`; `~(i = k + 1)`; `i < k + 2`] THEN
     ARITH_TAC;
     ALL_TAC] THEN
   ASM_SIMP_TAC[ARITH_RULE `k + 2 < i ==> ~(i = k + 1) /\ ~(i = k + 2)`] THEN
-  ASM_MESON_TAC[path; ARITH_RULE `k + 2 < i ==> k < i`]);;
+  ASM_MESON_TAC[friendship_path; ARITH_RULE `k + 2 < i ==> k < i`]);;
 
 (* ------------------------------------------------------------------------- *)
 (* The first lemma about the number of cycles.                               *)
@@ -595,7 +653,7 @@ let FRIENDSHIP = prove
     ASM_MESON_TAC[];
     ALL_TAC] THEN
   SUBGOAL_THEN `EVEN(m)` ASSUME_TAC THENL
-   [UNDISCH_TAC `!x:person. degree x = (m:num)` THEN
+   [UNDISCH_TAC `!x:person. degree(x) = (m:num)` THEN
     DISCH_THEN(SUBST1_TAC o SYM o SPEC `a:person`) THEN
     EXPAND_TAC "degree" THEN MATCH_MP_TAC ELEMENTS_PAIR_UP THEN
     EXISTS_TAC `\x y:person. friend a x /\ friend a y /\ friend x y` THEN
@@ -716,8 +774,8 @@ let FRIENDSHIP = prove
         ==> p divides nep2`) THEN
   MAP_EVERY EXISTS_TAC 
    [`m - 1`; `CARD {x:num->person | cycle friend p x}`;
-    `CARD {x:num->person | path friend (p-2) x /\ x (p-2) = x 0}`;
-    `CARD {x:num->person | path friend (p-2) x /\ ~(x (p-2) = x 0)}`] THEN
+    `CARD {x:num->person | friendship_path friend (p-2) x /\ x (p-2) = x 0}`;
+    `CARD {x:num->person | friendship_path friend (p-2) x /\ ~(x (p-2) = x 0)}`] THEN
   ASM_REWRITE_TAC[] THEN CONJ_TAC THENL
    [MATCH_MP_TAC CYCLES_PRIME_LEMMA THEN ASM_REWRITE_TAC[]; ALL_TAC] THEN
   SUBGOAL_THEN `3 <= p` ASSUME_TAC THENL

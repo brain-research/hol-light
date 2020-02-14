@@ -2,7 +2,27 @@
 (* Representation of primes == 1 (mod 4) as sum of 2 squares.                *)
 (* ========================================================================= *)
 
-needs "Library/prime.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "two_squares.ml"];;
+
+open Lib;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Ints;;
+open Sets;;
+
+open Prime;;
 
 prioritize_num();;
 
@@ -261,3 +281,4 @@ let SUM_OF_TWO_SQUARES = prove
       ASM_REWRITE_TAC[MULT_CLAUSES; ADD_CLAUSES] THEN
       ASM_CASES_TAC `x = 1` THEN ASM_REWRITE_TAC[] THEN
       REWRITE_TAC[MULT_CLAUSES] THEN ARITH_TAC]]);;
+Pb_printer.clear_file_tags();;

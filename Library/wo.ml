@@ -12,6 +12,7 @@ open Lib;;
 open Fusion;;
 open Basics;;
 open Printer;;
+open Preterm;;
 open Parser;;
 open Equal;;
 open Bool;;

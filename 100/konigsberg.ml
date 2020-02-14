@@ -2,6 +2,26 @@
 (* Impossibility of Eulerian path for bridges of Koenigsberg.                *)
 (* ========================================================================= *)
 
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "100/konigsberg.ml"];;
+
+open Lib;;
+open Parser;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Ind_defs;;
+open Class;;
+open Meson;;
+open Pair;;
+open Arith;;
+open Calc_num;;
+open Ints;;
+open Sets;;
+open Iterate;;
+
 let edges = new_definition
   `edges(E:E->bool,V:V->bool,Ter:E->V->bool) = E`;;
 
@@ -234,3 +254,5 @@ connected; cf:
 http://math.arizona.edu/~lagatta/class/fa05/m105/graphtheorynotes.pdf
 
  *****)
+
+Pb_printer.clear_file_tags();;

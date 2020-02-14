@@ -1012,7 +1012,7 @@ let define =
     f,itlist GEN avs (itlist PROVE_HYP (CONJUNCTS th) (end_itlist CONJ ths)) in
   fun tm ->
     let last_known_constant = last_constant() in
-    let normalized_tm = Pb_printer.normalize_term tm in
+    let normalized_tm = Normalize.normalize_term tm in
     match find_define_definition normalized_tm with
       Some thm ->
         warn true "Benign redefinition";

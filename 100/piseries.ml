@@ -2,12 +2,39 @@
 (* Taylor series for tan and cot, via partial fractions expansion of cot.    *)
 (* ========================================================================= *)
 
-needs "Library/analysis.ml";;
-needs "Library/transc.ml";;
-needs "Library/floor.ml";;
-needs "Library/poly.ml";;
-needs "Examples/machin.ml";;
-needs "Library/iter.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "piseries.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Recursion;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+
+open Floor;;
+open Iter;;
+open Analysis;;
+open Transc;;
+open Poly;;
+open Machin;;
 
 (* ------------------------------------------------------------------------- *)
 (* Compatibility stuff for some old proofs.                                  *)
@@ -3305,3 +3332,4 @@ let TAYLOR_COTXX_SQRT_BOUND = prove
   REWRITE_TAC[real_div; REAL_MUL_LZERO; REAL_ADD_RID] THEN
   ONCE_REWRITE_TAC[MULT_SYM] THEN
   ASM_SIMP_TAC[GSYM REAL_POW_POW; SQRT_POW_2; REAL_LT_IMP_LE]);;
+Pb_printer.clear_file_tags();;

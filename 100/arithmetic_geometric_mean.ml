@@ -1,8 +1,32 @@
 (* ========================================================================= *)
 (* Arithmetic-geometric mean inequality.                                     *)
 (* ========================================================================= *)
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "arithmetic_geometric_mean.ml"];;
 
-needs "Library/products.ml";;
+open Parser;;
+open Equal;;
+open Bool;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Iterate;;
+open Wo;;
+
+open Products;;
+
+open Transc;;
+
 prioritize_real();;
 
 (* ------------------------------------------------------------------------- *)
@@ -67,7 +91,7 @@ let AGM = prove
   ASM_CASES_TAC `n = 0` THENL
    [ASM_REWRITE_TAC[PRODUCT_CLAUSES_NUMSEG; ARITH; SUM_SING_NUMSEG] THEN
     REAL_ARITH_TAC;
-    REWRITE_TAC[ADD1] THEN STRIP_TAC THEN MATCH_MP_TAC REAL_LE_TRANS THEN     
+    REWRITE_TAC[ADD1] THEN STRIP_TAC THEN MATCH_MP_TAC REAL_LE_TRANS THEN
     EXISTS_TAC `x(n + 1) * (sum(1..n) x / &n) pow n` THEN
     ASM_SIMP_TAC[LEMMA_3; GSYM REAL_OF_NUM_ADD; LE_1;
                  ARITH_RULE `i <= n ==> i <= n + 1`] THEN
@@ -77,8 +101,6 @@ let AGM = prove
 (* ------------------------------------------------------------------------- *)
 (* Finally, reformulate in the usual way using roots.                        *)
 (* ------------------------------------------------------------------------- *)
-
-needs "Library/transc.ml";;
 
 let AGM_ROOT = prove
  (`!n a. 1 <= n /\ (!i. 1 <= i /\ i <= n ==> &0 <= a(i))
@@ -93,3 +115,4 @@ let AGM_ROOT = prove
     ASM_REWRITE_TAC[IN_NUMSEG; FINITE_NUMSEG];
     MATCH_MP_TAC REAL_EQ_IMP_LE THEN MATCH_MP_TAC POW_ROOT_POS THEN
     ASM_SIMP_TAC[REAL_LE_DIV; REAL_POS; SUM_POS_LE_NUMSEG]]);;
+Pb_printer.clear_file_tags();;

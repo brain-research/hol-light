@@ -4,15 +4,23 @@ open Lib;;
 open Fusion;;
 open Printer;;
 
-external str_list_fingerprint : string list -> int = "TheoremFingerprint";;
+external str_list_fingerprint : string -> string list -> int list -> int = "TheoremFingerprint";;
+(* Second argument is only supposed to be a string, but that somehow didn't
+   work. Now we pass a string list of length 1. *)
+(* external goal_int_fingerprint : int list -> string list -> int = "GoalFingerprint";; *)
 
 (* Fingerprinting for terms that are not considered theorems in the ocaml     *)
 (* typesystem, but of which we know that they are theorems.                   *)
 (* USE WITH CARE!                                                             *)
-let term_fingerprint ((hyp_terms, term): term list * term) : int =
-  str_list_fingerprint (List.map (str_of_sexp o sexp_term) (term::hyp_terms));;
+let to_string = str_of_sexp o sexp_term;;
+let term_fingerprint ((hyp_terms, concl): term list * term) : int =
+  str_list_fingerprint (to_string concl) (List.map to_string hyp_terms) [];;
 
 let fingerprint (th: thm) : int = term_fingerprint (dest_thm th);;
+
+let goal_fingerprint ((assum, concl): thm list * term) : int =
+  let assum_fps = List.map fingerprint assum in
+  str_list_fingerprint ((str_of_sexp o sexp_term) concl) [] assum_fps;;
 
 
 let theorem_index = Hashtbl.create 1000;;
@@ -35,7 +43,7 @@ let index_thm (i: int) (thm: thm) : unit =
   else
     Hashtbl.add theorem_index i thm;;
 
-let register_thm thm : unit =
-  if not (thm_is_known thm)
-  then index_thm (fingerprint thm) thm
-  else ();;
+let register_thm thm : int =
+  let fp = fingerprint thm in
+  (if not (thm_is_known thm) then index_thm fp thm);
+  fp;;

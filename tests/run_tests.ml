@@ -19,3 +19,4 @@ printf "Running %d tests\n%!" total_tests;;
 List.iter run_test !test_cases;;
 printf "\nTests succeeded: %d\nTests failed: %d\n%!"
   !successful_tests !failed_tests;;
+

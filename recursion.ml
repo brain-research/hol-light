@@ -127,7 +127,7 @@ let new_recursive_definition ax tm =
   with Failure s ->
     Printf.eprintf "Error parsing term from sexp: %s\n  with error %s\n%!" term_str s);
   *)
-  let normalized_tm = Pb_printer.normalize_term tm in
+  let normalized_tm = Normalize.normalize_term tm in
   match find_recursive_definition normalized_tm with
     Some thm ->
       warn true "Benign redefinition of recursive function";

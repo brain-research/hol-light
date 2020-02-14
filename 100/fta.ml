@@ -2,7 +2,28 @@
 (* The fundamental theorem of arithmetic (unique prime factorization).       *)
 (* ========================================================================= *)
 
-needs "Library/prime.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "fta.ml"];;
+
+open Lib;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Ints;;
+open Sets;;
+open Iterate;;
+
+open Prime;;
 
 prioritize_num();;
 
@@ -176,3 +197,4 @@ let FTA = prove
     FIRST_X_ASSUM(fun th -> SUBST1_TAC(SYM th) THEN AP_TERM_TAC) THEN
     MATCH_MP_TAC NPRODUCT_EQ_GEN THEN ASM_REWRITE_TAC[FINITE_DELETE] THEN
     SIMP_TAC[IN_DELETE; IN_ELIM_THM]]);;
+Pb_printer.clear_file_tags();;

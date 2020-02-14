@@ -2,7 +2,28 @@
 (* Heron's formula for the area of a triangle.                               *)
 (* ========================================================================= *)
 
-needs "Multivariate/measure.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "heron.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Tactics;;
+open Simp;;
+open Pair;;
+open Calc_num;;
+open Realax;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Cart;;
+open Misc;;
+
+open Vectors;;
+open Measure;;
 
 prioritize_real();;
 
@@ -40,3 +61,4 @@ let HERON = prove
   SIMP_TAC[VECTOR_SUB_COMPONENT; ARITH; DIMINDEX_2] THEN
   SQRT_ELIM_TAC THEN SIMP_TAC[REAL_LE_SQUARE; REAL_LE_ADD] THEN
   CONV_TAC "100/heron.ml:REAL_RING" REAL_RING);;
+Pb_printer.clear_file_tags();;

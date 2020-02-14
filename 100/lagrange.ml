@@ -2,39 +2,56 @@
 (* Very trivial group theory, just to reach Lagrange theorem.                *)
 (* ========================================================================= *)
 
-loadt "Library/prime.ml";;
+set_jrh_lexer;;
+open Lib;;
+open Printer;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Sets;;
 
+open Prime;;
 (* ------------------------------------------------------------------------- *)
 (* Definition of what a group is.                                            *)
 (* ------------------------------------------------------------------------- *)
 
+(* Copy the same precedence and associativity as normal ** operator. *)
+parse_as_infix("lagrange_group", (20, "right"));;
+
 let group = new_definition
-  `group(g,( ** ),i,(e:A)) <=>
+  `group(g,( lagrange_group ),i,(e:A)) <=>
     (e IN g) /\ (!x. x IN g ==> i(x) IN g) /\
-    (!x y. x IN g /\ y IN g ==> (x ** y) IN g) /\
-    (!x y z. x IN g /\ y IN g /\ z IN g ==> (x ** (y ** z) = (x ** y) ** z)) /\
-    (!x. x IN g ==> (x ** e = x) /\ (e ** x = x)) /\
-    (!x. x IN g ==> (x ** i(x) = e) /\ (i(x) ** x = e))`;;
+    (!x y. x IN g /\ y IN g ==> (x lagrange_group y) IN g) /\
+    (!x y z. x IN g /\ y IN g /\ z IN g ==> (x lagrange_group (y lagrange_group z) = (x lagrange_group y) lagrange_group z)) /\
+    (!x. x IN g ==> (x lagrange_group e = x) /\ (e lagrange_group x = x)) /\
+    (!x. x IN g ==> (x lagrange_group i(x) = e) /\ (i(x) lagrange_group x = e))`;;
 
 (* ------------------------------------------------------------------------- *)
 (* Notion of a subgroup.                                                     *)
 (* ------------------------------------------------------------------------- *)
 
 let subgroup = new_definition
-  `subgroup h (g,( ** ),i,(e:A)) <=> h SUBSET g /\ group(h,( ** ),i,e)`;;
+  `subgroup h (g,( lagrange_group ),i,(e:A)) <=> h SUBSET g /\ group(h,( lagrange_group ),i,e)`;;
 
 (* ------------------------------------------------------------------------- *)
 (* Lagrange theorem, introducing the coset representatives.                  *)
 (* ------------------------------------------------------------------------- *)
 
 let GROUP_LAGRANGE_COSETS = prove
- (`!g h ( ** ) i e.
-        group (g,( ** ),i,e:A) /\ subgroup h (g,( ** ),i,e) /\ FINITE g
+ (`!g h ( lagrange_group ) i e.
+        group (g,( lagrange_group ),i,e:A) /\ subgroup h (g,( lagrange_group ),i,e) /\ FINITE g
         ==> ?q. (CARD(g) = CARD(q) * CARD(h)) /\
-                (!b. b IN g ==> ?a x. a IN q /\ x IN h /\ (b = a ** x))`,
+                (!b. b IN g ==> ?a x. a IN q /\ x IN h /\ (b = a lagrange_group x))`,
   REPEAT GEN_TAC THEN REWRITE_TAC[group; subgroup; SUBSET] THEN STRIP_TAC THEN
   ABBREV_TAC
-   `coset = \a:A. {b:A | b IN g /\ (?x:A. x IN h /\ (b = a ** x))}` THEN
+   `coset = \a:A. {b:A | b IN g /\ (?x:A. x IN h /\ (b = a lagrange_group x))}` THEN
   SUBGOAL_THEN `!a:A. a IN g ==> a IN (coset a)` ASSUME_TAC THENL
    [GEN_TAC THEN DISCH_TAC THEN EXPAND_TAC "coset" THEN
     ASM_SIMP_TAC[IN_ELIM_THM] THEN ASM_MESON_TAC[];
@@ -47,13 +64,13 @@ let GROUP_LAGRANGE_COSETS = prove
     ASM_SIMP_TAC[IN_ELIM_THM; SUBSET];
     ALL_TAC] THEN
   SUBGOAL_THEN
-   `!a:A x:A y. a IN g /\ x IN g /\ y IN g /\ ((a ** x) :A = a ** y)
+   `!a:A x:A y. a IN g /\ x IN g /\ y IN g /\ ((a lagrange_group x) :A = a lagrange_group y)
                 ==> (x = y)`
   ASSUME_TAC THENL
    [REPEAT STRIP_TAC THEN
-    SUBGOAL_THEN `(e:A ** x:A):A = e ** y` (fun th -> ASM_MESON_TAC[th]) THEN
+    SUBGOAL_THEN `(e:A lagrange_group x:A):A = e lagrange_group y` (fun th -> ASM_MESON_TAC[th]) THEN
     SUBGOAL_THEN
-     `((i(a):A ** a:A) ** x) = (i(a) ** a) ** y`
+     `((i(a):A lagrange_group a:A) lagrange_group x) = (i(a) lagrange_group a) lagrange_group y`
      (fun th -> ASM_MESON_TAC[th]) THEN
     ASM_MESON_TAC[];
     ALL_TAC] THEN
@@ -61,7 +78,7 @@ let GROUP_LAGRANGE_COSETS = prove
   ASSUME_TAC THENL
    [REPEAT STRIP_TAC THEN
     SUBGOAL_THEN
-     `(coset:A->A->bool) (a:A) = IMAGE (\x. a ** x) (h:A->bool)`
+     `(coset:A->A->bool) (a:A) = IMAGE (\x. a lagrange_group x) (h:A->bool)`
     SUBST1_TAC THENL
      [EXPAND_TAC "coset" THEN
       REWRITE_TAC[EXTENSION; IN_ELIM_THM; IN_IMAGE; IN_ELIM_THM] THEN
@@ -70,13 +87,13 @@ let GROUP_LAGRANGE_COSETS = prove
     MATCH_MP_TAC CARD_IMAGE_INJ THEN ASM_REWRITE_TAC[] THEN
     ASM_MESON_TAC[];
     ALL_TAC] THEN
-  SUBGOAL_THEN `!x:A y. x IN g /\ y IN g ==> (i(x ** y) = i(y) ** i(x))`
+  SUBGOAL_THEN `!x:A y. x IN g /\ y IN g ==> (i(x lagrange_group y) = i(y) lagrange_group i(x))`
   ASSUME_TAC THENL
    [REPEAT STRIP_TAC THEN
     FIRST_ASSUM MATCH_MP_TAC THEN
-    EXISTS_TAC `(x:A ** y:A) :A` THEN ASM_SIMP_TAC[] THEN
+    EXISTS_TAC `(x:A lagrange_group y:A) :A` THEN ASM_SIMP_TAC[] THEN
     MATCH_MP_TAC EQ_TRANS THEN
-    EXISTS_TAC `(x:A ** (y ** i(y))) ** i(x)` THEN
+    EXISTS_TAC `(x:A lagrange_group (y lagrange_group i(y))) lagrange_group i(x)` THEN
     ASM_MESON_TAC[];
     ALL_TAC] THEN
   SUBGOAL_THEN `!x:A. x IN g ==> (i(i(x)) = x)` ASSUME_TAC THENL
@@ -89,13 +106,13 @@ let GROUP_LAGRANGE_COSETS = prove
               ((coset a) INTER (coset b) = {})`
   ASSUME_TAC THENL
    [REPEAT STRIP_TAC THEN
-    ASM_CASES_TAC `((i:A->A)(b) ** a:A) IN (h:A->bool)` THENL
+    ASM_CASES_TAC `((i:A->A)(b) lagrange_group a:A) IN (h:A->bool)` THENL
      [DISJ1_TAC THEN EXPAND_TAC "coset" THEN
       REWRITE_TAC[EXTENSION; IN_ELIM_THM] THEN
       GEN_TAC THEN AP_TERM_TAC THEN
       SUBGOAL_THEN
-       `!x:A. x IN h ==> (b ** (i(b) ** a:A) ** x = a ** x) /\
-                         (a ** i(i(b) ** a) ** x = b ** x)`
+       `!x:A. x IN h ==> (b lagrange_group (i(b) lagrange_group a:A) lagrange_group x = a lagrange_group x) /\
+                         (a lagrange_group i(i(b) lagrange_group a) lagrange_group x = b lagrange_group x)`
        (fun th -> EQ_TAC THEN REPEAT STRIP_TAC THEN
           ASM_REWRITE_TAC[] THEN ASM_MESON_TAC[th]) THEN
       ASM_SIMP_TAC[];
@@ -106,21 +123,21 @@ let GROUP_LAGRANGE_COSETS = prove
     DISCH_THEN(CONJUNCTS_THEN2 ASSUME_TAC MP_TAC) THEN
     DISCH_THEN(CONJUNCTS_THEN2 (X_CHOOSE_THEN `y:A` STRIP_ASSUME_TAC)
                                (X_CHOOSE_THEN `z:A` STRIP_ASSUME_TAC)) THEN
-    SUBGOAL_THEN `(i(b:A) ** a ** y):A = i(b) ** b ** z` ASSUME_TAC THENL
+    SUBGOAL_THEN `(i(b:A) lagrange_group a lagrange_group y):A = i(b) lagrange_group b lagrange_group z` ASSUME_TAC THENL
      [ASM_MESON_TAC[]; ALL_TAC] THEN
-    SUBGOAL_THEN `(i(b:A) ** a:A ** y):A = e ** z` ASSUME_TAC THENL
+    SUBGOAL_THEN `(i(b:A) lagrange_group a:A lagrange_group y):A = e lagrange_group z` ASSUME_TAC THENL
      [ASM_MESON_TAC[]; ALL_TAC] THEN
-    SUBGOAL_THEN `(i(b:A) ** a:A ** y):A = z` ASSUME_TAC THENL
+    SUBGOAL_THEN `(i(b:A) lagrange_group a:A lagrange_group y):A = z` ASSUME_TAC THENL
      [ASM_MESON_TAC[]; ALL_TAC] THEN
-    SUBGOAL_THEN `((i(b:A) ** a:A) ** y):A = z` ASSUME_TAC THENL
+    SUBGOAL_THEN `((i(b:A) lagrange_group a:A) lagrange_group y):A = z` ASSUME_TAC THENL
      [ASM_MESON_TAC[]; ALL_TAC] THEN
-    SUBGOAL_THEN `((i(b:A) ** a:A) ** y) ** i(y) = z ** i(y)` ASSUME_TAC THENL
+    SUBGOAL_THEN `((i(b:A) lagrange_group a:A) lagrange_group y) lagrange_group i(y) = z lagrange_group i(y)` ASSUME_TAC THENL
      [ASM_MESON_TAC[]; ALL_TAC] THEN
-    SUBGOAL_THEN `(i(b:A) ** a:A) ** (y ** i(y)) = z ** i(y)` ASSUME_TAC THENL
+    SUBGOAL_THEN `(i(b:A) lagrange_group a:A) lagrange_group (y lagrange_group i(y)) = z lagrange_group i(y)` ASSUME_TAC THENL
      [ASM_MESON_TAC[]; ALL_TAC] THEN
-    SUBGOAL_THEN `(i(b:A) ** a:A) ** e = z ** i(y)` ASSUME_TAC THENL
+    SUBGOAL_THEN `(i(b:A) lagrange_group a:A) lagrange_group e = z lagrange_group i(y)` ASSUME_TAC THENL
      [ASM_MESON_TAC[]; ALL_TAC] THEN
-    SUBGOAL_THEN `(i(b:A) ** a:A):A = z ** i(y)` ASSUME_TAC THENL
+    SUBGOAL_THEN `(i(b:A) lagrange_group a:A):A = z lagrange_group i(y)` ASSUME_TAC THENL
      [ASM_MESON_TAC[]; ALL_TAC] THEN
     ASM_MESON_TAC[];
     ALL_TAC] THEN
@@ -136,7 +153,7 @@ let GROUP_LAGRANGE_COSETS = prove
      [REWRITE_TAC[IN] THEN MATCH_MP_TAC SELECT_AX THEN
       ASM_MESON_TAC[IN];
       ALL_TAC] THEN
-    FIRST_ASSUM(fun th -> GEN_REWRITE_TAC "100/lagrange.ml:(LAND_CONV o RAND_CONV o RATOR_CONV)" (LAND_CONV o RAND_CONV o RATOR_CONV)
+    FIRST_ASSUM(fun th -> GEN_REWRITE_TAC "100/lagrange.ml:(LAND_CONV o RAND_CONV o RATOR_CONV)"  (LAND_CONV o RAND_CONV o RATOR_CONV)
                          [SYM th]) THEN
     REWRITE_TAC[] THEN
     ABBREV_TAC `C = (@)((coset:A->A->bool) b)` THEN
@@ -189,7 +206,7 @@ let GROUP_LAGRANGE_COSETS = prove
     ALL_TAC] THEN
   SUBGOAL_THEN
    `!a:A x:A a' x'. a IN q /\ a' IN q /\ x IN h /\ x' IN h /\
-                    ((a' ** x') :A = a ** x) ==> (a' = a) /\ (x' = x)`
+                    ((a' lagrange_group x') :A = a lagrange_group x) ==> (a' = a) /\ (x' = x)`
   ASSUME_TAC THENL
    [REPEAT GEN_TAC THEN EXPAND_TAC "q" THEN REWRITE_TAC[IN_ELIM_THM] THEN
     MATCH_MP_TAC(TAUT `(c ==> a /\ b ==> d) ==> a /\ b /\ c ==> d`) THEN
@@ -211,12 +228,12 @@ let GROUP_LAGRANGE_COSETS = prove
     ONCE_ASM_REWRITE_TAC[] THEN AP_TERM_TAC THEN
     FIRST_ASSUM MATCH_MP_TAC THEN ASM_REWRITE_TAC[] THEN
     EXPAND_TAC "coset" THEN REWRITE_TAC[IN_ELIM_THM] THEN
-    ASM_REWRITE_TAC[] THEN EXISTS_TAC `(x:A ** (i:A->A)(x')):A` THEN
-    ASM_SIMP_TAC[] THEN UNDISCH_TAC `(a':A ** x':A):A = a ** x` THEN
-    DISCH_THEN(MP_TAC o C AP_THM `(i:A->A) x'` o AP_TERM `(**):A->A->A`) THEN
+    ASM_REWRITE_TAC[] THEN EXISTS_TAC `(x:A lagrange_group (i:A->A)(x')):A` THEN
+    ASM_SIMP_TAC[] THEN UNDISCH_TAC `(a':A lagrange_group x':A):A = a lagrange_group x` THEN
+    DISCH_THEN(MP_TAC o C AP_THM `(i:A->A) x'` o AP_TERM `(lagrange_group):A->A->A`) THEN
     DISCH_THEN(SUBST1_TAC o SYM) THEN ASM_MESON_TAC[];
     ALL_TAC] THEN
-  SUBGOAL_THEN `g = IMAGE (\(a:A,x:A). (a ** x):A) {(a,x) | a IN q /\ x IN h}`
+  SUBGOAL_THEN `g = IMAGE (\(a:A,x:A). (a lagrange_group x):A) {(a,x) | a IN q /\ x IN h}`
   SUBST1_TAC THENL
    [REWRITE_TAC[EXTENSION; IN_IMAGE; IN_ELIM_THM] THEN
     REWRITE_TAC[EXISTS_PAIR_THM] THEN
@@ -247,8 +264,8 @@ let GROUP_LAGRANGE_COSETS = prove
 (* ------------------------------------------------------------------------- *)
 
 let GROUP_LAGRANGE = prove
- (`!g h ( ** ) i e.
-        group (g,( ** ),i,e:A) /\ subgroup h (g,( ** ),i,e) /\ FINITE g
+ (`!g h ( lagrange_group ) i e.
+        group (g,( lagrange_group ),i,e:A) /\ subgroup h (g,( lagrange_group ),i,e) /\ FINITE g
         ==> (CARD h) divides (CARD g)`,
   REPEAT GEN_TAC THEN DISCH_THEN(MP_TAC o MATCH_MP GROUP_LAGRANGE_COSETS) THEN
   MESON_TAC[DIVIDES_LMUL; DIVIDES_REFL]);;

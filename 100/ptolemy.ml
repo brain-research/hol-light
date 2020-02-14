@@ -2,7 +2,26 @@
 (* Ptolemy's theorem.                                                        *)
 (* ========================================================================= *)
 
-needs "Multivariate/transcendentals.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "ptolemy.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Realax;;
+open Realarith;;
+open Calc_rat;;
+open Cart;;
+open Misc;;
+
+open Vectors;;
+open Transcendentals;;
 
 (* ------------------------------------------------------------------------- *)
 (* Some 2-vector special cases.                                              *)
@@ -67,3 +86,4 @@ let PTOLEMY = prove
    [`a / &2`; `b / &2`; `c / &2`; `d / &2`] THEN
   REWRITE_TAC[SIN_SUB; SIN_ADD; COS_ADD; SIN_PI; COS_PI] THEN
   CONV_TAC "100/ptolemy.ml:REAL_RING" REAL_RING);;
+Pb_printer.clear_file_tags();;

@@ -1,9 +1,10 @@
 #include "hol_light_prover.h"
 
+#include <sstream>
+
 // Ignore this comment (1).
 // Ignore this comment (2).
 #include "proof_assistant.pb.h"
-#include "theorem_fingerprint.h"
 // Ignore this comment (3).
 #include "google/protobuf/stubs/status.h"
 // Ignore this comment (5).
@@ -27,6 +28,8 @@ enum Request {
   kRegisterTheorem = 9,
   kCompareLastTheorem = 10,
   kDefineType = 11,
+  kNegateGoal = 12,
+  kApplyRule = 13,
 };
 // LINT.ThenChange(//hol_light/sandboxee.ml)
 
@@ -51,6 +54,25 @@ util::StatusOr<ApplyTacticResponse> HolLightProver::ApplyTactic(
   RETURN_IF_ERROR(comm_->ReceiveInt(&result));
   if (result == kOk) {
     RETURN_IF_ERROR(ReceiveGoals(response.mutable_goals()));
+  } else {
+    RETURN_IF_ERROR(comm_->ReceiveString(response.mutable_error()));
+  }
+  return response;
+}
+
+util::StatusOr<ApplyRuleResponse> HolLightProver::ApplyRule(
+    const ApplyRuleRequest& request) {
+  RETURN_IF_ERROR(comm_->SendInt(kApplyRule));
+  RETURN_IF_ERROR(comm_->SendString(request.rule()));
+  LOG(INFO) << "Calling HOL Light to apply rule; setting timer (in ms):"
+            << request.timeout_ms();
+  auto timer = comm_->GetTimer(request.timeout_ms());
+  RETURN_IF_ERROR(comm_->GetStatus());
+  ApplyRuleResponse response;
+  int64 result;
+  RETURN_IF_ERROR(comm_->ReceiveInt(&result));
+  if (result == kOk) {
+    RETURN_IF_ERROR(ReceiveTheorem(response.mutable_theorem()));
   } else {
     RETURN_IF_ERROR(comm_->ReceiveString(response.mutable_error()));
   }
@@ -99,6 +121,15 @@ StatusOr<GoalList> HolLightProver::GetGoals() {
   return goals;
 }
 
+StatusOr<string> HolLightProver::NegateGoal(const Theorem& goal) {
+  RETURN_IF_ERROR(comm_->SendInt(kNegateGoal));
+  RETURN_IF_ERROR(SendGoal(goal));
+  RETURN_IF_ERROR(comm_->GetStatus());
+  string negated_goal_as_term;
+  RETURN_IF_ERROR(comm_->ReceiveString(&negated_goal_as_term));
+  return negated_goal_as_term;
+}
+
 Status HolLightProver::ReceiveGoals(GoalList* goals) {
   int64 n, m;
   RETURN_IF_ERROR(comm_->ReceiveInt(&n));
@@ -127,6 +158,19 @@ Status HolLightProver::SendGoal(const Theorem& goal) {
   return util::OkStatus();
 }
 
+Status HolLightProver::ReceiveTheorem(Theorem* theorem) {
+  int64 n;
+  theorem->set_tag(Theorem::THEOREM);
+  RETURN_IF_ERROR(comm_->ReceiveInt(&n));
+  for (int64 i = 0; i < n; ++i) {
+    string* term = (i == 0) ? theorem->mutable_pretty_printed()
+                            : (i == 1) ? theorem->mutable_conclusion()
+                                       : theorem->add_hypotheses();
+    RETURN_IF_ERROR(comm_->ReceiveString(term));
+  }
+  return util::OkStatus();
+}
+
 Status HolLightProver::SendTheorem(const Theorem& theorem) {
   RETURN_IF_ERROR(comm_->SendInt(1 + theorem.hypotheses_size()));
   RETURN_IF_ERROR(comm_->SendString(theorem.conclusion()));
@@ -150,7 +194,7 @@ Status HolLightProver::RegisterLastTheorem() {
 
 Status HolLightProver::CompareLastTheorem(const Theorem& theorem) {
   RETURN_IF_ERROR(comm_->SendInt(kCompareLastTheorem));
-  RETURN_IF_ERROR(comm_->SendInt(Fingerprint(theorem)));
+  RETURN_IF_ERROR(SendTheorem(theorem));
   return comm_->GetStatus();
 }
 
@@ -170,13 +214,16 @@ Status HolLightProver::Define(const Definition& def) {
   return comm_->GetStatus();
 }
 
-Status HolLightProver::DefineType(const TypeDefinition& def) {
+Status HolLightProver::DefineType(const TypeDefinition& def,
+                                  int64* fingerprint_result) {
   RETURN_IF_ERROR(comm_->SendInt(kDefineType));
   RETURN_IF_ERROR(comm_->SendString(def.type_name()));
   RETURN_IF_ERROR(comm_->SendString(def.abs_name()));
   RETURN_IF_ERROR(comm_->SendString(def.rep_name()));
   RETURN_IF_ERROR(comm_->SendInt(def.theorem_arg()));
-  return comm_->GetStatus();
+  RETURN_IF_ERROR(comm_->GetStatus());
+  RETURN_IF_ERROR(comm_->ReceiveInt(fingerprint_result));
+  return util::OkStatus();
 }
 
 Status HolLightProver::SetTermEncoding(int encoding) {
@@ -188,32 +235,47 @@ Status HolLightProver::SetTermEncoding(int encoding) {
 StatusOr<RegisterTheoremResponse> HolLightProver::RegisterTheorem(
     const RegisterTheoremRequest& request) {
   const auto& theorem = request.theorem();
-  LOG(INFO) << "Registering " << theorem.fingerprint() << ".";
-  Status status = CheatTheorem(theorem);
+  // Disallow theorems with hypotheses
   RegisterTheoremResponse response;
-  response.set_fingerprint(request.theorem().fingerprint());
+  if (!theorem.hypotheses().empty()) {
+    response.set_error_msg("Theorem with hypotheses are not supported.");
+    return response;
+  }
+  int64 fingerprint_from_ocaml;
+  Status status = CheatTheorem(theorem, &fingerprint_from_ocaml);
   if (!status.ok()) {
     response.set_error_msg(status.ToString());
   }
-  LOG(INFO) << "Registered " << theorem.fingerprint() << ".";
+  if (status.ok() && request.theorem().has_fingerprint() &&
+      request.theorem().fingerprint() != fingerprint_from_ocaml) {
+    std::ostringstream msg;
+    msg << "Fingerprint " << request.theorem().fingerprint()
+        << " in RegisterTheoremRequest does not match fingerprint "
+        << fingerprint_from_ocaml << " returned from HOL Light.\n";
+    response.set_error_msg(msg.str());
+  }
+  response.set_fingerprint(fingerprint_from_ocaml);
   return response;
 }
 
-Status HolLightProver::CheatTheorem(const Theorem& theorem) {
+Status HolLightProver::CheatTheorem(const Theorem& theorem,
+                                    int64* fingerprint_result) {
   switch (theorem.tag()) {
     case Theorem::TYPE_DEFINITION:
-      return DefineType(theorem.type_definition());
+      return DefineType(theorem.type_definition(), fingerprint_result);
     case Theorem::DEFINITION: {
       RETURN_IF_ERROR(comm_->SendInt(kRegisterTheorem));
       RETURN_IF_ERROR(SendTheorem(theorem));
-      RETURN_IF_ERROR(comm_->SendInt(Fingerprint(theorem)));
-      return comm_->GetStatus();
+      RETURN_IF_ERROR(comm_->GetStatus());
+      RETURN_IF_ERROR(comm_->ReceiveInt(fingerprint_result));
+      return util::OkStatus();
     }
     case Theorem::THEOREM: {
       RETURN_IF_ERROR(comm_->SendInt(kRegisterTheorem));
       RETURN_IF_ERROR(SendTheorem(theorem));
-      RETURN_IF_ERROR(comm_->SendInt(Fingerprint(theorem)));
-      return comm_->GetStatus();
+      RETURN_IF_ERROR(comm_->GetStatus());
+      RETURN_IF_ERROR(comm_->ReceiveInt(fingerprint_result));
+      return util::OkStatus();
     }
     default:
       return util::UnimplementedError(::absl::StrCat(

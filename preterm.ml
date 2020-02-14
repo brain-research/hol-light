@@ -79,6 +79,18 @@ let prioritize_overload ty =
       with Failure _ -> ())
    (!the_overload_skeletons);;
 
+let print_overload overload = 
+  do_list 
+   (fun (s, ty) ->
+     report(s))
+   overload;;
+   
+let print_interface interface = 
+  do_list
+   (fun (s1, (s2, ty)) -> 
+     report((s1 ^ " ; " ^ s2)))
+   interface;;
+
 (* ------------------------------------------------------------------------- *)
 (* Type abbreviations.                                                       *)
 (* ------------------------------------------------------------------------- *)

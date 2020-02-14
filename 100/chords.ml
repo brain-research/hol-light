@@ -2,7 +2,28 @@
 (* #55: Theorem on product of segments of chords.                            *)
 (* ========================================================================= *)
 
-needs "Multivariate/convex.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "chords.ml"];;
+
+open Lib;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Meson;;
+open Pair;;
+open Calc_num;;
+open Realax;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Sets;;
+open Cart;;
+
+open Vectors;;
+open Convex;;
 
 prioritize_real();;
 
@@ -63,3 +84,4 @@ let SEGMENT_CHORDS = prove
   SIMP_TAC[dot; SUM_2; VECTOR_SUB_COMPONENT; DIMINDEX_2; VECTOR_ADD_COMPONENT;
            CART_EQ; FORALL_2; VECTOR_MUL_COMPONENT; ARITH] THEN
   CONV_TAC "100/chords.ml:REAL_RING" REAL_RING);;
+Pb_printer.clear_file_tags();;

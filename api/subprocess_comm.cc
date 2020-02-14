@@ -1,6 +1,7 @@
 #include "subprocess_comm.h"
 
 #include <signal.h>
+
 #include <chrono>
 #include <condition_variable>
 #include <exception>
@@ -25,7 +26,7 @@ SubprocessComm::SubprocessComm()
     : ok_(google::protobuf::util::Status::OK),
       comms_failure_(google::protobuf::util::Status(
           google::protobuf::util::error::INTERNAL,
-          "Communication with sandbox failed.")),
+          "Communication with sandbox (subprocess_comm.cc) failed.")),
       subprocess_(Subprocess::Start(kHolPath)),
       comms_(subprocess_.comms()) {
   std::cout << "Waiting for hol-light to get ready." << std::endl << std::flush;

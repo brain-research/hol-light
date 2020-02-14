@@ -22,21 +22,53 @@
  *  jesse.bingham@gmail.com
  *)
 
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "e_is_transcendental.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Trivia;;
+open Canon;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Recursion;;
+open Arith;;
+open Ind_types;;
+open Lists;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+
+open Floor;;
+open Binomial;;
+
 (* this is needed since the sum from the HOL core (iter.ml, i think)
  * which is used below, gets overwritten when Library/analysis.ml is loaded.
+ NOTE(smloos): this has been moved to analysis.ml.
  *)
-let OLD_SUM = sum;;
+(* let OLD_SUM = sum;; *) 
 
-(* required stuff from HOL Light library... *)
-needs "Library/binomial.ml";;
-needs "Library/analysis.ml";;
-needs "Library/transc.ml";;
-needs "Library/prime.ml";;
-needs "Library/iter.ml";;
-needs "Library/integer.ml";;
-needs "Library/floor.ml";;
-(* get def of transcendental from Harrison's Liouville proof  *)
-needs "100/liouville.ml";;
+open Analysis;;
+open Transc;;
+open Prime;;
+open Integer;;
+open Poly;;
+open Liouville;;
 
 prioritize_real();;
 
@@ -2894,3 +2926,4 @@ let TRANSCENDENTAL_E = prove(
 end;;
 
 Finale.TRANSCENDENTAL_E;;
+Pb_printer.clear_file_tags();;

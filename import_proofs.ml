@@ -28,7 +28,7 @@ let goal_fingerprint (g: goal) : int =
   let asl, (concl: term) = g in
   (if length asl > 0 then
     failwith "Cannot handle assumptions for goal fingerprints");
-  Theorem_fingerprint.term_fingerprint ([], Pb_printer.normalize_term concl);;
+  Theorem_fingerprint.term_fingerprint ([], Normalize.normalize_term concl);;
 
 let proof_index_contains (g: goal) : bool =
   Hashtbl.mem proof_index (goal_fingerprint g);;
@@ -44,10 +44,10 @@ let proof_of_goal (g: goal) : wrapped_proof =
     failwith ("No proof found for goal with index " ^ string_of_int goal_fp);;
 
 (* Call this function to 'import' a proof. *)
-let register_proof (goal_fp: int) (t: wrapped_proof) (in_core: bool) =
+let register_proof (goal_fp: int) (t: wrapped_proof) (in_core: bool) : unit =
   (* Printf.eprintf "register_proof for %d\n%!" goal_fp; *)
   if Hashtbl.mem proof_index goal_fp then
-    failwith "register_proof: tried to register two proofs for the same goal."
+    Printf.printf "Error in register_proof: tried to register two proofs for fingerprint %d for the same goal.\n\!" goal_fp
   else
     Hashtbl.add proof_index goal_fp t;
     if not in_core then Hashtbl.add has_to_be_checked goal_fp ();;

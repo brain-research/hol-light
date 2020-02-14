@@ -2,8 +2,36 @@
 (* Theorems about representations as sums of 2 and 4 squares.                *)
 (* ========================================================================= *)
 
-needs "Library/prime.ml";;
-needs "Library/analysis.ml";; (*** only for REAL_ARCH_LEAST! ***)
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "four_squares.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+
+open Prime;;
+open Analysis;;
+
+(*** "Library/analysis.ml" only for REAL_ARCH_LEAST! ***)
 
 prioritize_num();;
 
@@ -946,3 +974,4 @@ let LAGRANGE_INT = prove
     STRIP_TAC THEN ASM_SIMP_TAC[INT_LE_SQUARE; INT_LE_ADD; INT_POW_2]]);;
 
 prioritize_num();;
+Pb_printer.clear_file_tags();;

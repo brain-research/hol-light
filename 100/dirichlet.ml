@@ -2,12 +2,51 @@
 (* Dirichlet's theorem.                                                      *)
 (* ========================================================================= *)
 
-needs "Library/products.ml";;
-needs "Library/agm.ml";;
-needs "Multivariate/transcendentals.ml";;
-needs "Library/pocklington.ml";;
-needs "Library/multiplicative.ml";;
-needs "Examples/mangoldt.ml";;
+
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "dirichlet.ml"];;
+
+open Lib;;
+open Fusion;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Wo;;
+open Products;;
+open Floor;;
+open Misc;;
+
+open Metric;;
+open Vectors;;
+open Topology;;
+open Complexes;;
+open Canal;;
+open Transcendentals;;
+
+open Pocklington;;
+open Prime;;
+open Mangoldt;;
+open Agm;;
+open Multiplicative;;
 
 prioritize_real();;
 prioritize_complex();;
@@ -2080,3 +2119,4 @@ let DIRICHLET = prove
   REPLICATE_TAC 4 AP_TERM_TAC THEN AP_THM_TAC THEN AP_TERM_TAC THEN
   REWRITE_TAC[EXTENSION; IN_ELIM_THM; IN_NUMSEG] THEN
   GEN_TAC THEN EQ_TAC THEN ASM_SIMP_TAC[] THEN ASM_ARITH_TAC);;
+Pb_printer.clear_file_tags();;

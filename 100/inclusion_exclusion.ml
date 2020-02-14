@@ -2,6 +2,34 @@
 (* Inclusion-exclusion principle, the usual and generalized forms.           *)
 (* ========================================================================= *)
 
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "inclusion_exclusion.ml"];;
+
+open Lib;;
+open Fusion;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Nums;;
+open Arith;;
+open Wf;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+
+
 (* ------------------------------------------------------------------------- *)
 (* Simple set theory lemmas.                                                 *)
 (* ------------------------------------------------------------------------- *)
@@ -416,3 +444,4 @@ let INCLUSION_EXCLUSION_REAL_FUNCTION = prove
   ASM_SIMP_TAC[PRODUCT_CLAUSES; CARD_CLAUSES; real_pow] THEN REAL_ARITH_TAC);;
 
 ***)
+Pb_printer.clear_file_tags();;

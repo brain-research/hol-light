@@ -4,6 +4,31 @@
 (* Port to HOL Light of a HOL88 proof done on 9th May 1994                  *)
 (* ======================================================================== *)
 
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "100/ramsey.ml"];;
+
+open Lib;;
+open Fusion;;
+open Basics;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Replay;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Ints;;
+open Sets;;
+
+prioritize_num();;
+
 (* ------------------------------------------------------------------------- *)
 (* HOL88 compatibility.                                                      *)
 (* ------------------------------------------------------------------------- *)
@@ -1276,3 +1301,5 @@ let RAMSEY = prove(
     REPEAT STRIP_TAC THEN ASM_REWRITE_TAC[SUBSET_REFL];
     MAP_EVERY MATCH_MP_TAC [RAMSEY_LEMMA3; RAMSEY_LEMMA2; RAMSEY_LEMMA1] THEN
     POP_ASSUM MATCH_ACCEPT_TAC]);;
+
+Pb_printer.clear_file_tags();;

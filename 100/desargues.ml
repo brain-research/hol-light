@@ -2,7 +2,38 @@
 (* #87: Desargues's theorem.                                                 *)
 (* ========================================================================= *)
 
-needs "Multivariate/cross.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "desargues.ml"];;
+
+open Lib;;
+open Fusion;;
+open Printer;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Quot;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Cart;;
+open Define;;
+
+open Vectors;;
+open Determinants;;
+open Cross;;
 
 (* ------------------------------------------------------------------------- *)
 (* A lemma we want to justify some of the axioms.                            *)
@@ -190,8 +221,8 @@ let homop = prove
 (* Key equivalences of concepts in projective space and homogeneous coords.  *)
 (* ------------------------------------------------------------------------- *)
 
-let parallel = new_definition
- `parallel x y <=> x cross y = vec 0`;;
+let desargues_parallel = new_definition
+ `desargues_parallel x y <=> x cross y = vec 0`;;
 
 let ON_HOMOL = prove
  (`!p l. p on l <=> orthogonal (homop p) (homol l)`,
@@ -202,16 +233,16 @@ let ON_HOMOL = prove
   MESON_TAC[homol; homop; direction_tybij]);;
 
 let EQ_HOMOL = prove
- (`!l l'. l = l' <=> parallel (homol l) (homol l')`,
+ (`!l l'. l = l' <=> desargues_parallel (homol l) (homol l')`,
   REPEAT GEN_TAC THEN
   GEN_REWRITE_TAC "100/desargues.ml:(LAND_CONV o BINOP_CONV)" (LAND_CONV o BINOP_CONV) [homol] THEN
   REWRITE_TAC[projl; MESON[fst line_tybij; snd line_tybij]
    `mk_line((||) l) = mk_line((||) l') <=> (||) l = (||) l'`] THEN
-  REWRITE_TAC[PARDIR_EQUIV] THEN REWRITE_TAC[pardir; parallel] THEN
+  REWRITE_TAC[PARDIR_EQUIV] THEN REWRITE_TAC[pardir; desargues_parallel] THEN
   MESON_TAC[homol; direction_tybij]);;
 
 let EQ_HOMOP = prove
- (`!p p'. p = p' <=> parallel (homop p) (homop p')`,
+ (`!p p'. p = p' <=> desargues_parallel (homop p) (homop p')`,
   REWRITE_TAC[homop_def; GSYM EQ_HOMOL] THEN
   MESON_TAC[point_tybij]);;
 
@@ -220,8 +251,8 @@ let EQ_HOMOP = prove
 (* ------------------------------------------------------------------------- *)
 
 let PARALLEL_PROJL_HOMOL = prove
- (`!x. parallel x (homol(projl x))`,
-  GEN_TAC THEN REWRITE_TAC[parallel] THEN ASM_CASES_TAC `x:real^3 = vec 0` THEN
+ (`!x. desargues_parallel x (homol(projl x))`,
+  GEN_TAC THEN REWRITE_TAC[desargues_parallel] THEN ASM_CASES_TAC `x:real^3 = vec 0` THEN
   ASM_REWRITE_TAC[CROSS_0] THEN MP_TAC(ISPEC `projl x` homol) THEN
   DISCH_THEN(CONJUNCTS_THEN2 ASSUME_TAC MP_TAC) THEN
   GEN_REWRITE_TAC "100/desargues.ml:(LAND_CONV o ONCE_DEPTH_CONV)" (LAND_CONV o ONCE_DEPTH_CONV) [projl] THEN
@@ -232,14 +263,14 @@ let PARALLEL_PROJL_HOMOL = prove
   ASM_MESON_TAC[direction_tybij]);;
 
 let PARALLEL_PROJP_HOMOP = prove
- (`!x. parallel x (homop(projp x))`,
+ (`!x. desargues_parallel x (homop(projp x))`,
   REWRITE_TAC[homop_def; projp; REWRITE_RULE[] point_tybij] THEN
   REWRITE_TAC[PARALLEL_PROJL_HOMOL]);;
 
 let PARALLEL_PROJP_HOMOP_EXPLICIT = prove
  (`!x. ~(x = vec 0) ==> ?a. ~(a = &0) /\ homop(projp x) = a % x`,
   MP_TAC PARALLEL_PROJP_HOMOP THEN MATCH_MP_TAC MONO_FORALL THEN
-  REWRITE_TAC[parallel; CROSS_EQ_0; COLLINEAR_LEMMA] THEN
+  REWRITE_TAC[desargues_parallel; CROSS_EQ_0; COLLINEAR_LEMMA] THEN
   GEN_TAC THEN ASM_CASES_TAC `x:real^3 = vec 0` THEN
   ASM_REWRITE_TAC[homop] THEN MATCH_MP_TAC MONO_EXISTS THEN
   X_GEN_TAC `c:real` THEN ASM_CASES_TAC `c = &0` THEN
@@ -289,7 +320,7 @@ let COLLINEAR_BRACKET = prove
     ASM_CASES_TAC `p1:point = p2` THENL
      [ASM_REWRITE_TAC[INSERT_AC; COLLINEAR_PAIR]; ALL_TAC] THEN
     POP_ASSUM MP_TAC THEN
-    REWRITE_TAC[parallel; COLLINEAR_TRIPLE; bracket; EQ_HOMOP; ON_HOMOL] THEN
+    REWRITE_TAC[desargues_parallel; COLLINEAR_TRIPLE; bracket; EQ_HOMOP; ON_HOMOL] THEN
     REPEAT STRIP_TAC THEN
     EXISTS_TAC `mk_line((||) (mk_dir(homop p1 cross homop p2)))` THEN
     MATCH_MP_TAC lemma THEN EXISTS_TAC `homop p1 cross homop p2` THEN
@@ -297,7 +328,7 @@ let COLLINEAR_BRACKET = prove
     REWRITE_TAC[orthogonal] THEN ONCE_REWRITE_TAC[DOT_SYM] THEN
     ONCE_REWRITE_TAC[CROSS_TRIPLE] THEN ONCE_REWRITE_TAC[DOT_SYM] THEN
     ASM_REWRITE_TAC[DOT_CROSS_DET] THEN
-    REWRITE_TAC[GSYM projl; GSYM parallel; PARALLEL_PROJL_HOMOL]]);;
+    REWRITE_TAC[GSYM projl; GSYM desargues_parallel; PARALLEL_PROJL_HOMOL]]);;
 
 (* ------------------------------------------------------------------------- *)
 (* Rather crude shuffling of bracket triple into canonical order.            *)
@@ -397,3 +428,4 @@ let DESARGUES_DIRECT = prove
   CONJ_TAC THENL [POP_ASSUM MP_TAC THEN CONV_TAC "100/desargues.ml:REAL_RING" REAL_RING; ALL_TAC] THEN
   FIRST_X_ASSUM(MP_TAC o CONJUNCT1) THEN
   REWRITE_TAC[bracket; DET_3; VECTOR_3] THEN CONV_TAC "100/desargues.ml:REAL_RING" REAL_RING);;
+Pb_printer.clear_file_tags();;

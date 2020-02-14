@@ -2,6 +2,22 @@
 (* Cantor's theorem.                                                         *)
 (* ========================================================================= *)
 
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "100/cantor.ml"];;
+
+open Lib;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Sets;;
+
+
 (* ------------------------------------------------------------------------- *)
 (* Ad hoc version for whole type.                                            *)
 (* ------------------------------------------------------------------------- *)
@@ -73,7 +89,7 @@ let CANTOR_TAYLOR = prove
   ASM_MESON_TAC[]);;
 
 let SURJECTIVE_COMPOSE = prove
- (`(!y. ?x. f(x) = y) /\ (!z. ?y. g(y) = z) 
+ (`(!y. ?x. f(x) = y) /\ (!z. ?y. g(y) = z)
    ==> (!z. ?x. (g o f) x = z)`,
   MESON_TAC[o_THM]);;
 
@@ -93,5 +109,7 @@ let CANTOR_JOHNSTONE = prove
     (REWRITE_RULE[NOT_EXISTS_THM] CANTOR)) THEN
   REWRITE_TAC[] THEN MATCH_MP_TAC SURJECTIVE_COMPOSE THEN
   ASM_REWRITE_TAC[SURJECTIVE_IMAGE] THEN
-  MATCH_MP_TAC INJECTIVE_SURJECTIVE_PREIMAGE THEN 
+  MATCH_MP_TAC INJECTIVE_SURJECTIVE_PREIMAGE THEN
   ASM_REWRITE_TAC[]);;
+
+Pb_printer.clear_file_tags();;

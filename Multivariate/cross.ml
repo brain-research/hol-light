@@ -52,7 +52,6 @@ open Vectors;;
 open Determinants;;
 open Topology;;
 
-
 prioritize_vector();;
 
 (* ------------------------------------------------------------------------- *)

@@ -2,7 +2,32 @@
 (* Perfect number theorems.                                                  *)
 (* ========================================================================= *)
 
-needs "Library/prime.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "perfect.ml"];;
+
+open Lib;;
+open Fusion;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Trivia;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Wo;;
+
+open Prime;;
 
 prioritize_num();;
 
@@ -281,3 +306,4 @@ let PERFECT_EULER = prove
     ASM_REWRITE_TAC[LT_MULT_RCANCEL] THEN
     MATCH_MP_TAC(ARITH_RULE `2 EXP 0 < a ==> 1 < a`) THEN
     REWRITE_TAC[LT_EXP] THEN UNDISCH_TAC `~(r = 0)` THEN ARITH_TAC]);;
+Pb_printer.clear_file_tags();;

@@ -197,7 +197,7 @@ let new_definition_log_opt : bool -> term -> thm =
     fun arg -> let gv = genvar(type_of arg) in
                gv,depair gv arg in
   fun (log: bool) (tm: term) ->
-    let normalized_tm = Pb_printer.normalize_term tm in
+    let normalized_tm = Normalize.normalize_term tm in
     match find_pair_definition normalized_tm with
       Some thm ->
         warn true "Benign redefinition";

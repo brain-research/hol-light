@@ -4,7 +4,7 @@ open Fusion;;
 open Printer;;
 open Pb_printer;;
 open Test_common;;
-
+open Normalize;;
 
 let idempotent_term_normalization : term -> unit =
   assert_idempotent assert_equal_terms normalize_term;;

@@ -2,9 +2,35 @@
 (* The law of cosines, of sines, and sum of angles of a triangle.            *)
 (* ========================================================================= *)
 
-needs "Multivariate/transcendentals.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "cosine.ml"];;
+
+open Lib;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Floor;;
+
+open Vectors;;
+open Transcendentals;;
 
 prioritize_vector();;
+
+(* TODO(smloos): Some duplicates with geom.ml, consider depending on geom.*)
 
 (* ------------------------------------------------------------------------- *)
 (* Angle between vectors (always 0 <= angle <= pi).                          *)
@@ -18,8 +44,8 @@ let vangle = new_definition
 (* Traditional geometric notion of angle (but always 0 <= theta <= pi).      *)
 (* ------------------------------------------------------------------------- *)
 
-let angle = new_definition
- `angle(a,b,c) = vangle (a - b) (c - b)`;;
+let cosine_angle = new_definition
+ `cosine_angle(a,b,c) = vangle (a - b) (c - b)`;;
 
 (* ------------------------------------------------------------------------- *)
 (* Lemmas (more than we need for this result).                               *)
@@ -79,8 +105,8 @@ let VANGLE_EQ_PI = prove
   VECTOR_ARITH_TAC);;
 
 let ANGLE_EQ_PI = prove
- (`!A B C:real^N. angle(A,B,C) = pi ==> dist(A,C) = dist(A,B) + dist(B,C)`,
-  REPEAT GEN_TAC THEN REWRITE_TAC[angle] THEN
+ (`!A B C:real^N. cosine_angle(A,B,C) = pi ==> dist(A,C) = dist(A,B) + dist(B,C)`,
+  REPEAT GEN_TAC THEN REWRITE_TAC[cosine_angle] THEN
   DISCH_THEN(MP_TAC o MATCH_MP VANGLE_EQ_PI) THEN
   REWRITE_TAC[VECTOR_ARITH `a + x % (b - c) = vec 0 <=> a = x % (c - b)`] THEN
   GEN_REWRITE_TAC "100/cosine.ml:(funpow 3 LAND_CONV)" (funpow 3 LAND_CONV) [NORM_SUB] THEN
@@ -89,30 +115,30 @@ let ANGLE_EQ_PI = prove
   REWRITE_TAC[dist; NORM_SUB]);;
 
 let SIN_ANGLE_POS = prove
- (`!A B C. &0 <= sin(angle(A,B,C))`,
-  SIMP_TAC[SIN_POS_PI_LE; angle; VANGLE_RANGE]);;
+ (`!A B C. &0 <= sin(cosine_angle(A,B,C))`,
+  SIMP_TAC[SIN_POS_PI_LE; cosine_angle; VANGLE_RANGE]);;
 
 let ANGLE = prove
- (`!A B C. (A - C) dot (B - C) = dist(A,C) * dist(B,C) * cos(angle(A,C,B))`,
-  REWRITE_TAC[angle; dist; GSYM VANGLE]);;
+ (`!A B C. (A - C) dot (B - C) = dist(A,C) * dist(B,C) * cos(cosine_angle(A,C,B))`,
+  REWRITE_TAC[cosine_angle; dist; GSYM VANGLE]);;
 
 let ANGLE_REFL = prove
- (`!A B. angle(A,A,B) = pi / &2 /\
-         angle(B,A,A) = pi / &2`,
-  REWRITE_TAC[angle; vangle; VECTOR_SUB_REFL]);;
+ (`!A B. cosine_angle(A,A,B) = pi / &2 /\
+         cosine_angle(B,A,A) = pi / &2`,
+  REWRITE_TAC[cosine_angle; vangle; VECTOR_SUB_REFL]);;
 
 let ANGLE_REFL_MID = prove
- (`!A B. ~(A = B) ==> angle(A,B,A) = &0`,
-  SIMP_TAC[angle; vangle; VECTOR_SUB_EQ; GSYM NORM_POW_2; GSYM REAL_POW_2;
+ (`!A B. ~(A = B) ==> cosine_angle(A,B,A) = &0`,
+  SIMP_TAC[cosine_angle; vangle; VECTOR_SUB_EQ; GSYM NORM_POW_2; GSYM REAL_POW_2;
            REAL_DIV_REFL; ACS_1; REAL_POW_EQ_0; ARITH; NORM_EQ_0]);;
 
 let ANGLE_SYM = prove
- (`!A B C. angle(A,B,C) = angle(C,B,A)`,
-  REWRITE_TAC[angle; vangle; VECTOR_SUB_EQ; DISJ_SYM; REAL_MUL_SYM; DOT_SYM]);;
+ (`!A B C. cosine_angle(A,B,C) = cosine_angle(C,B,A)`,
+  REWRITE_TAC[cosine_angle; vangle; VECTOR_SUB_EQ; DISJ_SYM; REAL_MUL_SYM; DOT_SYM]);;
 
 let ANGLE_RANGE = prove
- (`!A B C. &0 <= angle(A,B,C) /\ angle(A,B,C) <= pi`,
-  REWRITE_TAC[angle; VANGLE_RANGE]);;
+ (`!A B C. &0 <= cosine_angle(A,B,C) /\ cosine_angle(A,B,C) <= pi`,
+  REWRITE_TAC[cosine_angle; VANGLE_RANGE]);;
 
 (* ------------------------------------------------------------------------- *)
 (* The law of cosines.                                                       *)
@@ -121,9 +147,9 @@ let ANGLE_RANGE = prove
 let LAW_OF_COSINES = prove
  (`!A B C:real^N.
      dist(B,C) pow 2 = dist(A,B) pow 2 + dist(A,C) pow 2 -
-                         &2 * dist(A,B) * dist(A,C) * cos(angle(B,A,C))`,
+                         &2 * dist(A,B) * dist(A,C) * cos(cosine_angle(B,A,C))`,
   REPEAT GEN_TAC THEN
-  REWRITE_TAC[angle; ONCE_REWRITE_RULE[NORM_SUB] dist; GSYM VANGLE;
+  REWRITE_TAC[cosine_angle; ONCE_REWRITE_RULE[NORM_SUB] dist; GSYM VANGLE;
               NORM_POW_2] THEN
   VECTOR_ARITH_TAC);;
 
@@ -133,7 +159,7 @@ let LAW_OF_COSINES = prove
 
 let LAW_OF_SINES = prove
  (`!A B C:real^N.
-      sin(angle(A,B,C)) * dist(B,C) = sin(angle(B,A,C)) * dist(A,C)`,
+      sin(cosine_angle(A,B,C)) * dist(B,C) = sin(cosine_angle(B,A,C)) * dist(A,C)`,
   REPEAT GEN_TAC THEN MATCH_MP_TAC REAL_POW_EQ THEN EXISTS_TAC `2` THEN
   SIMP_TAC[SIN_ANGLE_POS; DIST_POS_LE; REAL_LE_MUL; ARITH] THEN
   REWRITE_TAC[REAL_POW_MUL; MATCH_MP
@@ -158,7 +184,7 @@ let LAW_OF_SINES = prove
 
 let TRIANGLE_ANGLE_SUM_LEMMA = prove
  (`!A B C:real^N. ~(A = B) /\ ~(A = C) /\ ~(B = C)
-                  ==> cos(angle(B,A,C) + angle(A,B,C) + angle(B,C,A)) = -- &1`,
+                  ==> cos(cosine_angle(B,A,C) + cosine_angle(A,B,C) + cosine_angle(B,C,A)) = -- &1`,
   REPEAT GEN_TAC THEN ONCE_REWRITE_TAC[GSYM VECTOR_SUB_EQ] THEN
   REWRITE_TAC[GSYM NORM_EQ_0] THEN
   MP_TAC(ISPECL [`A:real^N`; `B:real^N`; `C:real^N`] LAW_OF_COSINES) THEN
@@ -169,7 +195,7 @@ let TRIANGLE_ANGLE_SUM_LEMMA = prove
   MP_TAC(ISPECL [`B:real^N`; `C:real^N`; `A:real^N`] LAW_OF_SINES) THEN
   REWRITE_TAC[COS_ADD; SIN_ADD; dist; NORM_SUB] THEN
   MAP_EVERY (fun t -> MP_TAC(SPEC t SIN_CIRCLE))
-   [`angle(B:real^N,A,C)`; `angle(A:real^N,B,C)`; `angle(B:real^N,C,A)`] THEN
+   [`cosine_angle(B:real^N,A,C)`; `cosine_angle(A:real^N,B,C)`; `cosine_angle(B:real^N,C,A)`] THEN
   REWRITE_TAC[COS_ADD; SIN_ADD; ANGLE_SYM] THEN CONV_TAC "100/cosine.ml:REAL_RING" REAL_RING);;
 
 let COS_MINUS1_LEMMA = prove
@@ -196,7 +222,7 @@ let COS_MINUS1_LEMMA = prove
 
 let TRIANGLE_ANGLE_SUM = prove
  (`!A B C:real^N. ~(A = B) /\ ~(A = C) /\ ~(B = C)
-                  ==> angle(B,A,C) + angle(A,B,C) + angle(B,C,A) = pi`,
+                  ==> cosine_angle(B,A,C) + cosine_angle(A,B,C) + cosine_angle(B,C,A) = pi`,
   REPEAT STRIP_TAC THEN MATCH_MP_TAC COS_MINUS1_LEMMA THEN
   ASM_SIMP_TAC[TRIANGLE_ANGLE_SUM_LEMMA; REAL_LE_ADD; ANGLE_RANGE] THEN
   MATCH_MP_TAC(REAL_ARITH
@@ -208,3 +234,4 @@ let TRIANGLE_ANGLE_SUM = prove
   REPEAT(FIRST_X_ASSUM(MP_TAC o GEN_REWRITE_RULE RAND_CONV
    [GSYM VECTOR_SUB_EQ])) THEN
   REWRITE_TAC[GSYM NORM_EQ_0; dist; NORM_SUB] THEN REAL_ARITH_TAC);;
+Pb_printer.clear_file_tags();;

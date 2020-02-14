@@ -386,7 +386,7 @@ let prove_inductive_relations_exist,new_inductive_definition =
     let th2 = generalize_schematic_variables true fvs th1 in
     derive_existence th2
   and new_inductive_definition (tm : term) : thm * thm * thm =
-    let normalized_tm = Pb_printer.normalize_term tm in
+    let normalized_tm = Normalize.normalize_term tm in
     match find_inductive_definition normalized_tm with
       Some (thtr: (thm*thm*thm)) ->
         warn true "Benign redefinition of inductive predicate";

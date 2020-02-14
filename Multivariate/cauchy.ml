@@ -23823,3 +23823,6 @@ let JORDAN_SCHOENFLIES_S2 = prove
   FIRST_X_ASSUM MATCH_MP_TAC THEN ASM SET_TAC[]);;
 
 Pb_printer.clear_file_tags();;
+
+(* This is the last file in the "complex" dataset. Clear the library_tags. *)
+Pb_printer.library_tags := [];;

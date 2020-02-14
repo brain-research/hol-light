@@ -2,7 +2,81 @@
 (* Ballot problem.                                                           *)
 (* ========================================================================= *)
 
-needs "Library/binomial.ml";;
+set_jrh_lexer;;
+open Lib;;
+open Fusion;;
+open Basics;;
+open Printer;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Log;;
+open Import_proofs;;
+open Tactics;;
+open Itab;;
+open Replay;;
+open Simp;;
+open Embryo_extra;;
+open Theorems;;
+open Ind_defs;;
+open Class;;
+open Trivia;;
+open Canon;;
+open Meson;;
+open Metis;;
+open Quot;;
+open Impconv;;
+open Pair;;
+open Nums;;
+open Recursion;;
+open Arith;;
+open Wf;;
+open Calc_num;;
+open Normalizer;;
+open Grobner;;
+open Ind_types;;
+open Lists;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Cart;;
+open Define;;
+open Help;;
+open Wo;;
+open Binary;;
+open Card;;
+open Permutations;;
+open Products;;
+open Floor;;
+open Misc;;
+open Iter;;
+
+open Vectors;;
+open Determinants;;
+open Topology;;
+open Convex;;
+open Paths;;
+open Polytope;;
+open Degree;;
+open Derivatives;;
+open Clifford;;
+open Integration;;
+open Measure;;
+
+open Binomial;;
+open Complexes;;
+open Canal;;
+open Transcendentals;;
+open Realanalysis;;
+open Moretop;;
+open Cauchy;;
+
 
 prioritize_num();;
 
@@ -10,20 +84,20 @@ prioritize_num();;
 (* Restricted function space.                                                *)
 (* ------------------------------------------------------------------------- *)
 
-parse_as_infix("-->",(13,"right"));;
+parse_as_infix("-->_ballot",(13,"right"));;
 
 let funspace = new_definition
- `(s --> t) = {f:A->B | (!x. x IN s ==> f(x) IN t) /\
+ `(s -->_ballot t) = {f:A->B | (!x. x IN s ==> f(x) IN t) /\
                         (!x. ~(x IN s) ==> f(x) = @y. T)}`;;
 
 let FUNSPACE_EMPTY = prove
- (`({} --> t) = {(\x. @y. T)}`,
+ (`({} -->_ballot t) = {(\x. @y. T)}`,
   REWRITE_TAC[EXTENSION; IN_SING; funspace; IN_ELIM_THM; NOT_IN_EMPTY] THEN
   REWRITE_TAC[FUN_EQ_THM]);;
 
 let HAS_SIZE_FUNSPACE = prove
  (`!s:A->bool t:B->bool m n.
-        s HAS_SIZE m /\ t HAS_SIZE n ==> (s --> t) HAS_SIZE (n EXP m)`,
+        s HAS_SIZE m /\ t HAS_SIZE n ==> (s -->_ballot t) HAS_SIZE (n EXP m)`,
   REWRITE_TAC[HAS_SIZE; GSYM CONJ_ASSOC] THEN
   ONCE_REWRITE_TAC[IMP_CONJ] THEN
   REWRITE_TAC[RIGHT_FORALL_IMP_THM] THEN
@@ -34,9 +108,9 @@ let HAS_SIZE_FUNSPACE = prove
     ALL_TAC] THEN
   REWRITE_TAC[GSYM HAS_SIZE] THEN REPEAT STRIP_TAC THEN
   SUBGOAL_THEN
-   `(x INSERT s) --> t =
+   `(x INSERT s) -->_ballot t =
         IMAGE (\(y:B,g) u:A. if u = x then y else g(u))
-              {y,g | y IN t /\ g IN s --> t}`
+              {y,g | y IN t /\ g IN s -->_ballot t}`
   SUBST1_TAC THENL
    [REWRITE_TAC[EXTENSION; IN_IMAGE; funspace; IN_ELIM_THM] THEN
     ONCE_REWRITE_TAC[TAUT `(a /\ b /\ c) /\ d <=> d /\ a /\ b /\ c`] THEN
@@ -67,7 +141,7 @@ let HAS_SIZE_FUNSPACE = prove
   MATCH_MP_TAC HAS_SIZE_PRODUCT THEN ASM_MESON_TAC[]);;
 
 let FINITE_FUNSPACE = prove
- (`!s t. FINITE s /\ FINITE t ==> FINITE(s --> t)`,
+ (`!s t. FINITE s /\ FINITE t ==> FINITE(s -->_ballot t)`,
   MESON_TAC[HAS_SIZE_FUNSPACE; HAS_SIZE]);;
 
 (* ------------------------------------------------------------------------- *)
@@ -80,14 +154,14 @@ let vote_INDUCT,vote_RECURSION = define_type
 let all_countings = new_definition
  `all_countings a b =
         let n = a + b in
-        CARD {f | f IN (1..n --> {A,B}) /\
+        CARD {f | f IN (1..n -->_ballot {A,B}) /\
                   CARD { i | i IN 1..n /\ f(i) = A} = a /\
                   CARD { i | i IN 1..n /\ f(i) = B} = b}`;;
 
 let valid_countings = new_definition
  `valid_countings a b =
         let n = a + b in
-        CARD {f | f IN (1..n --> {A,B}) /\
+        CARD {f | f IN (1..n -->_ballot {A,B}) /\
                   CARD { i | i IN 1..n /\ f(i) = A} = a /\
                   CARD { i | i IN 1..n /\ f(i) = B} = b /\
                   !m. 1 <= m /\ m <= n
@@ -102,7 +176,7 @@ let vote_CASES = cases "vote"
 and vote_DISTINCT = distinctness "vote";;
 
 let FINITE_COUNTINGS = prove
- (`FINITE {f | f IN (1..n --> {A,B}) /\ P f}`,
+ (`FINITE {f | f IN (1..n -->_ballot {A,B}) /\ P f}`,
   MATCH_MP_TAC FINITE_RESTRICT THEN
   MATCH_MP_TAC FINITE_FUNSPACE THEN
   REWRITE_TAC[FINITE_NUMSEG; FINITE_INSERT; FINITE_RULES]);;
@@ -164,7 +238,7 @@ let VOTE_NOT_EQ = prove
   MESON_TAC[vote_CASES; vote_DISTINCT]);;
 
 let FUNSPACE_FIXED = prove
- (`{f | f IN (s --> t) /\ (!i. i IN s ==> f i = a)} =
+ (`{f | f IN (s -->_ballot t) /\ (!i. i IN s ==> f i = a)} =
    if s = {} \/ a IN t then {(\i. if i IN s then a else @x. T)} else {}`,
   REWRITE_TAC[EXTENSION; NOT_IN_EMPTY] THEN GEN_TAC THEN
   COND_CASES_TAC THEN
@@ -172,12 +246,12 @@ let FUNSPACE_FIXED = prove
   REWRITE_TAC[FUN_EQ_THM] THEN ASM_MESON_TAC[]);;
 
 let COUNTING_LEMMA = prove
- (`CARD {f | f IN (1..(n+1) --> {A,B}) /\ P f} =
-   CARD {f | f IN (1..n --> {A,B}) /\ P (\i. if i = n + 1 then A else f i)} +
-   CARD {f | f IN (1..n --> {A,B}) /\ P (\i. if i = n + 1 then B else f i)}`,
+ (`CARD {f | f IN (1..(n+1) -->_ballot {A,B}) /\ P f} =
+   CARD {f | f IN (1..n -->_ballot {A,B}) /\ P (\i. if i = n + 1 then A else f i)} +
+   CARD {f | f IN (1..n -->_ballot {A,B}) /\ P (\i. if i = n + 1 then B else f i)}`,
   MATCH_MP_TAC EQ_TRANS THEN
-  EXISTS_TAC `CARD {f | f IN (1..(n+1) --> {A,B}) /\ f(n+1) = A /\ P f} +
-              CARD {f | f IN (1..(n+1) --> {A,B}) /\ f(n+1) = B /\ P f}` THEN
+  EXISTS_TAC `CARD {f | f IN (1..(n+1) -->_ballot {A,B}) /\ f(n+1) = A /\ P f} +
+              CARD {f | f IN (1..(n+1) -->_ballot {A,B}) /\ f(n+1) = B /\ P f}` THEN
   CONJ_TAC THENL
    [CONV_TAC "100/ballot.ml:SYM_CONV" SYM_CONV THEN MATCH_MP_TAC CARD_UNION_EQ THEN
     REWRITE_TAC[FINITE_COUNTINGS; EXTENSION; IN_INTER; IN_UNION] THEN

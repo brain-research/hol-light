@@ -2,8 +2,29 @@
 (* Isosceles triangle theorem.                                               *)
 (* ========================================================================= *)
 
-needs "Multivariate/geom.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "isosceles.ml"];;
 
+open Lib;;
+open Fusion;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Reals;;
+open Calc_rat;;
+open Sets;;
+
+open Misc;;
+
+open Vectors;;
+open Transcendentals;;
+open Geom;;
 (* ------------------------------------------------------------------------- *)
 (* The theorem, according to Wikipedia.                                      *)
 (* ------------------------------------------------------------------------- *)
@@ -235,3 +256,4 @@ let ISOSCELES_TRIANGLE_6 = prove
     EXPAND_TAC "D" THEN REWRITE_TAC[midpoint] THEN
     REWRITE_TAC[VECTOR_ARITH `inv(&2) % (A + B) - A = inv(&2) % (B - A)`] THEN
     MESON_TAC[VECTOR_MUL_ASSOC]]);;
+Pb_printer.clear_file_tags();;

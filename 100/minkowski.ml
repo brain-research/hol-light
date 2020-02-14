@@ -2,7 +2,34 @@
 (* Minkowski's convex body theorem.                                          *)
 (* ========================================================================= *)
 
-needs "Multivariate/measure.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "minkowski.ml"];;
+
+open Lib;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Sets;;
+open Cart;;
+open Floor;;
+
+open Vectors;;
+open Topology;;
+open Convex;;
+open Integration;;
+open Measure;;
 
 (* ------------------------------------------------------------------------- *)
 (* An ad hoc lemma.                                                          *)
@@ -92,7 +119,7 @@ let BLICHFELDT = prove
     EXISTS_TAC `x + (v - u):real^N` THEN
     ASM_REWRITE_TAC[VECTOR_ARITH `x = x + (v - u) <=> v:real^N = u`] THEN
     ASM_SIMP_TAC[VECTOR_SUB_COMPONENT; VECTOR_ADD_COMPONENT] THEN
-    ASM_SIMP_TAC[REAL_ARITH `x - (x + v - u):real = u - v`; 
+    ASM_SIMP_TAC[REAL_ARITH `x - (x + v - u):real = u - v`;
                  INTEGER_CLOSED]] THEN
   REPEAT CONJ_TAC THENL
    [SUBGOAL_THEN
@@ -284,3 +311,4 @@ let MINKOWSKI_COMPACT = prove
   ASM_SIMP_TAC[REAL_ARITH `&0 < x ==> abs x = x`] THEN
   ASM_SIMP_TAC[REAL_DIV_RMUL; REAL_LT_IMP_NZ] THEN
   UNDISCH_TAC `&0 < d` THEN REAL_ARITH_TAC);;
+Pb_printer.clear_file_tags();;

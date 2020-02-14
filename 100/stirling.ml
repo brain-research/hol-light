@@ -2,8 +2,34 @@
 (* Stirling's approximation.                                                 *)
 (* ========================================================================= *)
 
-needs "Library/analysis.ml";;
-needs "Library/transc.ml";;
+set_jrh_lexer;;
+Pb_printer.set_file_tags ["Top100"; "stirling.ml"];;
+
+open Lib;;
+open Fusion;;
+open Preterm;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Tactics;;
+open Simp;;
+open Theorems;;
+open Class;;
+open Meson;;
+open Pair;;
+open Nums;;
+open Arith;;
+open Calc_num;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+
+open Analysis;;
+open Transc;;
 
 override_interface("-->",`(tends_num_real)`);;
 
@@ -595,3 +621,4 @@ let STIRLING = prove
   REWRITE_TAC[] THEN ONCE_REWRITE_TAC[SEQ_SUC] THEN
   SIMP_TAC[real_div; REAL_MUL_LID; REAL_MUL_ASSOC; REAL_MUL_LINV;
            REAL_MUL_RID; REAL_OF_NUM_EQ; NOT_SUC]);;
+Pb_printer.clear_file_tags();;

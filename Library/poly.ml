@@ -2,7 +2,58 @@
 (* Properties of real polynomials (not canonically represented).             *)
 (* ========================================================================= *)
 
-needs "Library/analysis.ml";;
+set_jrh_lexer;;
+open System;;
+open Lib;;
+open Fusion;;
+open Basics;;
+open Nets;;
+open Printer;;
+open Preterm;;
+open Parser;;
+open Equal;;
+open Bool;;
+open Drule;;
+open Log;;
+open Import_proofs;;
+open Tactics;;
+open Itab;;
+open Replay;;
+open Simp;;
+open Embryo_extra;;
+open Theorems;;
+open Ind_defs;;
+open Class;;
+open Trivia;;
+open Canon;;
+open Meson;;
+open Metis;;
+open Quot;;
+open Impconv;;
+open Pair;;
+open Nums;;
+open Recursion;;
+open Arith;;
+open Wf;;
+open Calc_num;;
+open Normalizer;;
+open Grobner;;
+open Ind_types;;
+open Lists;;
+open Realax;;
+open Calc_int;;
+open Realarith;;
+open Reals;;
+open Calc_rat;;
+open Ints;;
+open Sets;;
+open Iterate;;
+open Cart;;
+open Define;;
+open Help;;
+
+open Analysis;;
+
 
 prioritize_real();;
 
@@ -817,16 +868,16 @@ let POLY_ORDER = prove
 (* Definition of order.                                                      *)
 (* ------------------------------------------------------------------------- *)
 
-let order = new_definition
-  `order a p = @n. ([--a; &1] exp n) divides p /\
+let poly_order = new_definition
+  `poly_order a p = @n. ([--a; &1] exp n) divides p /\
                    ~(([--a; &1] exp (SUC n)) divides p)`;;
 
 let ORDER = prove
  (`!p a n. ([--a; &1] exp n) divides p /\
            ~(([--a; &1] exp (SUC n)) divides p) <=>
-           (n = order a p) /\
+           (n = poly_order a p) /\
            ~(poly p = poly [])`,
-  REPEAT GEN_TAC THEN REWRITE_TAC[order] THEN
+  REPEAT GEN_TAC THEN REWRITE_TAC[poly_order] THEN
   EQ_TAC THEN STRIP_TAC THENL
    [SUBGOAL_THEN `~(poly p = poly [])` ASSUME_TAC THENL
      [FIRST_ASSUM(UNDISCH_TAC o check is_neg o concl) THEN
@@ -840,24 +891,24 @@ let ORDER = prove
 
 let ORDER_THM = prove
  (`!p a. ~(poly p = poly [])
-         ==> ([--a; &1] exp (order a p)) divides p /\
-             ~(([--a; &1] exp (SUC(order a p))) divides p)`,
+         ==> ([--a; &1] exp (poly_order a p)) divides p /\
+             ~(([--a; &1] exp (SUC(poly_order a p))) divides p)`,
   MESON_TAC[ORDER]);;
 
 let ORDER_UNIQUE = prove
  (`!p a n. ~(poly p = poly []) /\
            ([--a; &1] exp n) divides p /\
            ~(([--a; &1] exp (SUC n)) divides p)
-           ==> (n = order a p)`,
+           ==> (n = poly_order a p)`,
   MESON_TAC[ORDER]);;
 
 let ORDER_POLY = prove
- (`!p q a. (poly p = poly q) ==> (order a p = order a q)`,
+ (`!p q a. (poly p = poly q) ==> (poly_order a p = poly_order a q)`,
   REPEAT STRIP_TAC THEN
-  ASM_REWRITE_TAC[order; divides; FUN_EQ_THM; POLY_MUL]);;
+  ASM_REWRITE_TAC[poly_order; divides; FUN_EQ_THM; POLY_MUL]);;
 
 let ORDER_ROOT = prove
- (`!p a. (poly p a = &0) <=> (poly p = poly []) \/ ~(order a p = 0)`,
+ (`!p a. (poly p a = &0) <=> (poly p = poly []) \/ ~(poly_order a p = 0)`,
   REPEAT GEN_TAC THEN ASM_CASES_TAC `poly p = poly []` THEN
   ASM_REWRITE_TAC[poly] THEN EQ_TAC THENL
    [DISCH_THEN(MP_TAC o REWRITE_RULE[POLY_LINEAR_DIVIDES]) THEN
@@ -870,8 +921,8 @@ let ORDER_ROOT = prove
     REWRITE_TAC[FUN_EQ_THM; POLY_MUL; poly] THEN REAL_ARITH_TAC;
     DISCH_TAC THEN
     FIRST_ASSUM(MP_TAC o SPEC `a:real` o MATCH_MP ORDER_THM) THEN
-    UNDISCH_TAC `~(order a p = 0)` THEN
-    SPEC_TAC(`order a p`,`n:num`) THEN
+    UNDISCH_TAC `~(poly_order a p = 0)` THEN
+    SPEC_TAC(`poly_order a p`,`n:num`) THEN
     INDUCT_TAC THEN ASM_REWRITE_TAC[poly_exp; NOT_SUC] THEN
     DISCH_THEN(MP_TAC o CONJUNCT1) THEN REWRITE_TAC[divides] THEN
     DISCH_THEN(X_CHOOSE_THEN `s:real list` SUBST1_TAC) THEN
@@ -879,7 +930,7 @@ let ORDER_ROOT = prove
 
 let ORDER_DIVIDES = prove
  (`!p a n. ([--a; &1] exp n) divides p <=>
-           (poly p = poly []) \/ n <= order a p`,
+           (poly p = poly []) \/ n <= poly_order a p`,
   REPEAT GEN_TAC THEN ASM_CASES_TAC `poly p = poly []` THEN
   ASM_REWRITE_TAC[] THENL
    [ASM_REWRITE_TAC[divides] THEN EXISTS_TAC `[]:real list` THEN
@@ -888,14 +939,14 @@ let ORDER_DIVIDES = prove
 
 let ORDER_DECOMP = prove
  (`!p a. ~(poly p = poly [])
-         ==> ?q. (poly p = poly (([--a; &1] exp (order a p)) ** q)) /\
+         ==> ?q. (poly p = poly (([--a; &1] exp (poly_order a p)) ** q)) /\
                  ~([--a; &1] divides q)`,
   REPEAT STRIP_TAC THEN FIRST_ASSUM(MP_TAC o MATCH_MP ORDER_THM) THEN
   DISCH_THEN(CONJUNCTS_THEN2 MP_TAC ASSUME_TAC o SPEC `a:real`) THEN
   DISCH_THEN(X_CHOOSE_TAC `q:real list` o REWRITE_RULE[divides]) THEN
   EXISTS_TAC `q:real list` THEN ASM_REWRITE_TAC[] THEN
   DISCH_THEN(X_CHOOSE_TAC `r: real list` o REWRITE_RULE[divides]) THEN
-  UNDISCH_TAC `~([-- a; &1] exp SUC (order a p) divides p)` THEN
+  UNDISCH_TAC `~([-- a; &1] exp SUC (poly_order a p) divides p)` THEN
   ASM_REWRITE_TAC[] THEN REWRITE_TAC[divides] THEN
   EXISTS_TAC `r:real list` THEN
   ASM_REWRITE_TAC[POLY_MUL; FUN_EQ_THM; poly_exp] THEN
@@ -907,11 +958,11 @@ let ORDER_DECOMP = prove
 
 let ORDER_MUL = prove
  (`!a p q. ~(poly (p ** q) = poly []) ==>
-           (order a (p ** q) = order a p + order a q)`,
+           (poly_order a (p ** q) = poly_order a p + poly_order a q)`,
   REPEAT GEN_TAC THEN
   DISCH_THEN(fun th -> ASSUME_TAC th THEN MP_TAC th) THEN
   REWRITE_TAC[POLY_ENTIRE; DE_MORGAN_THM] THEN STRIP_TAC THEN
-  SUBGOAL_THEN `(order a p + order a q = order a (p ** q)) /\
+  SUBGOAL_THEN `(poly_order a p + poly_order a q = poly_order a (p ** q)) /\
                 ~(poly (p ** q) = poly [])`
   MP_TAC THENL [ALL_TAC; MESON_TAC[]] THEN
   REWRITE_TAC[GSYM ORDER] THEN CONJ_TAC THENL
@@ -932,14 +983,14 @@ let ORDER_MUL = prove
     SUBGOAL_THEN `[--a; &1] divides (r ** s)` MP_TAC THENL
      [ALL_TAC; ASM_REWRITE_TAC[POLY_PRIMES]] THEN
     REWRITE_TAC[divides] THEN EXISTS_TAC `t:real list` THEN
-    SUBGOAL_THEN `poly ([-- a; &1] exp (order a p) ** r ** s) =
-                  poly ([-- a; &1] exp (order a p) ** ([-- a; &1] ** t))`
+    SUBGOAL_THEN `poly ([-- a; &1] exp (poly_order a p) ** r ** s) =
+                  poly ([-- a; &1] exp (poly_order a p) ** ([-- a; &1] ** t))`
     MP_TAC THENL
      [ALL_TAC; MESON_TAC[POLY_MUL_LCANCEL; POLY_EXP_PRIME_EQ_0]] THEN
-    SUBGOAL_THEN `poly ([-- a; &1] exp (order a q) **
-                        [-- a; &1] exp (order a p) ** r ** s) =
-                  poly ([-- a; &1] exp (order a q) **
-                        [-- a; &1] exp (order a p) **
+    SUBGOAL_THEN `poly ([-- a; &1] exp (poly_order a q) **
+                        [-- a; &1] exp (poly_order a p) ** r ** s) =
+                  poly ([-- a; &1] exp (poly_order a q) **
+                        [-- a; &1] exp (poly_order a p) **
                         [-- a; &1] ** t)`
     MP_TAC THENL
      [ALL_TAC; MESON_TAC[POLY_MUL_LCANCEL; POLY_EXP_PRIME_EQ_0]] THEN
@@ -949,15 +1000,15 @@ let ORDER_MUL = prove
 
 let ORDER_DIFF = prove
  (`!p a. ~(poly (diff p) = poly []) /\
-         ~(order a p = 0)
-         ==> (order a p = SUC (order a (diff p)))`,
+         ~(poly_order a p = 0)
+         ==> (poly_order a p = SUC (poly_order a (diff p)))`,
   REPEAT GEN_TAC THEN
   DISCH_THEN(CONJUNCTS_THEN2 ASSUME_TAC MP_TAC) THEN
   SUBGOAL_THEN `~(poly p = poly [])` MP_TAC THENL
    [ASM_MESON_TAC[POLY_DIFF_ZERO]; ALL_TAC] THEN
   DISCH_THEN(X_CHOOSE_THEN `q:real list` MP_TAC o
     SPEC `a:real` o MATCH_MP ORDER_DECOMP) THEN
-  SPEC_TAC(`order a p`,`n:num`) THEN
+  SPEC_TAC(`poly_order a p`,`n:num`) THEN
   INDUCT_TAC THEN REWRITE_TAC[NOT_SUC; SUC_INJ] THEN
   STRIP_TAC THEN MATCH_MP_TAC ORDER_UNIQUE THEN
   ASM_REWRITE_TAC[] THEN
@@ -1017,21 +1068,21 @@ let POLY_SQUAREFREE_DECOMP_ORDER = prove
         (poly p = poly (q ** d)) /\
         (poly (diff p) = poly (e ** d)) /\
         (poly d = poly (r ** p ++ s ** diff p))
-        ==> !a. order a q = (if order a p = 0 then 0 else 1)`,
+        ==> !a. poly_order a q = (if poly_order a p = 0 then 0 else 1)`,
   REPEAT STRIP_TAC THEN
-  SUBGOAL_THEN `order a p = order a q + order a d` MP_TAC THENL
-   [MATCH_MP_TAC EQ_TRANS THEN EXISTS_TAC `order a (q ** d)` THEN
+  SUBGOAL_THEN `poly_order a p = poly_order a q + poly_order a d` MP_TAC THENL
+   [MATCH_MP_TAC EQ_TRANS THEN EXISTS_TAC `poly_order a (q ** d)` THEN
     CONJ_TAC THENL
      [MATCH_MP_TAC ORDER_POLY THEN ASM_REWRITE_TAC[];
       MATCH_MP_TAC ORDER_MUL THEN
       FIRST_ASSUM(fun th ->
         GEN_REWRITE_TAC "Library/poly.ml:(RAND_CONV o LAND_CONV)" (RAND_CONV o LAND_CONV) [SYM th]) THEN
       ASM_MESON_TAC[POLY_DIFF_ZERO]]; ALL_TAC] THEN
-  ASM_CASES_TAC `order a p = 0` THEN ASM_REWRITE_TAC[] THENL
+  ASM_CASES_TAC `poly_order a p = 0` THEN ASM_REWRITE_TAC[] THENL
    [ARITH_TAC; ALL_TAC] THEN
-  SUBGOAL_THEN `order a (diff p) =
-                order a e + order a d` MP_TAC THENL
-   [MATCH_MP_TAC EQ_TRANS THEN EXISTS_TAC `order a (e ** d)` THEN
+  SUBGOAL_THEN `poly_order a (diff p) =
+                poly_order a e + poly_order a d` MP_TAC THENL
+   [MATCH_MP_TAC EQ_TRANS THEN EXISTS_TAC `poly_order a (e ** d)` THEN
     CONJ_TAC THENL
      [ASM_MESON_TAC[ORDER_POLY]; ASM_MESON_TAC[ORDER_MUL]]; ALL_TAC] THEN
   SUBGOAL_THEN `~(poly p = poly [])` ASSUME_TAC THENL
@@ -1040,15 +1091,15 @@ let POLY_SQUAREFREE_DECOMP_ORDER = prove
   ASM_REWRITE_TAC[] THEN
   DISCH_THEN(fun th -> MP_TAC th THEN MP_TAC(AP_TERM `PRE` th)) THEN
   REWRITE_TAC[PRE] THEN DISCH_THEN(ASSUME_TAC o SYM) THEN
-  SUBGOAL_THEN `order a (diff p) <= order a d` MP_TAC THENL
-   [SUBGOAL_THEN `([--a; &1] exp (order a (diff p))) divides d`
+  SUBGOAL_THEN `poly_order a (diff p) <= poly_order a d` MP_TAC THENL
+   [SUBGOAL_THEN `([--a; &1] exp (poly_order a (diff p))) divides d`
     MP_TAC THENL [ALL_TAC; ASM_MESON_TAC[POLY_ENTIRE; ORDER_DIVIDES]] THEN
     SUBGOAL_THEN
-      `([--a; &1] exp (order a (diff p))) divides p /\
-       ([--a; &1] exp (order a (diff p))) divides (diff p)`
+      `([--a; &1] exp (poly_order a (diff p))) divides p /\
+       ([--a; &1] exp (poly_order a (diff p))) divides (diff p)`
     MP_TAC THENL
      [REWRITE_TAC[ORDER_DIVIDES; LE_REFL] THEN DISJ2_TAC THEN
-      REWRITE_TAC[ASSUME `order a (diff p) = PRE (order a p)`] THEN
+      REWRITE_TAC[ASSUME `poly_order a (diff p) = PRE (poly_order a p)`] THEN
       ARITH_TAC;
       DISCH_THEN(CONJUNCTS_THEN MP_TAC) THEN REWRITE_TAC[divides] THEN
       REWRITE_TAC[ASSUME `poly d = poly (r ** p ++ s ** diff p)`] THEN
@@ -1065,7 +1116,7 @@ let POLY_SQUAREFREE_DECOMP_ORDER = prove
 
 let rsquarefree = new_definition
   `rsquarefree p <=> ~(poly p = poly []) /\
-                     !a. (order a p = 0) \/ (order a p = 1)`;;
+                     !a. (poly_order a p = 0) \/ (poly_order a p = 1)`;;
 
 (* ------------------------------------------------------------------------- *)
 (* Standard squarefree criterion and rephasing of squarefree decomposition.  *)
